@@ -1,0 +1,95 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --primary: #8B5CF6;
+  --primary-hover: #7C3AED;
+  --primary-glow: #C4B5FD;
+  --secondary: #EC4899;
+  --secondary-hover: #DB2777;
+  --secondary-glow: #F9A8D4;
+  --background-dark: #0F0F0F;
+  --glass-light: rgba(255, 255, 255, 0.12);
+  --glass-dark: rgba(0, 0, 0, 0.25);
+  --border-color: rgba(255, 255, 255, 0.18);
+  --text-primary: #FFFFFF;
+  --text-secondary: #E0E0E0;
+  --text-muted: #A1A1A1;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-dark text-white;
+    font-family: var(--font-inter);
+  }
+  
+  .bg-dark {
+    background: #0F0F0F;
+    background-image: 
+      radial-gradient(circle at 20% 50%, rgba(139, 92, 246, 0.3) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, rgba(236, 72, 153, 0.3) 0%, transparent 50%),
+      radial-gradient(circle at 40% 80%, rgba(139, 92, 246, 0.2) 0%, transparent 50%);
+    min-height: 100vh;
+  }
+
+  .glass {
+    background: var(--glass-light);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border-color);
+  }
+
+  .glass-dark {
+    background: var(--glass-dark);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border-color);
+  }
+
+  .gradient-primary {
+    background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%);
+  }
+
+  .gradient-premium {
+    background: linear-gradient(135deg, #A855F7 0%, #EC4899 40%, #FACC15 100%);
+  }
+
+  .text-gradient {
+    background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .glow {
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.5);
+  }
+
+  .glow-pink {
+    box-shadow: 0 0 20px rgba(236, 72, 153, 0.5);
+  }
+
+  .floating {
+    animation: floating 6s ease-in-out infinite;
+  }
+
+  @keyframes floating {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+  }
+
+  .font-poppins {
+    font-family: var(--font-poppins);
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
