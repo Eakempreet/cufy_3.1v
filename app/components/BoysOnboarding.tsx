@@ -2,12 +2,15 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import OnboardingStep from './OnboardingStep'
 import { Input } from './ui/Input'
 import { Button } from './ui/Button'
 import { Textarea } from './ui/textarea'
 import { Card } from './ui/Card'
 import { Sparkles, Camera, Crown } from 'lucide-react'
+import ImageUpload from './ImageUpload'
 
 interface OnboardingData {
   fullName: string
@@ -30,7 +33,10 @@ interface OnboardingData {
 }
 
 export default function BoysOnboarding() {
+  const { data: session } = useSession()
+  const router = useRouter()
   const [currentStep, setCurrentStep] = useState(1)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [data, setData] = useState<OnboardingData>({
     fullName: '',
     phoneNumber: '',
@@ -51,16 +57,63 @@ export default function BoysOnboarding() {
     story: '',
   })
 
-  const totalSteps = 16
+  const totalSteps = 15
 
   const updateData = (field: keyof OnboardingData, value: any) => {
     setData(prev => ({ ...prev, [field]: value }))
   }
 
+  const handleSubmit = async () => {
+    if (!session?.user?.email) {
+      router.push('/')
+      return
+    }
+
+    setIsSubmitting(true)
+    
+    try {
+      const userData = {
+        email: session.user.email,
+        full_name: data.fullName,
+        phone_number: data.phoneNumber,
+        age: parseInt(data.age),
+        university: data.university,
+        year_of_study: data.yearOfStudy,
+        profile_photo: data.profilePhoto,
+        bio: data.bio,
+        energy_style: data.energyStyle,
+        group_setting: data.groupSetting,
+        ideal_weekend: data.idealWeekend,
+        communication_style: data.communicationStyle,
+        best_trait: data.bestTrait,
+        relationship_values: data.relationshipValues,
+        love_language: data.loveLanguage,
+        connection_statement: data.connectionStatement,
+        gender: 'male' as const,
+      }
+
+      const response = await fetch('/api/user/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData),
+      })
+
+      if (response.ok) {
+        router.push('/subscription-selection')
+      } else {
+        console.error('Failed to create user profile')
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   const canGoNext = () => {
     switch (currentStep) {
       case 1: return data.fullName.trim() !== ''
-      case 2: return data.phoneNumber.trim() !== ''
+      case 2: return data.phoneNumber.trim() !== '' && data.phoneNumber.length === 10
       case 3: return data.age !== ''
       case 4: return data.university.trim() !== ''
       case 5: return data.yearOfStudy !== ''
@@ -68,13 +121,12 @@ export default function BoysOnboarding() {
       case 7: return data.bio.trim() !== ''
       case 8: return data.energyStyle !== ''
       case 9: return data.groupSetting !== ''
-      case 10: return data.idealWeekend.length > 0
+      case 10: return data.idealWeekend.length === 2
       case 11: return data.communicationStyle !== ''
       case 12: return data.bestTrait !== ''
-      case 13: return data.relationshipValues.length >= 3
+      case 13: return data.relationshipValues.length === 3
       case 14: return data.loveLanguage !== ''
       case 15: return data.connectionStatement.trim() !== ''
-      case 16: return data.lookingFor !== ''
       default: return true
     }
   }
@@ -97,6 +149,12 @@ export default function BoysOnboarding() {
               placeholder="Enter your full name"
               value={data.fullName}
               onChange={(e) => updateData('fullName', e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && data.fullName.trim() !== '') {
+                  e.preventDefault()
+                  setCurrentStep(2)
+                }
+              }}
               className="text-center text-xl"
             />
           </OnboardingStep>
@@ -115,11 +173,23 @@ export default function BoysOnboarding() {
           >
             <Input
               type="tel"
-              placeholder="+91 9876543210"
+              placeholder="9876543210 (10 digits)"
               value={data.phoneNumber}
-              onChange={(e) => updateData('phoneNumber', e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value.replace(/\D/g, '').slice(0, 10)
+                updateData('phoneNumber', value)
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && data.phoneNumber.length === 10) {
+                  e.preventDefault()
+                  setCurrentStep(3)
+                }
+              }}
               className="text-center text-xl"
             />
+            <p className="text-sm text-white/60 mt-2">
+              {data.phoneNumber.length}/10 digits
+            </p>
           </OnboardingStep>
         )
 
@@ -164,6 +234,12 @@ export default function BoysOnboarding() {
               placeholder="e.g., IIT Delhi"
               value={data.university}
               onChange={(e) => updateData('university', e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && data.university.trim() !== '') {
+                  e.preventDefault()
+                  setCurrentStep(5)
+                }
+              }}
               className="text-center text-xl"
             />
           </OnboardingStep>
@@ -210,16 +286,11 @@ export default function BoysOnboarding() {
             theme="purple"
           >
             <div className="text-center">
-              <div className="w-32 h-32 mx-auto mb-6 rounded-full border-2 border-dashed border-purple-500 flex items-center justify-center">
-                <Camera className="h-12 w-12 text-purple-500" />
-              </div>
-              <Button 
-                onClick={() => updateData('profilePhoto', 'uploaded')}
-                className="bg-gradient-to-r from-purple-500 to-indigo-500"
-              >
-                <Camera className="mr-2 h-4 w-4" />
-                Upload Photo
-              </Button>
+              <ImageUpload
+                onImageUploaded={(url) => updateData('profilePhoto', url)}
+                currentImage={data.profilePhoto || undefined}
+                className="mx-auto"
+              />
               <p className="text-sm text-white/60 mt-4">
                 First impressions matter! Upload your best photo.
               </p>
@@ -227,24 +298,334 @@ export default function BoysOnboarding() {
           </OnboardingStep>
         )
 
-      default:
+      case 7:
         return (
           <OnboardingStep
-            step={16}
+            step={currentStep}
             totalSteps={totalSteps}
-            title="Welcome aboard! 🚀"
-            onNext={() => {}}
-            onBack={() => setCurrentStep(15)}
-            canGoNext={true}
+            title="Write a fun bio"
+            onNext={() => setCurrentStep(8)}
+            onBack={() => setCurrentStep(6)}
+            canGoNext={canGoNext()}
+            theme="purple"
+          >
+            <Textarea
+              placeholder="Tell us something interesting about yourself in one line..."
+              value={data.bio}
+              onChange={(e) => updateData('bio', e.target.value)}
+              className="glass backdrop-blur-md border border-white/20 min-h-[100px]"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey && data.bio.trim() !== '') {
+                  e.preventDefault()
+                  setCurrentStep(8)
+                }
+              }}
+            />
+            <p className="text-sm text-white/60 mt-2">
+              {data.bio.length}/200 characters
+            </p>
+          </OnboardingStep>
+        )
+
+      case 8:
+        return (
+          <OnboardingStep
+            step={currentStep}
+            totalSteps={totalSteps}
+            title="Your energy style?"
+            onNext={() => setCurrentStep(9)}
+            onBack={() => setCurrentStep(7)}
+            canGoNext={canGoNext()}
+            theme="purple"
+          >
+            <div className="space-y-4">
+              {[
+                { value: 'high-energy', label: 'High Energy', desc: 'Always ready for adventure!' },
+                { value: 'thoughtful', label: 'Thoughtful', desc: 'I prefer meaningful conversations' },
+                { value: 'balanced', label: 'Balanced', desc: 'Mix of both depending on mood' }
+              ].map((option) => (
+                <Card
+                  key={option.value}
+                  className={`p-4 cursor-pointer transition-all hover:scale-105 ${
+                    data.energyStyle === option.value
+                      ? 'bg-gradient-to-r from-purple-500/20 to-indigo-500/20 border-purple-500'
+                      : 'hover:border-white/30'
+                  }`}
+                  onClick={() => updateData('energyStyle', option.value)}
+                >
+                  <h3 className="font-semibold text-lg">{option.label}</h3>
+                  <p className="text-sm text-white/70">{option.desc}</p>
+                </Card>
+              ))}
+            </div>
+          </OnboardingStep>
+        )
+
+      case 9:
+        return (
+          <OnboardingStep
+            step={currentStep}
+            totalSteps={totalSteps}
+            title="In group settings, you typically:"
+            onNext={() => setCurrentStep(10)}
+            onBack={() => setCurrentStep(8)}
+            canGoNext={canGoNext()}
+            theme="purple"
+          >
+            <div className="space-y-4">
+              {[
+                'Lead conversations',
+                'Listen and contribute thoughtfully', 
+                'Prefer one-on-one connections'
+              ].map((option) => (
+                <Card
+                  key={option}
+                  className={`p-4 cursor-pointer transition-all hover:scale-105 ${
+                    data.groupSetting === option
+                      ? 'bg-gradient-to-r from-purple-500/20 to-indigo-500/20 border-purple-500'
+                      : 'hover:border-white/30'
+                  }`}
+                  onClick={() => updateData('groupSetting', option)}
+                >
+                  <p className="text-center font-medium">{option}</p>
+                </Card>
+              ))}
+            </div>
+          </OnboardingStep>
+        )
+
+      case 10:
+        return (
+          <OnboardingStep
+            step={currentStep}
+            totalSteps={totalSteps}
+            title="Your ideal weekend includes: (select top 2)"
+            onNext={() => setCurrentStep(11)}
+            onBack={() => setCurrentStep(9)}
+            canGoNext={canGoNext()}
+            theme="purple"
+          >
+            <div className="grid grid-cols-2 gap-4">
+              {[
+                'Adventure',
+                'Learning',
+                'Relaxing',
+                'Socializing',
+                'Creating',
+                'Exercising'
+              ].map((option) => (
+                <Card
+                  key={option}
+                  className={`p-4 cursor-pointer transition-all hover:scale-105 ${
+                    data.idealWeekend.includes(option)
+                      ? 'bg-gradient-to-r from-purple-500/20 to-indigo-500/20 border-purple-500'
+                      : 'hover:border-white/30'
+                  }`}
+                  onClick={() => {
+                    const currentSelection = data.idealWeekend
+                    if (currentSelection.includes(option)) {
+                      updateData('idealWeekend', currentSelection.filter(item => item !== option))
+                    } else if (currentSelection.length < 2) {
+                      updateData('idealWeekend', [...currentSelection, option])
+                    }
+                  }}
+                >
+                  <p className="text-center font-medium">{option}</p>
+                </Card>
+              ))}
+            </div>
+            <p className="text-sm text-white/60 mt-4 text-center">
+              Selected: {data.idealWeekend.length}/2
+            </p>
+          </OnboardingStep>
+        )
+
+      case 11:
+        return (
+          <OnboardingStep
+            step={currentStep}
+            totalSteps={totalSteps}
+            title="You communicate through: (primary style)"
+            onNext={() => setCurrentStep(12)}
+            onBack={() => setCurrentStep(10)}
+            canGoNext={canGoNext()}
+            theme="purple"
+          >
+            <div className="space-y-4">
+              {[
+                'Words and deep talks',
+                'Actions and gestures',
+                'Shared experiences',
+                'Humor and playfulness'
+              ].map((option) => (
+                <Card
+                  key={option}
+                  className={`p-4 cursor-pointer transition-all hover:scale-105 ${
+                    data.communicationStyle === option
+                      ? 'bg-gradient-to-r from-purple-500/20 to-indigo-500/20 border-purple-500'
+                      : 'hover:border-white/30'
+                  }`}
+                  onClick={() => updateData('communicationStyle', option)}
+                >
+                  <p className="text-center font-medium">{option}</p>
+                </Card>
+              ))}
+            </div>
+          </OnboardingStep>
+        )
+
+      case 12:
+        return (
+          <OnboardingStep
+            step={currentStep}
+            totalSteps={totalSteps}
+            title="Your friends would say your best trait is:"
+            onNext={() => setCurrentStep(13)}
+            onBack={() => setCurrentStep(11)}
+            canGoNext={canGoNext()}
+            theme="purple"
+          >
+            <div className="grid grid-cols-2 gap-4">
+              {[
+                'Loyalty',
+                'Humor',
+                'Intelligence',
+                'Kindness',
+                'Ambition',
+                'Creativity',
+                'Reliability'
+              ].map((option) => (
+                <Card
+                  key={option}
+                  className={`p-4 cursor-pointer transition-all hover:scale-105 ${
+                    data.bestTrait === option
+                      ? 'bg-gradient-to-r from-purple-500/20 to-indigo-500/20 border-purple-500'
+                      : 'hover:border-white/30'
+                  }`}
+                  onClick={() => updateData('bestTrait', option)}
+                >
+                  <p className="text-center font-medium">{option}</p>
+                </Card>
+              ))}
+            </div>
+          </OnboardingStep>
+        )
+
+      case 13:
+        return (
+          <OnboardingStep
+            step={currentStep}
+            totalSteps={totalSteps}
+            title="In relationships, you value most: (rank top 3)"
+            onNext={() => setCurrentStep(14)}
+            onBack={() => setCurrentStep(12)}
+            canGoNext={canGoNext()}
+            theme="purple"
+          >
+            <div className="space-y-4">
+              {[
+                'Growth together',
+                'Fun & laughter',
+                'Deep connection',
+                'Shared goals',
+                'Independence with closeness'
+              ].map((option) => (
+                <Card
+                  key={option}
+                  className={`p-4 cursor-pointer transition-all hover:scale-105 ${
+                    data.relationshipValues.includes(option)
+                      ? 'bg-gradient-to-r from-purple-500/20 to-indigo-500/20 border-purple-500'
+                      : 'hover:border-white/30'
+                  }`}
+                  onClick={() => {
+                    const currentSelection = data.relationshipValues
+                    if (currentSelection.includes(option)) {
+                      updateData('relationshipValues', currentSelection.filter(item => item !== option))
+                    } else if (currentSelection.length < 3) {
+                      updateData('relationshipValues', [...currentSelection, option])
+                    }
+                  }}
+                >
+                  <p className="text-center font-medium">{option}</p>
+                  {data.relationshipValues.includes(option) && (
+                    <p className="text-center text-sm text-purple-400 mt-1">
+                      #{data.relationshipValues.indexOf(option) + 1}
+                    </p>
+                  )}
+                </Card>
+              ))}
+            </div>
+            <p className="text-sm text-white/60 mt-4 text-center">
+              Selected: {data.relationshipValues.length}/3
+            </p>
+          </OnboardingStep>
+        )
+
+      case 14:
+        return (
+          <OnboardingStep
+            step={currentStep}
+            totalSteps={totalSteps}
+            title="Your love language is: (select primary)"
+            onNext={() => setCurrentStep(15)}
+            onBack={() => setCurrentStep(13)}
+            canGoNext={canGoNext()}
+            theme="purple"
+          >
+            <div className="space-y-4">
+              {[
+                'Quality time',
+                'Words of affirmation',
+                'Physical touch',
+                'Acts of service',
+                'Gifts'
+              ].map((option) => (
+                <Card
+                  key={option}
+                  className={`p-4 cursor-pointer transition-all hover:scale-105 ${
+                    data.loveLanguage === option
+                      ? 'bg-gradient-to-r from-purple-500/20 to-indigo-500/20 border-purple-500'
+                      : 'hover:border-white/30'
+                  }`}
+                  onClick={() => updateData('loveLanguage', option)}
+                >
+                  <p className="text-center font-medium">{option}</p>
+                </Card>
+              ))}
+            </div>
+          </OnboardingStep>
+        )
+
+      case 15:
+        return (
+          <OnboardingStep
+            step={currentStep}
+            totalSteps={totalSteps}
+            title='Complete this: "I feel most connected to someone when..."'
+            onNext={handleSubmit}
+            onBack={() => setCurrentStep(14)}
+            canGoNext={canGoNext()}
             isLast
             theme="purple"
           >
-            <div className="text-center">
-              <Crown className="h-16 w-16 text-primary mx-auto mb-4 fill-current" />
+            <Textarea
+              placeholder="I feel most connected to someone when..."
+              value={data.connectionStatement}
+              onChange={(e) => updateData('connectionStatement', e.target.value)}
+              className="glass backdrop-blur-md border border-white/20 min-h-[120px]"
+            />
+            <p className="text-sm text-white/60 mt-2">
+              {data.connectionStatement.length}/300 characters
+            </p>
+            <div className="text-center mt-8">
+              <Crown className="h-16 w-16 text-purple-500 mx-auto mb-4 fill-current" />
               <h2 className="text-2xl font-bold mb-4">Ready to Connect!</h2>
               <p className="text-white/70">
                 Your profile is set up. Time to find meaningful connections!
               </p>
+              {isSubmitting && (
+                <p className="text-purple-400 mt-4">Saving your profile...</p>
+              )}
             </div>
           </OnboardingStep>
         )
