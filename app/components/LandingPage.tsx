@@ -68,7 +68,7 @@ export default function LandingPage() {
         const data = await response.json()
         
         if (data.success) {
-          setBoysRegistrationEnabled(data.boys_registration_enabled !== false)
+          setBoysRegistrationEnabled(data.boys_registration_enabled === true)
           setBoysRegistrationMessage(data.boys_registration_message || 'Boys registration will open soon! Girls can join now.')
         }
       } catch (error) {
