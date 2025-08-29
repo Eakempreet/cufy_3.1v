@@ -27,12 +27,16 @@ export default function PaymentPage({ subscriptionType, onPaymentProofUploaded }
   const searchParams = useSearchParams()
   const plan = subscriptionType || searchParams.get('plan')
 
+  console.log('PaymentPage component loaded, plan:', plan)
+
   // UPI ID for payment (you can replace this with your actual UPI ID)
   const upiId = "cufy@paytm" // Replace with your actual UPI ID
   const upiLink = `upi://pay?pa=${upiId}&pn=Cufy Dating&cu=INR`
 
   useEffect(() => {
+    console.log('PaymentPage useEffect running, plan:', plan)
     if (!plan) {
+      console.log('No plan found, redirecting to subscription-selection')
       router.push('/subscription-selection')
       return
     }
@@ -49,8 +53,10 @@ export default function PaymentPage({ subscriptionType, onPaymentProofUploaded }
 
   const checkExistingPayment = async () => {
     try {
+      console.log('Checking existing payment...')
       const response = await fetch('/api/user/check')
       const data = await response.json()
+      console.log('User check response:', data)
       
       if (data.exists && data.user) {
         setUserPaymentStatus(data.user)
@@ -66,11 +72,19 @@ export default function PaymentPage({ subscriptionType, onPaymentProofUploaded }
 
   const fetchPlanDetails = async () => {
     try {
-      const response = await fetch(`/api/subscriptions?type=${plan}`)
-      const data = await response.json()
-      setPlanDetails(data.subscription)
+      console.log('Fetching plan details for:', plan)
+      // Since we don't have a subscriptions API, let's use static plan details
+      const planData = {
+        basic: { price: 99, name: 'Basic Plan' },
+        premium: { price: 249, name: 'Premium Plan' }
+      }
+      
+      setPlanDetails(planData[plan as keyof typeof planData] || planData.basic)
+      console.log('Plan details set:', planData[plan as keyof typeof planData])
     } catch (error) {
       console.error('Error fetching plan details:', error)
+      // Set default plan details
+      setPlanDetails({ price: plan === 'premium' ? 249 : 99, name: `${plan?.toUpperCase()} Plan` })
     }
   }
 

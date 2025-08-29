@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { NextRequest, NextResponse } from "next/server"
+import { supabaseAdmin } from "@/lib/supabase"
 
 export async function POST(request: NextRequest) {
   try {
@@ -7,96 +7,89 @@ export async function POST(request: NextRequest) {
 
     if (!maleUserId || !femaleUserId) {
       return NextResponse.json(
-        { error: 'Both male and female user IDs are required' },
+        { error: "Both male and female user IDs are required" },
         { status: 400 }
       )
     }
 
-    // Check if male user already has 3 assignments
-    const { count: maleAssignments } = await supabase
-      .from('profile_assignments')
-      .select('id', { count: 'exact' })
-      .eq('male_user_id', maleUserId)
+    // Check if male user has confirmed payment
+    const { data: maleUser, error: maleUserError } = await supabaseAdmin
+      .from("users")
+      .select("payment_confirmed, subscription_status, full_name")
+      .eq("id", maleUserId)
+      .single()
 
-    if ((maleAssignments || 0) >= 3) {
+    if (maleUserError || !maleUser) {
       return NextResponse.json(
-        { error: 'Male user already has maximum assignments' },
-        { status: 400 }
+        { error: "Male user not found" },
+        { status: 404 }
       )
     }
 
-    // Check if female user already has 2 assignments
-    const { count: femaleAssignments } = await supabase
-      .from('profile_assignments')
-      .select('id', { count: 'exact' })
-      .eq('female_user_id', femaleUserId)
-
-    if ((femaleAssignments || 0) >= 2) {
+    if (!maleUser.payment_confirmed) {
       return NextResponse.json(
-        { error: 'Female user already has maximum assignments' },
+        { error: `Cannot assign profile to ${maleUser.full_name}. Payment not yet confirmed.` },
         { status: 400 }
       )
     }
 
-    // Check if this specific assignment already exists
-    const { data: existingAssignment } = await supabase
-      .from('profile_assignments')
-      .select('id')
-      .eq('male_user_id', maleUserId)
-      .eq('female_user_id', femaleUserId)
+    if (maleUser.subscription_status !== 'active') {
+      return NextResponse.json(
+        { error: `Cannot assign profile to ${maleUser.full_name}. Subscription is not active.` },
+        { status: 400 }
+      )
+    }
+
+    // Check if assignment already exists
+    const { data: existingAssignment } = await supabaseAdmin
+      .from("profile_assignments")
+      .select("id")
+      .eq("male_user_id", maleUserId)
+      .eq("female_user_id", femaleUserId)
       .single()
 
     if (existingAssignment) {
       return NextResponse.json(
-        { error: 'Assignment already exists between these users' },
+        { error: "Assignment already exists between these users" },
         { status: 400 }
       )
     }
 
-    // Create the assignment
-    const { data: assignment, error } = await supabase
-      .from('profile_assignments')
-      .insert({
-        male_user_id: maleUserId,
-        female_user_id: femaleUserId
-      })
+    // Create the assignment with the new schema structure
+    const assignmentData = {
+      male_user_id: maleUserId,
+      female_user_id: femaleUserId,
+      status: "assigned" as const,
+      male_revealed: false,
+      female_revealed: false,
+      assigned_at: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }
+
+    const { data: assignment, error } = await supabaseAdmin
+      .from("profile_assignments")
+      .insert(assignmentData)
       .select()
       .single()
 
     if (error) {
-      console.error('Assignment creation error:', error)
+      console.error("Assignment creation error:", error)
       return NextResponse.json(
-        { error: 'Failed to create assignment' },
+        { error: "Failed to create assignment" },
         { status: 500 }
       )
-    }
-
-    // Log admin action (optional, ignore if table doesn't exist)
-    try {
-      await supabase
-        .from('admin_actions')
-        .insert({
-          action_type: 'assign_profile',
-          target_user_id: maleUserId,
-          details: {
-            male_user_id: maleUserId,
-            female_user_id: femaleUserId,
-            assignment_id: assignment.id
-          }
-        })
-    } catch (logError) {
-      console.log('Admin action logging failed (table may not exist):', logError)
     }
 
     return NextResponse.json({ 
       success: true, 
       assignment,
-      message: 'Profile assigned successfully' 
+      message: "Profile assigned successfully" 
     })
   } catch (error) {
-    console.error('Assign profile error:', error)
+    console.error("Assign profile error:", error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: "Internal server error" },
       { status: 500 }
     )
   }

@@ -20,6 +20,7 @@ interface OnboardingData {
   yearOfStudy: string
   profilePhoto: string | null
   bio: string
+  instagram: string
   energyStyle: string
   groupSetting: string
   idealWeekend: string[]
@@ -45,6 +46,7 @@ export default function BoysOnboarding() {
     yearOfStudy: '',
     profilePhoto: null,
     bio: '',
+    instagram: '',
     energyStyle: '',
     groupSetting: '',
     idealWeekend: [],
@@ -57,7 +59,7 @@ export default function BoysOnboarding() {
     story: '',
   })
 
-  const totalSteps = 15
+  const totalSteps = 16
 
   const updateData = (field: keyof OnboardingData, value: any) => {
     setData(prev => ({ ...prev, [field]: value }))
@@ -90,6 +92,8 @@ export default function BoysOnboarding() {
         love_language: data.loveLanguage,
         connection_statement: data.connectionStatement,
         gender: 'male' as const,
+        // Note: Instagram temporarily removed due to database schema
+        // ...(data.instagram && { instagram: data.instagram }),
       }
 
       const response = await fetch('/api/user/create', {
@@ -119,14 +123,15 @@ export default function BoysOnboarding() {
       case 5: return data.yearOfStudy !== ''
       case 6: return data.profilePhoto !== null
       case 7: return data.bio.trim() !== ''
-      case 8: return data.energyStyle !== ''
-      case 9: return data.groupSetting !== ''
-      case 10: return data.idealWeekend.length === 2
-      case 11: return data.communicationStyle !== ''
-      case 12: return data.bestTrait !== ''
-      case 13: return data.relationshipValues.length === 3
-      case 14: return data.loveLanguage !== ''
-      case 15: return data.connectionStatement.trim() !== ''
+      case 8: return true // Instagram is optional
+      case 9: return data.energyStyle !== ''
+      case 10: return data.groupSetting !== ''
+      case 11: return data.idealWeekend.length === 2
+      case 12: return data.communicationStyle !== ''
+      case 13: return data.bestTrait !== ''
+      case 14: return data.relationshipValues.length === 3
+      case 15: return data.loveLanguage !== ''
+      case 16: return data.connectionStatement.trim() !== ''
       default: return true
     }
   }
@@ -332,9 +337,43 @@ export default function BoysOnboarding() {
           <OnboardingStep
             step={currentStep}
             totalSteps={totalSteps}
-            title="Your energy style?"
+            title="Your Instagram username (optional)"
             onNext={() => setCurrentStep(9)}
             onBack={() => setCurrentStep(7)}
+            canGoNext={canGoNext()}
+            theme="purple"
+          >
+            <div className="space-y-4">
+              <Input
+                placeholder="@yourhandle (without @)"
+                value={data.instagram}
+                onChange={(e) => {
+                  const value = e.target.value.replace('@', '')
+                  updateData('instagram', value)
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    setCurrentStep(9)
+                  }
+                }}
+                className="text-center text-xl"
+              />
+              <p className="text-sm text-white/60 text-center">
+                This helps matches connect with you easily! Skip if you prefer not to share.
+              </p>
+            </div>
+          </OnboardingStep>
+        )
+
+      case 9:
+        return (
+          <OnboardingStep
+            step={currentStep}
+            totalSteps={totalSteps}
+            title="Your energy style?"
+            onNext={() => setCurrentStep(10)}
+            onBack={() => setCurrentStep(8)}
             canGoNext={canGoNext()}
             theme="purple"
           >
@@ -361,14 +400,14 @@ export default function BoysOnboarding() {
           </OnboardingStep>
         )
 
-      case 9:
+      case 10:
         return (
           <OnboardingStep
             step={currentStep}
             totalSteps={totalSteps}
             title="In group settings, you typically:"
-            onNext={() => setCurrentStep(10)}
-            onBack={() => setCurrentStep(8)}
+            onNext={() => setCurrentStep(11)}
+            onBack={() => setCurrentStep(9)}
             canGoNext={canGoNext()}
             theme="purple"
           >
@@ -394,14 +433,14 @@ export default function BoysOnboarding() {
           </OnboardingStep>
         )
 
-      case 10:
+      case 11:
         return (
           <OnboardingStep
             step={currentStep}
             totalSteps={totalSteps}
             title="Your ideal weekend includes: (select top 2)"
-            onNext={() => setCurrentStep(11)}
-            onBack={() => setCurrentStep(9)}
+            onNext={() => setCurrentStep(12)}
+            onBack={() => setCurrentStep(10)}
             canGoNext={canGoNext()}
             theme="purple"
           >
@@ -440,14 +479,14 @@ export default function BoysOnboarding() {
           </OnboardingStep>
         )
 
-      case 11:
+      case 12:
         return (
           <OnboardingStep
             step={currentStep}
             totalSteps={totalSteps}
             title="You communicate through: (primary style)"
-            onNext={() => setCurrentStep(12)}
-            onBack={() => setCurrentStep(10)}
+            onNext={() => setCurrentStep(13)}
+            onBack={() => setCurrentStep(11)}
             canGoNext={canGoNext()}
             theme="purple"
           >
@@ -474,14 +513,14 @@ export default function BoysOnboarding() {
           </OnboardingStep>
         )
 
-      case 12:
+      case 13:
         return (
           <OnboardingStep
             step={currentStep}
             totalSteps={totalSteps}
             title="Your friends would say your best trait is:"
-            onNext={() => setCurrentStep(13)}
-            onBack={() => setCurrentStep(11)}
+            onNext={() => setCurrentStep(14)}
+            onBack={() => setCurrentStep(12)}
             canGoNext={canGoNext()}
             theme="purple"
           >
@@ -511,14 +550,14 @@ export default function BoysOnboarding() {
           </OnboardingStep>
         )
 
-      case 13:
+      case 14:
         return (
           <OnboardingStep
             step={currentStep}
             totalSteps={totalSteps}
             title="In relationships, you value most: (rank top 3)"
-            onNext={() => setCurrentStep(14)}
-            onBack={() => setCurrentStep(12)}
+            onNext={() => setCurrentStep(15)}
+            onBack={() => setCurrentStep(13)}
             canGoNext={canGoNext()}
             theme="purple"
           >
@@ -561,14 +600,14 @@ export default function BoysOnboarding() {
           </OnboardingStep>
         )
 
-      case 14:
+      case 15:
         return (
           <OnboardingStep
             step={currentStep}
             totalSteps={totalSteps}
             title="Your love language is: (select primary)"
-            onNext={() => setCurrentStep(15)}
-            onBack={() => setCurrentStep(13)}
+            onNext={() => setCurrentStep(16)}
+            onBack={() => setCurrentStep(14)}
             canGoNext={canGoNext()}
             theme="purple"
           >
@@ -596,14 +635,14 @@ export default function BoysOnboarding() {
           </OnboardingStep>
         )
 
-      case 15:
+      case 16:
         return (
           <OnboardingStep
             step={currentStep}
             totalSteps={totalSteps}
             title='Complete this: "I feel most connected to someone when..."'
             onNext={handleSubmit}
-            onBack={() => setCurrentStep(14)}
+            onBack={() => setCurrentStep(15)}
             canGoNext={canGoNext()}
             isLast
             theme="purple"

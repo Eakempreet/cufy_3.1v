@@ -34,7 +34,12 @@ export async function GET(request: NextRequest) {
           age,
           university,
           profile_photo,
-          bio
+          bio,
+          energy_style,
+          communication_style,
+          love_language,
+          ideal_weekend,
+          year_of_study
         ),
         female_user:female_user_id (
           id,
@@ -42,7 +47,12 @@ export async function GET(request: NextRequest) {
           age,
           university,
           profile_photo,
-          bio
+          bio,
+          energy_style,
+          communication_style,
+          love_language,
+          ideal_weekend,
+          year_of_study
         )
       `)
       .or(`male_user_id.eq.${user.id},female_user_id.eq.${user.id}`)

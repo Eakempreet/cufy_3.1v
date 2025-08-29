@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { supabase } from '../../../../lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase'
 
 export async function GET(request: NextRequest) {
   try {
@@ -11,21 +11,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { data, error } = await supabase
+    // Try to get all fields, but handle gracefully if some columns don't exist
+    const { data, error } = await supabaseAdmin
       .from('users')
       .select(`
         id,
         email,
-        name,
+        full_name,
         age,
         gender,
-        education,
+        university,
         bio,
-        photo_url,
-        subscription_type,
-        subscription_status,
-        payment_confirmed,
-        payment_proof_url,
+        profile_photo,
         created_at
       `)
       .eq('email', session.user.email)
@@ -36,9 +33,32 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Database error' }, { status: 500 })
     }
 
+    // If user exists, try to get subscription info separately
+    let subscriptionData = null
+    if (data) {
+      try {
+        const { data: subData } = await supabaseAdmin
+          .from('users')
+          .select('subscription_type, payment_confirmed')
+          .eq('email', session.user.email)
+          .single()
+        
+        subscriptionData = subData
+      } catch (subError) {
+        console.log('Subscription columns might not exist:', subError)
+        // This is okay, subscription columns might not exist yet
+      }
+    }
+
+    const userData = data ? {
+      ...data,
+      subscription_type: subscriptionData?.subscription_type || null,
+      payment_confirmed: subscriptionData?.payment_confirmed || false
+    } : null
+
     return NextResponse.json({ 
       exists: !!data,
-      user: data || null
+      user: userData
     })
   } catch (error) {
     console.error('Check user error:', error)
@@ -54,7 +74,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 })
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('users')
       .select('id')
       .eq('email', email)

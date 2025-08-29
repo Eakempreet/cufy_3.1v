@@ -1,12 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '../../../../lib/supabase'
+import { getServerSession } from 'next-auth/next'
+import { authOptions } from '@/lib/auth'
+import { createClient } from '@supabase/supabase-js'
 
 export async function POST(request: NextRequest) {
   try {
+    const session = await getServerSession(authOptions)
+
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Create admin client with explicit keys to ensure it works
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+    
+    if (!supabaseServiceKey) {
+      console.error('SUPABASE_SERVICE_ROLE_KEY is missing')
+      return NextResponse.json({ error: 'Server configuration error' }, { status: 500 })
+    }
+
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    })
+
     const userData = await request.json()
 
-    if (!userData.email) {
-      return NextResponse.json({ error: 'Email is required' }, { status: 400 })
+    // Ensure the email matches the session email for security
+    if (userData.email !== session.user.email) {
+      return NextResponse.json({ error: 'Unauthorized: Email mismatch' }, { status: 401 })
     }
 
     // Validate phone number
@@ -27,7 +52,18 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const { data, error } = await supabase
+    // Check if user already exists
+    const { data: existingUser } = await supabaseAdmin
+      .from('users')
+      .select('id')
+      .eq('email', userData.email)
+      .single()
+
+    if (existingUser) {
+      return NextResponse.json({ error: 'User with this email already exists' }, { status: 409 })
+    }
+
+    const { data, error } = await supabaseAdmin
       .from('users')
       .insert([{
         ...userData,

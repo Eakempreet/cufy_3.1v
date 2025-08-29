@@ -12,13 +12,17 @@ const Card = forwardRef<
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.5 }}
-    ref={ref}
-    className={cn(
-      'glass rounded-xl border border-white/20 shadow-lg backdrop-blur-md p-6',
-      className
-    )}
-    {...props}
-  />
+    className="inline-block w-full"
+  >
+    <div
+      ref={ref}
+      className={cn(
+        'glass rounded-xl border border-white/20 shadow-lg backdrop-blur-md p-6',
+        className
+      )}
+      {...props}
+    />
+  </motion.div>
 ))
 Card.displayName = 'Card'
 

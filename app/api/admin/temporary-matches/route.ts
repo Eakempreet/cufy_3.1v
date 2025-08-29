@@ -1,16 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase'
 
 export async function GET(request: NextRequest) {
   try {
-    const { data: matches, error } = await supabase
+    const { data: matches, error } = await supabaseAdmin
       .from('temporary_matches')
       .select(`
-        id,
-        created_at,
-        expires_at,
-        male_disengaged,
-        female_disengaged,
+        *,
         male_user:male_user_id (
           id,
           full_name,
@@ -29,19 +25,22 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: false })
 
     if (error) {
-      console.error('Supabase error:', error)
-      return NextResponse.json(
-        { error: 'Failed to fetch temporary matches' },
-        { status: 500 }
-      )
+      console.error('Temporary matches error:', error)
+      return NextResponse.json({ matches: [] })
     }
 
-    return NextResponse.json({ matches })
+    // Format matches with proper structure
+    const formattedMatches = (matches || []).map(match => ({
+      ...match,
+      // Handle missing columns gracefully
+      male_disengaged: match.male_disengaged || false,
+      female_disengaged: match.female_disengaged || false,
+      expires_at: match.expires_at || null
+    }))
+
+    return NextResponse.json({ matches: formattedMatches })
   } catch (error) {
     console.error('Temporary matches fetch error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    return NextResponse.json({ matches: [] })
   }
 }

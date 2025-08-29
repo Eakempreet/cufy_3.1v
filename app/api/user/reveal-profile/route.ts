@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth'
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,23 +20,23 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get user ID from email
-    const { data: user } = await supabase
+    // Get current user
+    const { data: currentUser } = await supabaseAdmin
       .from('users')
-      .select('id')
+      .select('id, email, gender')
       .eq('email', session.user.email)
       .single()
 
-    if (!user) {
+    if (!currentUser) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    // Get the assignment details and verify ownership
-    const { data: assignment, error: fetchError } = await supabase
+    // Get the assignment details using user ID
+    const { data: assignment, error: fetchError } = await supabaseAdmin
       .from('profile_assignments')
-      .select('id, male_user_id, female_user_id')
+      .select('*')
       .eq('id', assignmentId)
-      .eq('male_user_id', user.id) // Ensure user owns this assignment
+      .eq('male_user_id', currentUser.id)
       .single()
 
     if (fetchError || !assignment) {
@@ -46,40 +46,104 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Since we don't have status column yet, create a temporary match directly
-    // This simulates revealing the profile
-    const expiresAt = new Date()
-    expiresAt.setHours(expiresAt.getHours() + 48) // 48 hours from now
+    // Check if already revealed - only trust male_revealed column
+    const alreadyRevealed = assignment.male_revealed === true
+    if (alreadyRevealed) {
+      // Get female profile for already revealed case
+      const { data: femaleUser } = await supabaseAdmin
+        .from('users')
+        .select('*')
+        .eq('id', assignment.female_user_id)
+        .single()
 
-    const { data: tempMatch, error: matchError } = await supabase
-      .from('temporary_matches')
-      .insert({
-        male_user_id: assignment.male_user_id,
-        female_user_id: assignment.female_user_id,
-        expires_at: expiresAt.toISOString()
+      return NextResponse.json({
+        success: true,
+        message: 'Profile already revealed',
+        assignment: {
+          id: assignment.id,
+          female_user: femaleUser,
+          status: 'revealed',
+          male_revealed: true,
+          revealed_at: assignment.revealed_at || new Date().toISOString()
+        }
       })
-      .select()
+    }
+
+    // Get female user details
+    const { data: femaleUser, error: femaleError } = await supabaseAdmin
+      .from('users')
+      .select('*')
+      .eq('id', assignment.female_user_id)
       .single()
 
-    if (matchError) {
-      // Check if match already exists
-      if (matchError.code === '23505') { // Unique constraint violation
-        return NextResponse.json({
-          success: true,
-          message: 'Profile already revealed'
-        })
-      }
-      console.error('Temporary match creation error:', matchError)
+    if (femaleError || !femaleUser) {
       return NextResponse.json(
-        { error: 'Failed to reveal profile' },
+        { error: 'Female profile not found' },
+        { status: 404 }
+      )
+    }
+
+    // Update the assignment to mark as revealed
+    const updateData = {
+      status: 'revealed' as const,
+      male_revealed: true,
+      revealed_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }
+
+    const { error: updateError } = await supabaseAdmin
+      .from('profile_assignments')
+      .update(updateData)
+      .eq('id', assignmentId)
+
+    if (updateError) {
+      console.error('Assignment update error:', updateError)
+      return NextResponse.json(
+        { error: 'Failed to update assignment status' },
         { status: 500 }
       )
     }
 
+    // Create a temporary match
+    try {
+      const { data: existingMatch } = await supabaseAdmin
+        .from('temporary_matches')
+        .select('*')
+        .eq('male_user_id', currentUser.id)
+        .eq('female_user_id', assignment.female_user_id)
+        .single()
+
+      if (!existingMatch) {
+        const matchData = {
+          male_user_id: currentUser.id,
+          female_user_id: assignment.female_user_id,
+          assignment_id: assignmentId,
+          status: 'active' as const,
+          male_disengaged: false,
+          female_disengaged: false,
+          created_at: new Date().toISOString(),
+          expires_at: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString() // 48 hours from now
+        }
+
+        await supabaseAdmin
+          .from('temporary_matches')
+          .insert(matchData)
+      }
+    } catch (createMatchError) {
+      console.error('Temporary match creation error:', createMatchError)
+      // Continue without temp match - at least user can see the profile
+    }
+
     return NextResponse.json({ 
       success: true,
-      message: 'Profile revealed successfully',
-      tempMatch 
+      message: 'Profile revealed successfully!',
+      assignment: {
+        id: assignment.id,
+        female_user: femaleUser,
+        status: 'revealed',
+        male_revealed: true,
+        revealed_at: new Date().toISOString()
+      }
     })
   } catch (error) {
     console.error('Reveal profile error:', error)

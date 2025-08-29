@@ -1,19 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import GoogleProvider from 'next-auth/providers/google'
-import { supabase } from '@/lib/supabase'
-
-const authOptions = {
-  providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
-  ],
-  session: {
-    strategy: 'jwt' as const,
-  },
-}
+import { authOptions } from '@/lib/auth'
+import { supabaseAdmin } from '@/lib/supabase'
 
 export async function GET() {
   try {
@@ -23,7 +11,7 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('users')
       .select('*')
       .eq('email', session.user.email)
@@ -54,7 +42,7 @@ export async function PUT(request: NextRequest) {
     // Remove fields that shouldn't be updated via this endpoint
     const { id, email, created_at, updated_at, is_admin, ...allowedUpdates } = updateData
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('users')
       .update({
         ...allowedUpdates,
@@ -84,7 +72,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 })
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('users')
       .select('*')
       .eq('email', email)

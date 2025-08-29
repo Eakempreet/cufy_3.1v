@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth'
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,56 +15,76 @@ export async function POST(request: NextRequest) {
 
     if (!matchId) {
       return NextResponse.json(
-        { error: 'Match ID is required' },
+        { error: 'Assignment ID is required' },
         { status: 400 }
       )
     }
 
-    // Get user ID from email
-    const { data: user } = await supabase
+    // Get current user
+    const { data: currentUser } = await supabaseAdmin
       .from('users')
-      .select('id')
+      .select('id, email, gender')
       .eq('email', session.user.email)
       .single()
 
-    if (!user) {
+    if (!currentUser) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    // Get the temporary match details and verify user is part of it
-    const { data: match, error: fetchError } = await supabase
-      .from('temporary_matches')
-      .select('id, male_user_id, female_user_id, created_at')
+    // Get the assignment details - boys can only disengage from assignments where they are the male user
+    const { data: assignment, error: fetchError } = await supabaseAdmin
+      .from('profile_assignments')
+      .select('*')
       .eq('id', matchId)
-      .or(`male_user_id.eq.${user.id},female_user_id.eq.${user.id}`)
+      .eq('male_user_id', currentUser.id) // Only allow male users to disengage
       .single()
 
-    if (fetchError || !match) {
+    if (fetchError || !assignment) {
       return NextResponse.json(
-        { error: 'Temporary match not found or unauthorized' },
+        { error: 'Assignment not found or unauthorized' },
         { status: 404 }
       )
     }
 
-    // Since we don't have disengaged columns yet, simply delete the temporary match
-    // This simulates disengagement
-    const { error: deleteError } = await supabase
-      .from('temporary_matches')
-      .delete()
+    // Check if assignment is revealed (can only disengage revealed assignments)
+    if (!assignment.male_revealed) {
+      return NextResponse.json(
+        { error: 'Cannot disengage from unrevealed assignment' },
+        { status: 400 }
+      )
+    }
+
+    // Check if already disengaged
+    if (assignment.status === 'disengaged') {
+      return NextResponse.json(
+        { error: 'Already disengaged from this assignment' },
+        { status: 400 }
+      )
+    }
+
+    // Update assignment to disengaged status
+    const { error: updateError } = await supabaseAdmin
+      .from('profile_assignments')
+      .update({
+        status: 'disengaged' as const,
+        disengaged_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
       .eq('id', matchId)
 
-    if (deleteError) {
-      console.error('Match delete error:', deleteError)
+    if (updateError) {
+      console.error('Assignment update error:', updateError)
       return NextResponse.json(
-        { error: 'Failed to disengage from match' },
+        { error: 'Failed to disengage from assignment' },
         { status: 500 }
       )
     }
 
     return NextResponse.json({ 
       success: true,
-      message: 'Successfully disengaged from match' 
+      message: 'Successfully disengaged from assignment. Profile has been blurred.'
     })
+
   } catch (error) {
     console.error('Disengage error:', error)
     return NextResponse.json(

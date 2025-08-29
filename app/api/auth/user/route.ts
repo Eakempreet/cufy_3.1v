@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase';
 
 const authOptions = {
   providers: [
@@ -23,8 +23,56 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
-    // Check if user exists in our database
-    const { data: user, error } = await supabase
+    // Special case: Admin email always has access
+    if (session.user.email === 'cufy.online@gmail.com') {
+      // Try to get admin user, create if doesn't exist
+      let { data: user, error } = await supabaseAdmin
+        .from('users')
+        .select('*')
+        .eq('email', session.user.email)
+        .single();
+
+      if (error && error.code === 'PGRST116') {
+        // Admin user doesn't exist, create it
+        const { data: newUser, error: createError } = await supabaseAdmin
+          .from('users')
+          .insert([{
+            email: session.user.email,
+            full_name: session.user.name || 'Admin User',
+            age: 25,
+            gender: 'male',
+            university: 'Admin University',
+            bio: 'System Administrator',
+            is_admin: true,
+            subscription_status: 'active',
+            payment_confirmed: true,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          }])
+          .select()
+          .single();
+
+        if (createError) {
+          console.error('Error creating admin user:', createError);
+          return NextResponse.json({ error: 'Failed to create admin user' }, { status: 500 });
+        }
+        user = newUser;
+      } else if (error) {
+        console.error('Database error:', error);
+        return NextResponse.json({ error: 'Database error' }, { status: 500 });
+      }
+
+      return NextResponse.json({ 
+        exists: true, 
+        user: {
+          ...user,
+          is_admin: true
+        }
+      });
+    }
+
+    // For non-admin users, check if user exists in our database
+    const { data: user, error } = await supabaseAdmin
       .from('users')
       .select('*')
       .eq('email', session.user.email)
@@ -45,14 +93,12 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // User exists, check if they're admin
-    const isAdmin = user.is_admin || session.user.email === 'cufy.online@gmail.com';
-
+    // User exists
     return NextResponse.json({ 
       exists: true, 
       user: {
         ...user,
-        is_admin: isAdmin
+        is_admin: user.is_admin || false
       }
     });
 
