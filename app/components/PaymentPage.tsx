@@ -23,15 +23,48 @@ export default function PaymentPage({ subscriptionType, onPaymentProofUploaded }
   const [submitted, setSubmitted] = useState(false)
   const [existingProof, setExistingProof] = useState<string | null>(null)
   const [userPaymentStatus, setUserPaymentStatus] = useState<any>(null)
+  const [upiLoading, setUpiLoading] = useState(false)
   const router = useRouter()
   const searchParams = useSearchParams()
   const plan = subscriptionType || searchParams.get('plan')
 
   console.log('PaymentPage component loaded, plan:', plan)
 
-  // UPI ID for payment (you can replace this with your actual UPI ID)
-  const upiId = "cufy@paytm" // Replace with your actual UPI ID
-  const upiLink = `upi://pay?pa=${upiId}&pn=Cufy Dating&cu=INR`
+  // UPI ID for payment
+  const upiId = "9211660455@fam"
+  
+  // Generate UPI payment link with amount
+  const generateUpiLink = (amount: number) => {
+    return `upi://pay?pa=${upiId}&pn=Cufy Dating&mc=0000&tid=${Date.now()}&tr=${Date.now()}&tn=Cufy Dating ${plan?.toUpperCase()} Plan Payment&am=${amount}&cu=INR`
+  }
+
+  // Detect if user is on mobile device
+  const isMobile = () => {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+  }
+
+  // Enhanced UPI payment handler
+  const handleUpiPayment = async (amount: number) => {
+    setUpiLoading(true)
+    
+    try {
+      const upiLink = generateUpiLink(amount)
+      
+      if (isMobile()) {
+        // On mobile, try to open UPI app directly
+        window.location.href = upiLink
+      } else {
+        // On desktop, open in new tab/window
+        window.open(upiLink, '_blank')
+      }
+      
+      // Reset loading after a delay
+      setTimeout(() => setUpiLoading(false), 2000)
+    } catch (error) {
+      console.error('Error opening UPI app:', error)
+      setUpiLoading(false)
+    }
+  }
 
   useEffect(() => {
     console.log('PaymentPage useEffect running, plan:', plan)
@@ -94,8 +127,13 @@ export default function PaymentPage({ subscriptionType, onPaymentProofUploaded }
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
   }
 
-  const copyUpiId = () => {
-    navigator.clipboard.writeText(upiId)
+  const copyUpiId = async () => {
+    try {
+      await navigator.clipboard.writeText(upiId)
+      // You could add a toast notification here
+    } catch (error) {
+      console.error('Failed to copy UPI ID:', error)
+    }
   }
 
   const handleProofUploaded = (url: string) => {
@@ -198,13 +236,13 @@ export default function PaymentPage({ subscriptionType, onPaymentProofUploaded }
               <CardTitle className="text-white text-xl">Scan QR Code to Pay</CardTitle>
             </CardHeader>
             <CardContent className="text-center space-y-6">
-              {/* QR Code Placeholder - You'll replace this with actual QR code */}
+              {/* QR Code with your provided image */}
               <div className="bg-white p-4 rounded-lg mx-auto w-64 h-64 flex items-center justify-center">
-                <div className="text-center">
-                  <QrCode className="w-32 h-32 mx-auto mb-4 text-gray-600" />
-                  <p className="text-gray-600 text-sm">QR Code</p>
-                  <p className="text-gray-800 font-semibold">₹{planDetails.price}</p>
-                </div>
+                <img 
+                  src="https://xdhtrwaghahigmbojotu.supabase.co/storage/v1/object/public/website%20stuff/Screenshot%20From%202025-08-29%2018-05-40.png"
+                  alt="QR Code for Payment"
+                  className="w-full h-full object-contain rounded-lg"
+                />
               </div>
 
               {/* Payment Instructions */}
@@ -233,15 +271,55 @@ export default function PaymentPage({ subscriptionType, onPaymentProofUploaded }
                   </div>
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Button 
-                    onClick={() => window.open(upiLink)}
-                    className="w-full bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700"
+                    onClick={() => handleUpiPayment(planDetails.price)}
+                    disabled={upiLoading}
+                    className="w-full bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 disabled:opacity-50"
                   >
-                    Pay with UPI App
+                    {upiLoading ? (
+                      <div className="flex items-center space-x-2">
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <span>Opening UPI App...</span>
+                      </div>
+                    ) : (
+                      `Pay ₹${planDetails.price} with UPI`
+                    )}
                   </Button>
+                  
+                  {/* Alternative UPI payment methods */}
+                  <div className="grid grid-cols-3 gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => window.open(`phonepe://pay?pa=${upiId}&pn=Cufy Dating&am=${planDetails.price}&cu=INR`, '_self')}
+                      className="text-xs bg-white/10 border-white/30 text-white hover:bg-white/20"
+                    >
+                      PhonePe
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => window.open(`paytmmp://pay?pa=${upiId}&pn=Cufy Dating&am=${planDetails.price}&cu=INR`, '_self')}
+                      className="text-xs bg-white/10 border-white/30 text-white hover:bg-white/20"
+                    >
+                      Paytm
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => window.open(`gpay://pay?pa=${upiId}&pn=Cufy Dating&am=${planDetails.price}&cu=INR`, '_self')}
+                      className="text-xs bg-white/10 border-white/30 text-white hover:bg-white/20"
+                    >
+                      GPay
+                    </Button>
+                  </div>
+                  
                   <p className="text-xs text-white/60">
-                    Click to open your UPI app directly
+                    {isMobile() 
+                      ? 'Click main button or specific app to pay with pre-filled details' 
+                      : 'Click to open UPI payment (works best on mobile devices)'
+                    }
                   </p>
                 </div>
               </div>

@@ -13,6 +13,8 @@ export default function GenderSelection() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [boysRegistrationEnabled, setBoysRegistrationEnabled] = useState(true)
+  const [boysRegistrationMessage, setBoysRegistrationMessage] = useState('')
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -21,8 +23,30 @@ export default function GenderSelection() {
     }
   }, [status, router])
 
+  // Check boys registration status
+  useEffect(() => {
+    const checkRegistrationStatus = async () => {
+      try {
+        const response = await fetch('/api/registration-status')
+        const data = await response.json()
+        
+        setBoysRegistrationEnabled(data.boys_registration_enabled)
+        setBoysRegistrationMessage(data.boys_registration_message || 'Boys registration will open soon! Girls can join now.')
+      } catch (error) {
+        console.error('Error checking registration status:', error)
+      }
+    }
+
+    checkRegistrationStatus()
+  }, [])
+
   const handleGenderSelection = async (gender: 'male' | 'female') => {
     if (!session?.user?.email) return
+    
+    // Check if boys registration is disabled and user selected male
+    if (gender === 'male' && !boysRegistrationEnabled) {
+      return // Do nothing if boys registration is disabled
+    }
     
     setLoading(true)
     
@@ -101,21 +125,44 @@ export default function GenderSelection() {
           </motion.div>
 
           <motion.div
-            whileHover={{ scale: 1.05 }}
+            whileHover={{ scale: boysRegistrationEnabled ? 1.05 : 1 }}
             transition={{ duration: 0.3 }}
           >
             <Card 
-              className="p-8 cursor-pointer hover:border-purple-500/50 transition-all"
-              onClick={() => handleGenderSelection('male')}
+              className={`p-8 transition-all ${
+                boysRegistrationEnabled 
+                  ? 'cursor-pointer hover:border-purple-500/50' 
+                  : 'cursor-not-allowed opacity-50 border-gray-600'
+              }`}
+              onClick={() => boysRegistrationEnabled && handleGenderSelection('male')}
             >
-              <Sparkles className="h-16 w-16 text-purple-500 mx-auto mb-4 fill-current" />
-              <h3 className="text-2xl font-bold text-white mb-4">Male</h3>
-              <Button 
-                className="w-full bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600"
-                disabled={loading}
-              >
-                Continue as Male
-              </Button>
+              <Sparkles className={`h-16 w-16 mx-auto mb-4 fill-current ${
+                boysRegistrationEnabled ? 'text-purple-500' : 'text-gray-500'
+              }`} />
+              <h3 className={`text-2xl font-bold mb-4 ${
+                boysRegistrationEnabled ? 'text-white' : 'text-gray-400'
+              }`}>Male</h3>
+              
+              {boysRegistrationEnabled ? (
+                <Button 
+                  className="w-full bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600"
+                  disabled={loading}
+                >
+                  Continue as Male
+                </Button>
+              ) : (
+                <div className="text-center">
+                  <Button 
+                    className="w-full bg-gray-600 text-gray-300 cursor-not-allowed"
+                    disabled={true}
+                  >
+                    Not Available
+                  </Button>
+                  <p className="text-sm text-amber-400 mt-3 font-medium">
+                    {boysRegistrationMessage}
+                  </p>
+                </div>
+              )}
             </Card>
           </motion.div>
         </div>

@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion'
 import { Button } from './ui/Button'
 import { Card, CardContent } from './ui/Card'
-import { Heart, Star, Sparkles, Crown } from 'lucide-react'
+import { Heart, Star, Sparkles, Crown, AlertTriangle } from 'lucide-react'
 import Link from 'next/link'
 import { useSession, signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
@@ -54,6 +54,33 @@ export default function LandingPage() {
 
   const [isCheckingProfile, setIsCheckingProfile] = useState(false)
   const [userState, setUserState] = useState<'loading' | 'no-auth' | 'signed-in-no-profile' | 'has-profile'>('loading')
+  
+  // System settings state
+  const [boysRegistrationEnabled, setBoysRegistrationEnabled] = useState(true)
+  const [boysRegistrationMessage, setBoysRegistrationMessage] = useState('Boys registration will open soon! Girls can join now.')
+  const [settingsLoaded, setSettingsLoaded] = useState(false)
+
+  // Fetch system settings on component mount
+  useEffect(() => {
+    const fetchSystemSettings = async () => {
+      try {
+        const response = await fetch('/api/registration-status')
+        const data = await response.json()
+        
+        if (data.success) {
+          setBoysRegistrationEnabled(data.boys_registration_enabled !== false)
+          setBoysRegistrationMessage(data.boys_registration_message || 'Boys registration will open soon! Girls can join now.')
+        }
+      } catch (error) {
+        console.error('Error fetching system settings:', error)
+        // Keep defaults on error
+      } finally {
+        setSettingsLoaded(true)
+      }
+    }
+
+    fetchSystemSettings()
+  }, [])
 
   // Handle automatic routing after login
   useEffect(() => {
@@ -117,6 +144,12 @@ export default function LandingPage() {
   }
 
   const handleJoinClick = async (gender: 'male' | 'female') => {
+    // Check if boys registration is disabled for male users
+    if (gender === 'male' && !boysRegistrationEnabled) {
+      alert(boysRegistrationMessage)
+      return
+    }
+
     if (status === 'authenticated' && session?.user?.email) {
       // User is already signed in, check if they exist in our database
       try {
@@ -203,11 +236,17 @@ export default function LandingPage() {
   // Handle post-login routing based on stored gender preference
   useEffect(() => {
     async function handlePostLogin() {
-      if (status === 'authenticated' && session?.user?.email) {
+      if (status === 'authenticated' && session?.user?.email && settingsLoaded) {
         const pendingGender = localStorage.getItem('pendingGender')
         
         if (pendingGender) {
           localStorage.removeItem('pendingGender')
+          
+          // Check if boys registration is disabled for male users
+          if (pendingGender === 'male' && !boysRegistrationEnabled) {
+            alert(boysRegistrationMessage)
+            return
+          }
           
           try {
             const response = await fetch('/api/auth/user')
@@ -233,7 +272,7 @@ export default function LandingPage() {
     }
 
     handlePostLogin()
-  }, [status, session, router])
+  }, [status, session, router, settingsLoaded, boysRegistrationEnabled, boysRegistrationMessage])
 
   // Don't show landing page to authenticated users with profiles
   if (status === 'loading') {
@@ -318,12 +357,29 @@ export default function LandingPage() {
                 <Button 
                   size="lg" 
                   variant="glass"
-                  className="w-full sm:w-auto hover:glow"
+                  className={`w-full sm:w-auto ${
+                    !boysRegistrationEnabled 
+                      ? 'opacity-50 cursor-not-allowed bg-gray-600' 
+                      : 'hover:glow'
+                  }`}
+                  disabled={!boysRegistrationEnabled}
                   onClick={() => handleJoinClick('male')}
                 >
                   <Sparkles className="mr-2 h-5 w-5" />
-                  Join as Boy
+                  {!boysRegistrationEnabled ? 'Boys Registration Closed' : 'Join as Boy'}
                 </Button>
+                
+                {!boysRegistrationEnabled && (
+                  <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-4 mt-4 max-w-md mx-auto">
+                    <div className="flex items-center space-x-2 text-orange-400 text-sm">
+                      <AlertTriangle className="h-4 w-4" />
+                      <span className="font-medium">Registration Update</span>
+                    </div>
+                    <p className="text-orange-200 text-sm mt-1">
+                      {boysRegistrationMessage}
+                    </p>
+                  </div>
+                )}
               </>
             )}
 

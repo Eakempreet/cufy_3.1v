@@ -30,7 +30,13 @@ import {
   X,
   Info,
   Star,
-  Target
+  Target,
+  UserX,
+  ToggleLeft,
+  ToggleRight,
+  MessageSquare,
+  Shield,
+  Edit3
 } from 'lucide-react'
 
 interface User {
@@ -107,10 +113,18 @@ export default function AdminPanel() {
   const [assignDialogOpen, setAssignDialogOpen] = useState(false)
   const [selectedPaymentProof, setSelectedPaymentProof] = useState<string | null>(null)
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false)
+  
+  // Boys entry control states
+  const [boysRegistrationEnabled, setBoysRegistrationEnabled] = useState(true)
+  const [boysRegistrationMessage, setBoysRegistrationMessage] = useState('')
+  const [systemSettingsDialogOpen, setSystemSettingsDialogOpen] = useState(false)
+  const [editingMessage, setEditingMessage] = useState(false)
+  const [tempMessage, setTempMessage] = useState('')
 
   useEffect(() => {
     checkAdminAccess()
     fetchData()
+    fetchSystemSettings()
   }, [])
 
   const checkAdminAccess = async () => {
@@ -166,6 +180,68 @@ export default function AdminPanel() {
       console.error('Error fetching data:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchSystemSettings = async () => {
+    try {
+      const response = await fetch('/api/admin/system-settings')
+      const data = await response.json()
+      
+      if (data.success && data.settings) {
+        setBoysRegistrationEnabled(data.settings.boys_registration_enabled || true)
+        setBoysRegistrationMessage(data.settings.boys_registration_message || 'Boys registration will open soon! Girls can join now.')
+      }
+    } catch (error) {
+      console.error('Error fetching system settings:', error)
+    }
+  }
+
+  const toggleBoysRegistration = async () => {
+    try {
+      const response = await fetch('/api/admin/system-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'toggle_boys_registration' }),
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        setBoysRegistrationEnabled(result.new_value)
+        alert(result.message)
+      } else {
+        alert('Failed to toggle boys registration')
+      }
+    } catch (error) {
+      console.error('Error toggling boys registration:', error)
+      alert('An error occurred while toggling boys registration')
+    }
+  }
+
+  const updateBoysRegistrationMessage = async () => {
+    try {
+      const response = await fetch('/api/admin/system-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          action: 'update_message',
+          setting_value: tempMessage
+        }),
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        setBoysRegistrationMessage(tempMessage)
+        setEditingMessage(false)
+        alert('Message updated successfully!')
+      } else {
+        alert('Failed to update message')
+      }
+    } catch (error) {
+      console.error('Error updating message:', error)
+      alert('An error occurred while updating the message')
     }
   }
 
@@ -486,6 +562,13 @@ export default function AdminPanel() {
               Users Management
             </TabsTrigger>
             <TabsTrigger 
+              value="system" 
+              className="data-[state=active]:bg-red-500 data-[state=active]:text-white rounded-lg px-6 py-3 transition-all"
+            >
+              <Shield className="h-4 w-4 mr-2" />
+              System Controls
+            </TabsTrigger>
+            <TabsTrigger 
               value="temporary" 
               className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white rounded-lg px-6 py-3 transition-all"
             >
@@ -734,6 +817,169 @@ export default function AdminPanel() {
                     </div>
                   </motion.div>
                 ))}
+              </div>
+            </motion.div>
+          </TabsContent>
+
+          {/* System Controls Tab - NEW */}
+          <TabsContent value="system">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-6"
+            >
+              <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-6">
+                <div className="flex items-center space-x-3 mb-6">
+                  <div className="p-3 bg-gradient-to-br from-red-500 to-pink-600 rounded-xl">
+                    <Shield className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">System Controls</h2>
+                    <p className="text-slate-400">Manage registration settings and round controls</p>
+                  </div>
+                </div>
+
+                {/* Boys Registration Control */}
+                <div className="space-y-6">
+                  <Card className="bg-white/5 border border-white/10">
+                    <CardHeader>
+                      <CardTitle className="text-white flex items-center space-x-3">
+                        <UserX className="h-5 w-5 text-red-400" />
+                        <span>Boys Registration Control</span>
+                        <Badge 
+                          variant="outline" 
+                          className={`${
+                            boysRegistrationEnabled 
+                              ? 'border-green-500 text-green-400 bg-green-500/10' 
+                              : 'border-red-500 text-red-400 bg-red-500/10'
+                          } rounded-full px-3 py-1 ml-auto`}
+                        >
+                          {boysRegistrationEnabled ? (
+                            <>
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              ENABLED
+                            </>
+                          ) : (
+                            <>
+                              <X className="h-3 w-3 mr-1" />
+                              DISABLED
+                            </>
+                          )}
+                        </Badge>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10">
+                        <div className="space-y-1">
+                          <div className="text-white font-medium">
+                            {boysRegistrationEnabled ? 'Boys Can Join' : 'Boys Registration Stopped'}
+                          </div>
+                          <div className="text-sm text-slate-400">
+                            {boysRegistrationEnabled 
+                              ? 'Boys can create new accounts and join the platform'
+                              : 'New boys registration is blocked, existing boys can still login'
+                            }
+                          </div>
+                        </div>
+                        
+                        <Button
+                          onClick={toggleBoysRegistration}
+                          className={`px-6 py-3 rounded-lg transition-all flex items-center space-x-2 ${
+                            boysRegistrationEnabled
+                              ? 'bg-red-600 hover:bg-red-700 text-white'
+                              : 'bg-green-600 hover:bg-green-700 text-white'
+                          }`}
+                        >
+                          {boysRegistrationEnabled ? (
+                            <>
+                              <ToggleRight className="h-5 w-5" />
+                              <span>Stop Boys Registration</span>
+                            </>
+                          ) : (
+                            <>
+                              <ToggleLeft className="h-5 w-5" />
+                              <span>Enable Boys Registration</span>
+                            </>
+                          )}
+                        </Button>
+                      </div>
+
+                      {/* Message Editor */}
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-white font-medium">Message for Disabled Registration</h4>
+                          <Button
+                            onClick={() => {
+                              setEditingMessage(!editingMessage)
+                              setTempMessage(boysRegistrationMessage)
+                            }}
+                            variant="outline"
+                            size="sm"
+                            className="border-white/20 text-white hover:bg-white/10"
+                          >
+                            <Edit3 className="h-4 w-4 mr-2" />
+                            {editingMessage ? 'Cancel' : 'Edit Message'}
+                          </Button>
+                        </div>
+                        
+                        {editingMessage ? (
+                          <div className="space-y-3">
+                            <Input
+                              value={tempMessage}
+                              onChange={(e) => setTempMessage(e.target.value)}
+                              placeholder="Enter message to show when boys registration is disabled"
+                              className="bg-white/5 border-white/20 text-white placeholder-slate-400"
+                            />
+                            <div className="flex space-x-2">
+                              <Button
+                                onClick={updateBoysRegistrationMessage}
+                                className="bg-green-600 hover:bg-green-700 text-white"
+                              >
+                                <CheckCircle className="h-4 w-4 mr-2" />
+                                Save Message
+                              </Button>
+                              <Button
+                                onClick={() => setEditingMessage(false)}
+                                variant="outline"
+                                className="border-white/20 text-white hover:bg-white/10"
+                              >
+                                Cancel
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="p-4 bg-white/5 rounded-lg border border-white/10">
+                            <div className="flex items-start space-x-3">
+                              <MessageSquare className="h-5 w-5 text-blue-400 mt-0.5" />
+                              <div>
+                                <div className="text-white font-medium mb-1">Current Message:</div>
+                                <div className="text-slate-300 text-sm">
+                                  "{boysRegistrationMessage}"
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Status Summary */}
+                      <div className="grid grid-cols-2 gap-4 mt-6">
+                        <div className="bg-white/5 rounded-lg border border-white/10 p-4">
+                          <div className="text-slate-400 text-sm">Boys Registration</div>
+                          <div className={`text-2xl font-bold ${
+                            boysRegistrationEnabled ? 'text-green-400' : 'text-red-400'
+                          }`}>
+                            {boysRegistrationEnabled ? 'OPEN' : 'CLOSED'}
+                          </div>
+                        </div>
+                        <div className="bg-white/5 rounded-lg border border-white/10 p-4">
+                          <div className="text-slate-400 text-sm">Girls Registration</div>
+                          <div className="text-2xl font-bold text-green-400">OPEN</div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
               </div>
             </motion.div>
           </TabsContent>
