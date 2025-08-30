@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth'
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase'
+
+// Force dynamic rendering - prevent static generation
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 export async function GET(request: NextRequest) {
   try {
@@ -12,7 +16,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get user ID from email
-    const { data: user } = await supabase
+    const { data: user } = await supabaseAdmin
       .from('users')
       .select('id')
       .eq('email', session.user.email)
@@ -22,7 +26,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    const { data: matches, error } = await supabase
+    const { data: matches, error } = await supabaseAdmin
       .from('temporary_matches')
       .select(`
         id,

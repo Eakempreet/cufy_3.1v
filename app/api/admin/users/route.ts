@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 
+// Force dynamic rendering - prevent static generation
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export async function GET(request: NextRequest) {
   try {
     console.log('Fetching users from admin API...')
@@ -67,10 +71,14 @@ export async function GET(request: NextRequest) {
       fetched: formattedUsers.length 
     })
 
-    // Add cache control headers to prevent caching
-    response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate')
+    // Aggressive cache control headers to prevent ANY caching
+    response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0, s-maxage=0')
     response.headers.set('Pragma', 'no-cache')
     response.headers.set('Expires', '0')
+    response.headers.set('Surrogate-Control', 'no-store')
+    response.headers.set('CDN-Cache-Control', 'no-store')
+    response.headers.set('Vercel-CDN-Cache-Control', 'no-store')
+    response.headers.set('X-Vercel-Cache', 'MISS')
     
     return response
   } catch (error) {
