@@ -176,7 +176,7 @@ export default function Footer() {
             </p>
           </div>
 
-          <div className="flex flex-wrap justify-center gap-6">
+          <div className="flex flex-wrap justify-center gap-3 sm:gap-6">
             {socialLinks.map((social, index) => (
               <motion.a
                 key={social.name}
@@ -197,19 +197,19 @@ export default function Footer() {
                 className="group"
               >
                 <div className={`
-                  flex items-center space-x-3 px-4 py-3 rounded-xl 
+                  flex items-center space-x-2 sm:space-x-3 px-3 py-2 sm:px-4 sm:py-3 rounded-xl 
                   bg-white/5 border border-white/10 
                   hover:border-white/20 transition-all duration-300
                   hover:bg-white/10
                 `}>
-                  <div className={`p-2 rounded-lg bg-gradient-to-r ${social.color}`}>
-                    <social.icon className="h-5 w-5 text-white" />
+                  <div className={`p-1.5 sm:p-2 rounded-lg bg-gradient-to-r ${social.color}`}>
+                    <social.icon className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                   </div>
                   <div className="text-left">
-                    <div className="text-white font-medium text-sm">
+                    <div className="text-white font-medium text-xs sm:text-sm">
                       {social.name}
                     </div>
-                    <div className="text-white/60 text-xs">
+                    <div className="text-white/60 text-xs hidden sm:block">
                       {social.username}
                     </div>
                   </div>

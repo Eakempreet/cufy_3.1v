@@ -62,39 +62,39 @@ const features = [
 const testimonials = [
   {
     name: 'Priya Sharma',
-    university: 'Delhi University',
+    university: 'Sharda University',
     image: '/testimonials/girl1.jpg',
-    text: "Cufy helped me find my perfect study partner who became my best friend! The verification process made me feel safe throughout.",
+    text: "Yaar cufy mst website hai! 💕 Finally mil gaya koi jo mere jaise hi studies me serious hai. Love it yr! 😍",
     rating: 5,
   },
   {
-    name: 'Arjun Patel',
-    university: 'IIT Bombay',
+    name: 'Arjun Singh',
+    university: 'IIT Delhi',
     image: '/testimonials/boy1.jpg',
-    text: "Finally, a dating app that understands college life! Met amazing people who share my passion for tech and innovation.",
+    text: "Bro this app is actually legit! 🔥 Met so many cool people from my college. Campus dating scene sorted hai completely! 💯",
     rating: 5,
   },
   {
     name: 'Sneha Reddy',
-    university: 'Bangalore University',
+    university: 'NSUT Delhi',
     image: '/testimonials/girl2.jpg',
-    text: "The quality of matches is incredible. Every conversation feels meaningful. Cufy truly connects like-minded students!",
+    text: "Omg guys use kro isko! 😭💕 Itne ache matches aate hai yahan pe. Sab verified students hai so tension nhi lena pdta safety ka! ✨",
     rating: 5,
   },
   {
     name: 'Rahul Kumar',
-    university: 'Pune University',
+    university: 'Amity University',
     image: '/testimonials/boy2.jpg',
-    text: "From campus coffee dates to study sessions, Cufy helped me find someone who truly gets student life. Highly recommend!",
+    text: "Dude cufy rocks! 🚀 From library study dates to canteen hangouts, sab kuch perfect hai. College romance ko next level pe le gaya hai! 🎯",
     rating: 5,
   },
 ]
 
 const stats = [
-  { number: '50,000+', label: 'Happy Students' },
-  { number: '500+', label: 'Colleges Connected' },
-  { number: '15,000+', label: 'Successful Matches' },
-  { number: '4.9/5', label: 'User Rating' },
+  { number: '1,600+', label: 'Happy Students' },
+  { number: '32+', label: 'Colleges Connected' },
+  { number: '850+', label: 'Successful Matches' },
+  { number: '3.7/5', label: 'User Rating' },
 ]
 
 const containerVariants = {
@@ -371,7 +371,7 @@ export default function LandingPage() {
       <Navbar />
 
       {/* Hero Section */}
-      <section className="relative pt-32 pb-20 px-6 min-h-screen flex items-center">
+      <section className="relative pt-24 sm:pt-32 pb-16 sm:pb-20 px-3 sm:px-6 min-h-screen flex items-center">
         <motion.div
           variants={containerVariants}
           initial="hidden"
@@ -420,17 +420,17 @@ export default function LandingPage() {
 
           <motion.h1
             variants={itemVariants}
-            className="text-5xl md:text-7xl font-bold font-poppins mb-6 leading-tight"
+            className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold font-poppins mb-4 sm:mb-6 leading-tight px-4 sm:px-0"
           >
-            <span className="text-gradient">College</span>{' '}
-            <span className="text-white">connections</span>{' '}
-            <br className="hidden md:block" />
-            <span className="text-gradient">worth making</span>
+            <span className="text-gradient">Where Matches</span>{' '}
+            <span className="text-white">Are Meant</span>{' '}
+            <br className="hidden sm:block" />
+            <span className="text-gradient">to Meet</span>
           </motion.h1>
 
           <motion.p
             variants={itemVariants}
-            className="text-xl md:text-2xl text-white/70 mb-8 max-w-4xl mx-auto leading-relaxed"
+            className="text-base sm:text-lg md:text-xl lg:text-2xl text-white/70 mb-6 sm:mb-8 max-w-4xl mx-auto leading-relaxed px-4 sm:px-6 lg:px-0"
           >
             Connect with genuine college students, build meaningful relationships, and discover your perfect study partner or soulmate. 
             <br className="hidden md:block" />
@@ -440,18 +440,18 @@ export default function LandingPage() {
           {/* Stats Section */}
           <motion.div
             variants={itemVariants}
-            className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12 max-w-4xl mx-auto"
+            className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-8 sm:mb-12 max-w-4xl mx-auto px-4 sm:px-6 lg:px-0"
           >
             {stats.map((stat, index) => (
               <motion.div
                 key={index}
                 whileHover={{ scale: 1.05 }}
-                className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-4 text-center"
+                className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-3 sm:p-4 text-center"
               >
-                <div className="text-2xl md:text-3xl font-bold text-gradient mb-1">
+                <div className="text-lg sm:text-2xl md:text-3xl font-bold text-gradient mb-1">
                   {stat.number}
                 </div>
-                <div className="text-white/60 text-sm">
+                <div className="text-white/60 text-xs sm:text-sm">
                   {stat.label}
                 </div>
               </motion.div>
@@ -460,69 +460,73 @@ export default function LandingPage() {
 
           <motion.div
             variants={itemVariants}
-            className="flex flex-col sm:flex-row gap-6 justify-center items-center"
+            className="flex flex-col items-center gap-4 sm:gap-6"
           >
             {/* Show different UI based on user state */}
             {userState === 'no-auth' && (
               <>
-                {/* Login Button */}
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Button 
-                    size="lg" 
-                    variant="glass"
-                    className="w-full sm:w-auto mb-4 sm:mb-0 hover:glow text-lg px-8 py-4"
-                    onClick={handleLoginClick}
-                  >
-                    <Users className="mr-2 h-5 w-5" />
-                    Login with Google
-                  </Button>
-                </motion.div>
-
-                <div className="text-white/50 text-sm font-medium">or join as</div>
-
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Button 
-                    size="lg" 
-                    className="w-full sm:w-auto bg-gradient-to-r from-pink-500 via-rose-500 to-pink-600 hover:from-pink-600 hover:via-rose-600 hover:to-pink-700 glow-pink text-lg px-8 py-4 shadow-2xl shadow-pink-500/25"
-                    onClick={() => handleJoinClick('female')}
-                  >
-                    <Heart className="mr-2 h-5 w-5" />
-                    College Girl
-                  </Button>
-                </motion.div>
-
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Button 
-                    size="lg" 
-                    variant="glass"
-                    className={`w-full sm:w-auto text-lg px-8 py-4 ${
-                      !boysRegistrationEnabled 
-                        ? 'opacity-50 cursor-not-allowed bg-gray-600' 
-                        : 'hover:glow shadow-2xl shadow-blue-500/25'
-                    }`}
-                    disabled={!boysRegistrationEnabled}
-                    onClick={() => handleJoinClick('male')}
-                  >
-                    <Sparkles className="mr-2 h-5 w-5" />
-                    {!boysRegistrationEnabled ? 'Boys Registration Closed' : 'College Boy'}
-                  </Button>
-                </motion.div>
-                
+                {/* Warning above buttons */}
                 {!boysRegistrationEnabled && (
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-orange-500/10 border border-orange-500/20 rounded-xl p-4 mt-6 max-w-md mx-auto backdrop-blur-xl"
+                    className="bg-orange-500/10 border border-orange-500/20 rounded-xl p-3 sm:p-4 max-w-sm sm:max-w-md mx-auto backdrop-blur-xl mb-2"
                   >
-                    <div className="flex items-center space-x-2 text-orange-400 text-sm">
-                      <AlertTriangle className="h-4 w-4" />
+                    <div className="flex items-center space-x-2 text-orange-400 text-xs sm:text-sm">
+                      <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                       <span className="font-medium">Registration Update</span>
                     </div>
-                    <p className="text-orange-200 text-sm mt-1">
+                    <p className="text-orange-200 text-xs sm:text-sm mt-1">
                       {boysRegistrationMessage}
                     </p>
                   </motion.div>
                 )}
+
+                {/* Login Button */}
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="w-full max-w-xs px-4 sm:px-0">
+                  <Button 
+                    size="lg" 
+                    variant="glass"
+                    className="w-full hover:glow text-sm sm:text-base lg:text-lg px-6 sm:px-8 py-3 sm:py-4"
+                    onClick={handleLoginClick}
+                  >
+                    <Users className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+                    Login with Google
+                  </Button>
+                </motion.div>
+
+                <div className="text-white/50 text-xs sm:text-sm font-medium px-4">or join as</div>
+
+                {/* Action Buttons Container */}
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full max-w-md justify-center items-stretch px-4 sm:px-0">
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex-1">
+                    <Button 
+                      size="lg" 
+                      className="w-full bg-gradient-to-r from-pink-500 via-rose-500 to-pink-600 hover:from-pink-600 hover:via-rose-600 hover:to-pink-700 glow-pink text-sm sm:text-base lg:text-lg px-4 sm:px-8 py-4 sm:py-4 shadow-2xl shadow-pink-500/25 min-h-[48px]"
+                      onClick={() => handleJoinClick('female')}
+                    >
+                      <Heart className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+                      College Girl
+                    </Button>
+                  </motion.div>
+
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex-1">
+                    <Button 
+                      size="lg" 
+                      variant="glass"
+                      className={`w-full text-sm sm:text-base lg:text-lg px-4 sm:px-8 py-4 sm:py-4 min-h-[48px] ${
+                        !boysRegistrationEnabled 
+                          ? 'opacity-50 cursor-not-allowed bg-gray-600' 
+                          : 'hover:glow shadow-2xl shadow-blue-500/25'
+                      }`}
+                      disabled={!boysRegistrationEnabled}
+                      onClick={() => handleJoinClick('male')}
+                    >
+                      <Sparkles className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+                      {!boysRegistrationEnabled ? 'Boys Registration Closed' : 'College Boy'}
+                    </Button>
+                  </motion.div>
+                </div>
               </>
             )}
 
@@ -660,13 +664,13 @@ export default function LandingPage() {
       </section>
 
       {/* Testimonials Section */}
-      <section className="py-20 px-6 relative">
+      <section className="py-12 sm:py-16 lg:py-20 px-3 sm:px-6 relative">
         <motion.div
           style={{ y: y2 }}
           className="absolute inset-0 opacity-5"
         >
-          <div className="absolute top-20 left-20 text-6xl">🎓</div>
-          <div className="absolute bottom-20 right-20 text-6xl">💕</div>
+          <div className="absolute top-10 sm:top-20 left-4 sm:left-20 text-4xl sm:text-6xl">🎓</div>
+          <div className="absolute bottom-10 sm:bottom-20 right-4 sm:right-20 text-4xl sm:text-6xl">💕</div>
         </motion.div>
 
         <motion.div
@@ -676,8 +680,8 @@ export default function LandingPage() {
           viewport={{ once: true }}
           className="container mx-auto relative z-10"
         >
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-6xl font-bold font-poppins mb-4">
+          <div className="text-center mb-12 sm:mb-16">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-bold font-poppins mb-4">
               <span className="text-gradient">Real Stories</span> from Real Students
             </h2>
             <p className="text-xl text-white/70 max-w-3xl mx-auto">
@@ -685,7 +689,55 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {/* Mobile: Vertical Scrolling, Desktop: Grid */}
+          <div className="block md:hidden">
+            {/* Mobile Vertical Scroll */}
+            <div className="flex flex-col gap-4 max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-purple-500 scrollbar-track-transparent pr-2">
+              {testimonials.map((testimonial, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  transition={{ 
+                    duration: 0.5,
+                    delay: index * 0.1,
+                  }}
+                  viewport={{ once: true }}
+                  className="relative group"
+                >
+                  <Card className="border-white/10 bg-white/5 backdrop-blur-xl hover:border-white/20 transition-all duration-300">
+                    <CardContent className="p-4">
+                      {/* Avatar */}
+                      <div className="flex items-center mb-3">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm">
+                          {testimonial.name.charAt(0)}
+                        </div>
+                        <div className="ml-3">
+                          <h4 className="text-white font-semibold text-sm">{testimonial.name}</h4>
+                          <p className="text-white/60 text-xs">{testimonial.university}</p>
+                        </div>
+                      </div>
+                      
+                      {/* Rating */}
+                      <div className="flex mb-2">
+                        {[...Array(testimonial.rating)].map((_, i) => (
+                          <Star key={i} className="h-3 w-3 text-yellow-400 fill-current" />
+                        ))}
+                      </div>
+                      
+                      {/* Testimonial */}
+                      <p className="text-white/80 text-xs leading-relaxed italic">
+                        "{testimonial.text}"
+                      </p>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+
+          {/* Desktop: Grid Layout */}
+          <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
             {testimonials.map((testimonial, index) => (
               <motion.div
                 key={index}
@@ -703,27 +755,27 @@ export default function LandingPage() {
                 className="relative group"
               >
                 <Card className="h-full border-white/10 bg-white/5 backdrop-blur-xl hover:border-white/20 transition-all duration-300 hover:glow">
-                  <CardContent className="p-6">
+                  <CardContent className="p-4 sm:p-6">
                     {/* Avatar */}
-                    <div className="flex items-center mb-4">
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 flex items-center justify-center text-white font-bold text-lg">
+                    <div className="flex items-center mb-3 sm:mb-4">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 flex items-center justify-center text-white font-bold text-base sm:text-lg">
                         {testimonial.name.charAt(0)}
                       </div>
                       <div className="ml-3">
-                        <h4 className="text-white font-semibold">{testimonial.name}</h4>
-                        <p className="text-white/60 text-sm">{testimonial.university}</p>
+                        <h4 className="text-white font-semibold text-sm sm:text-base">{testimonial.name}</h4>
+                        <p className="text-white/60 text-xs sm:text-sm">{testimonial.university}</p>
                       </div>
                     </div>
                     
                     {/* Rating */}
-                    <div className="flex mb-3">
+                    <div className="flex mb-2 sm:mb-3">
                       {[...Array(testimonial.rating)].map((_, i) => (
-                        <Star key={i} className="h-4 w-4 text-yellow-400 fill-current" />
+                        <Star key={i} className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-400 fill-current" />
                       ))}
                     </div>
                     
                     {/* Testimonial */}
-                    <p className="text-white/80 text-sm leading-relaxed italic">
+                    <p className="text-white/80 text-xs sm:text-sm leading-relaxed italic">
                       "{testimonial.text}"
                     </p>
                   </CardContent>
