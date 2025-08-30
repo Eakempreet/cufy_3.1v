@@ -6,10 +6,12 @@ export async function DELETE(request: NextRequest) {
     const { userId } = await request.json()
 
     if (!userId) {
-      return NextResponse.json({ 
+      const response = NextResponse.json({ 
         success: false, 
         error: 'User ID is required' 
       }, { status: 400 })
+      response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate')
+      return response
     }
 
     // Delete user from database
@@ -20,21 +22,32 @@ export async function DELETE(request: NextRequest) {
 
     if (error) {
       console.error('Delete user error:', error)
-      return NextResponse.json({ 
+      const response = NextResponse.json({ 
         success: false, 
         error: 'Failed to delete user' 
       }, { status: 500 })
+      response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate')
+      return response
     }
 
-    return NextResponse.json({ 
+    const response = NextResponse.json({ 
       success: true, 
       message: 'User deleted successfully' 
     })
+    
+    // Add cache control headers
+    response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate')
+    response.headers.set('Pragma', 'no-cache')
+    response.headers.set('Expires', '0')
+    
+    return response
   } catch (error) {
     console.error('Delete user error:', error)
-    return NextResponse.json({ 
+    const response = NextResponse.json({ 
       success: false, 
       error: 'Internal server error' 
     }, { status: 500 })
+    response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate')
+    return response
   }
 }

@@ -25,7 +25,9 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error('Users fetch error:', error)
-      return NextResponse.json({ users: [], total: 0, error: error.message })
+      const response = NextResponse.json({ users: [], total: 0, error: error.message })
+      response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate')
+      return response
     }
 
     console.log(`Fetched ${(users || []).length} users from database`)
@@ -59,17 +61,31 @@ export async function GET(request: NextRequest) {
       instagram: user.instagram || null
     }))
 
-    return NextResponse.json({ 
+    const response = NextResponse.json({ 
       users: formattedUsers, 
       total: totalCount || formattedUsers.length,
       fetched: formattedUsers.length 
     })
+
+    // Add cache control headers to prevent caching
+    response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate')
+    response.headers.set('Pragma', 'no-cache')
+    response.headers.set('Expires', '0')
+    
+    return response
   } catch (error) {
     console.error('Users fetch error:', error)
-    return NextResponse.json({ 
+    const response = NextResponse.json({ 
       users: [], 
       total: 0, 
       error: error instanceof Error ? error.message : 'Unknown error' 
     })
+    
+    // Add cache control headers to prevent caching
+    response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate')
+    response.headers.set('Pragma', 'no-cache')
+    response.headers.set('Expires', '0')
+    
+    return response
   }
 }

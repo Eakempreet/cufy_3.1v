@@ -165,7 +165,14 @@ export default function AdminPanel() {
   const fetchData = async () => {
     setLoading(true)
     try {
-      const response = await fetch('/api/admin/users')
+      // Add cache busting parameter to prevent caching issues on Vercel
+      const timestamp = new Date().getTime()
+      const response = await fetch(`/api/admin/users?_=${timestamp}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache'
+        }
+      })
       const data = await response.json()
       
       console.log('Fetched users data:', data)
@@ -217,6 +224,12 @@ export default function AdminPanel() {
 
   const handleDeleteUser = async (user: User) => {
     try {
+      // Optimistic update - remove user from UI immediately
+      const originalUsers = [...users]
+      setUsers(users.filter(u => u.id !== user.id))
+      setTotalUsers(prev => prev - 1)
+      setFetchedUsers(prev => prev - 1)
+
       const response = await fetch('/api/admin/users/delete', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
@@ -226,13 +239,20 @@ export default function AdminPanel() {
       const result = await response.json()
 
       if (result.success) {
+        // Fetch fresh data to ensure consistency
         await fetchData()
         alert('User deleted successfully!')
       } else {
+        // Revert optimistic update on error
+        setUsers(originalUsers)
+        setTotalUsers(prev => prev + 1)
+        setFetchedUsers(prev => prev + 1)
         alert(result.error || 'Failed to delete user')
       }
     } catch (error) {
       console.error('Error deleting user:', error)
+      // Fetch fresh data on error to ensure consistency
+      await fetchData()
       alert('An error occurred while deleting the user')
     }
   }
@@ -512,6 +532,14 @@ export default function AdminPanel() {
                       }`}
                     >
                       Female ({users.filter(u => u.gender === 'female').length})
+                    </Button>
+                    <Button
+                      onClick={fetchData}
+                      disabled={loading}
+                      className={`px-4 py-3 rounded-lg transition-all bg-green-600 hover:bg-green-700 text-white border-0 ${loading ? 'opacity-50' : ''}`}
+                      title="Refresh user data"
+                    >
+                      <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
                     </Button>
                   </div>
                 </div>
