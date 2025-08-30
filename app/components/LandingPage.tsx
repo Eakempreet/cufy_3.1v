@@ -1,9 +1,9 @@
 'use client'
 
-import { motion } from 'framer-motion'
+import { motion, useScroll, useTransform } from 'framer-motion'
 import { Button } from './ui/Button'
 import { Card, CardContent } from './ui/Card'
-import { Heart, Star, Sparkles, Crown, AlertTriangle } from 'lucide-react'
+import { Heart, Star, Sparkles, Crown, AlertTriangle, Users, MessageCircle, Shield, Zap, Coffee, BookOpen, Camera, Music } from 'lucide-react'
 import Link from 'next/link'
 import { useSession, signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
@@ -32,6 +32,71 @@ const pricingCards = [
   },
 ]
 
+const features = [
+  {
+    icon: Users,
+    title: 'Smart Matching',
+    description: 'Our AI algorithm finds your perfect college match based on interests, goals, and compatibility.',
+    gradient: 'from-blue-500 to-purple-600',
+  },
+  {
+    icon: Shield,
+    title: 'Safe & Secure',
+    description: 'Verified college profiles with secure messaging. Your privacy and safety are our top priority.',
+    gradient: 'from-green-500 to-teal-600',
+  },
+  {
+    icon: MessageCircle,
+    title: 'Meaningful Connections',
+    description: 'Skip the superficial. Connect with people who share your academic interests and life goals.',
+    gradient: 'from-pink-500 to-rose-600',
+  },
+  {
+    icon: Zap,
+    title: 'Real-time Chat',
+    description: 'Instant messaging with your matches. Share your thoughts, plans, and build genuine relationships.',
+    gradient: 'from-yellow-500 to-orange-600',
+  },
+]
+
+const testimonials = [
+  {
+    name: 'Priya Sharma',
+    university: 'Delhi University',
+    image: '/testimonials/girl1.jpg',
+    text: "Cufy helped me find my perfect study partner who became my best friend! The verification process made me feel safe throughout.",
+    rating: 5,
+  },
+  {
+    name: 'Arjun Patel',
+    university: 'IIT Bombay',
+    image: '/testimonials/boy1.jpg',
+    text: "Finally, a dating app that understands college life! Met amazing people who share my passion for tech and innovation.",
+    rating: 5,
+  },
+  {
+    name: 'Sneha Reddy',
+    university: 'Bangalore University',
+    image: '/testimonials/girl2.jpg',
+    text: "The quality of matches is incredible. Every conversation feels meaningful. Cufy truly connects like-minded students!",
+    rating: 5,
+  },
+  {
+    name: 'Rahul Kumar',
+    university: 'Pune University',
+    image: '/testimonials/boy2.jpg',
+    text: "From campus coffee dates to study sessions, Cufy helped me find someone who truly gets student life. Highly recommend!",
+    rating: 5,
+  },
+]
+
+const stats = [
+  { number: '50,000+', label: 'Happy Students' },
+  { number: '500+', label: 'Colleges Connected' },
+  { number: '15,000+', label: 'Successful Matches' },
+  { number: '4.9/5', label: 'User Rating' },
+]
+
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -51,6 +116,9 @@ const itemVariants = {
 export default function LandingPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const { scrollY } = useScroll()
+  const y1 = useTransform(scrollY, [0, 300], [0, 100])
+  const y2 = useTransform(scrollY, [0, 300], [0, -100])
 
   const [isCheckingProfile, setIsCheckingProfile] = useState(false)
   const [userState, setUserState] = useState<'loading' | 'no-auth' | 'signed-in-no-profile' | 'has-profile'>('loading')
@@ -298,33 +366,97 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-dark relative">
+    <div className="min-h-screen bg-dark relative overflow-hidden">
       <FloatingShapes />
       <Navbar />
 
       {/* Hero Section */}
-      <section className="relative pt-32 pb-20 px-6">
+      <section className="relative pt-32 pb-20 px-6 min-h-screen flex items-center">
         <motion.div
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="container mx-auto text-center"
+          className="container mx-auto text-center relative z-10"
         >
+          {/* Floating Elements */}
+          <motion.div
+            initial={{ y: 0 }}
+            animate={{ 
+              y: [-10, 10, -10],
+              transition: {
+                duration: 4,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }
+            }}
+            className="absolute -top-10 -left-10 text-6xl opacity-20"
+          >
+            💕
+          </motion.div>
+          <motion.div
+            initial={{ y: 0 }}
+            animate={{ 
+              y: [-10, 10, -10],
+              transition: {
+                duration: 4,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: 1
+              }
+            }}
+            className="absolute -top-5 -right-10 text-4xl opacity-20"
+          >
+            ✨
+          </motion.div>
+
+          <motion.div
+            variants={itemVariants}
+            className="mb-6"
+          >
+            <span className="inline-block px-6 py-2 rounded-full bg-gradient-to-r from-pink-500/20 to-purple-500/20 border border-pink-500/30 text-pink-300 font-medium text-sm mb-6">
+              🎓 The #1 College Dating Platform in India
+            </span>
+          </motion.div>
+
           <motion.h1
             variants={itemVariants}
             className="text-5xl md:text-7xl font-bold font-poppins mb-6 leading-tight"
           >
-            <span className="text-gradient">matches</span>{' '}
-            <span className="text-white">are meant to</span>{' '}
-            <span className="text-gradient">meet.</span>
+            <span className="text-gradient">College</span>{' '}
+            <span className="text-white">connections</span>{' '}
+            <br className="hidden md:block" />
+            <span className="text-gradient">worth making</span>
           </motion.h1>
 
           <motion.p
             variants={itemVariants}
-            className="text-xl md:text-2xl text-white/70 mb-12 max-w-3xl mx-auto leading-relaxed"
+            className="text-xl md:text-2xl text-white/70 mb-8 max-w-4xl mx-auto leading-relaxed"
           >
-            find genuine people, meaningful connections, and a chance to meet your perfect match.
+            Connect with genuine college students, build meaningful relationships, and discover your perfect study partner or soulmate. 
+            <br className="hidden md:block" />
+            <span className="text-gradient font-semibold">Where campus romance meets real connections.</span>
           </motion.p>
+
+          {/* Stats Section */}
+          <motion.div
+            variants={itemVariants}
+            className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12 max-w-4xl mx-auto"
+          >
+            {stats.map((stat, index) => (
+              <motion.div
+                key={index}
+                whileHover={{ scale: 1.05 }}
+                className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-4 text-center"
+              >
+                <div className="text-2xl md:text-3xl font-bold text-gradient mb-1">
+                  {stat.number}
+                </div>
+                <div className="text-white/60 text-sm">
+                  {stat.label}
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
 
           <motion.div
             variants={itemVariants}
@@ -334,43 +466,54 @@ export default function LandingPage() {
             {userState === 'no-auth' && (
               <>
                 {/* Login Button */}
-                <Button 
-                  size="lg" 
-                  variant="glass"
-                  className="w-full sm:w-auto mb-4 sm:mb-0 hover:glow"
-                  onClick={handleLoginClick}
-                >
-                  Login with Google
-                </Button>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button 
+                    size="lg" 
+                    variant="glass"
+                    className="w-full sm:w-auto mb-4 sm:mb-0 hover:glow text-lg px-8 py-4"
+                    onClick={handleLoginClick}
+                  >
+                    <Users className="mr-2 h-5 w-5" />
+                    Login with Google
+                  </Button>
+                </motion.div>
 
-                <div className="text-white/50 text-sm">or</div>
+                <div className="text-white/50 text-sm font-medium">or join as</div>
 
-                <Button 
-                  size="lg" 
-                  className="w-full sm:w-auto bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 glow-pink"
-                  onClick={() => handleJoinClick('female')}
-                >
-                  <Heart className="mr-2 h-5 w-5" />
-                  Join as Girl
-                </Button>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button 
+                    size="lg" 
+                    className="w-full sm:w-auto bg-gradient-to-r from-pink-500 via-rose-500 to-pink-600 hover:from-pink-600 hover:via-rose-600 hover:to-pink-700 glow-pink text-lg px-8 py-4 shadow-2xl shadow-pink-500/25"
+                    onClick={() => handleJoinClick('female')}
+                  >
+                    <Heart className="mr-2 h-5 w-5" />
+                    College Girl
+                  </Button>
+                </motion.div>
 
-                <Button 
-                  size="lg" 
-                  variant="glass"
-                  className={`w-full sm:w-auto ${
-                    !boysRegistrationEnabled 
-                      ? 'opacity-50 cursor-not-allowed bg-gray-600' 
-                      : 'hover:glow'
-                  }`}
-                  disabled={!boysRegistrationEnabled}
-                  onClick={() => handleJoinClick('male')}
-                >
-                  <Sparkles className="mr-2 h-5 w-5" />
-                  {!boysRegistrationEnabled ? 'Boys Registration Closed' : 'Join as Boy'}
-                </Button>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button 
+                    size="lg" 
+                    variant="glass"
+                    className={`w-full sm:w-auto text-lg px-8 py-4 ${
+                      !boysRegistrationEnabled 
+                        ? 'opacity-50 cursor-not-allowed bg-gray-600' 
+                        : 'hover:glow shadow-2xl shadow-blue-500/25'
+                    }`}
+                    disabled={!boysRegistrationEnabled}
+                    onClick={() => handleJoinClick('male')}
+                  >
+                    <Sparkles className="mr-2 h-5 w-5" />
+                    {!boysRegistrationEnabled ? 'Boys Registration Closed' : 'College Boy'}
+                  </Button>
+                </motion.div>
                 
                 {!boysRegistrationEnabled && (
-                  <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-4 mt-4 max-w-md mx-auto">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-orange-500/10 border border-orange-500/20 rounded-xl p-4 mt-6 max-w-md mx-auto backdrop-blur-xl"
+                  >
                     <div className="flex items-center space-x-2 text-orange-400 text-sm">
                       <AlertTriangle className="h-4 w-4" />
                       <span className="font-medium">Registration Update</span>
@@ -378,7 +521,7 @@ export default function LandingPage() {
                     <p className="text-orange-200 text-sm mt-1">
                       {boysRegistrationMessage}
                     </p>
-                  </div>
+                  </motion.div>
                 )}
               </>
             )}
@@ -386,18 +529,20 @@ export default function LandingPage() {
             {userState === 'signed-in-no-profile' && (
               <div className="flex flex-col items-center gap-6">
                 <div className="text-center mb-4">
-                  <p className="text-lg text-white/80 mb-2">Welcome back, {session?.user?.name}!</p>
+                  <p className="text-lg text-white/80 mb-2">Welcome back, {session?.user?.name}! 👋</p>
                   <p className="text-white/60">Complete your profile to start meeting amazing people</p>
                 </div>
                 
-                <Button 
-                  size="lg" 
-                  className="w-full sm:w-auto bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 glow-pink text-lg px-8 py-4"
-                  onClick={handleCompleteProfile}
-                >
-                  <Heart className="mr-2 h-5 w-5" />
-                  Complete Your Profile
-                </Button>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button 
+                    size="lg" 
+                    className="w-full sm:w-auto bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 glow-pink text-lg px-8 py-4"
+                    onClick={handleCompleteProfile}
+                  >
+                    <Heart className="mr-2 h-5 w-5" />
+                    Complete Your Profile
+                  </Button>
+                </motion.div>
 
                 <Button 
                   size="lg" 
@@ -419,29 +564,63 @@ export default function LandingPage() {
               </div>
             )}
           </motion.div>
+
+          {/* Trust Indicators */}
+          <motion.div
+            variants={itemVariants}
+            className="mt-12 flex flex-wrap justify-center items-center gap-8 text-white/40 text-sm"
+          >
+            <div className="flex items-center gap-2">
+              <Shield className="h-4 w-4" />
+              <span>100% Verified Profiles</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Heart className="h-4 w-4" />
+              <span>15,000+ Matches Made</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Star className="h-4 w-4" />
+              <span>4.9/5 Rating</span>
+            </div>
+          </motion.div>
         </motion.div>
       </section>
 
-      {/* Pricing Section */}
-      <section className="py-20 px-6">
+      {/* Features Section */}
+      <section className="py-20 px-6 relative">
+        <motion.div
+          style={{ y: y1 }}
+          className="absolute top-0 left-0 w-full h-full opacity-10"
+        >
+          <div className="absolute top-10 left-10 text-8xl">💖</div>
+          <div className="absolute bottom-10 right-10 text-8xl">✨</div>
+        </motion.div>
+
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
           viewport={{ once: true }}
-          className="container mx-auto"
+          className="container mx-auto relative z-10"
         >
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold font-poppins mb-4">
-              <span className="text-gradient">Premium</span> for Boys
-            </h2>
-            <p className="text-xl text-white/70 max-w-2xl mx-auto">
-              Choose your perfect plan to start meaningful connections
-            </p>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6 }}
+              viewport={{ once: true }}
+            >
+              <h2 className="text-4xl md:text-6xl font-bold font-poppins mb-4">
+                Why <span className="text-gradient">College Students</span> Love Cufy
+              </h2>
+              <p className="text-xl text-white/70 max-w-3xl mx-auto">
+                Designed specifically for college life, relationships, and meaningful connections that last beyond graduation.
+              </p>
+            </motion.div>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            {pricingCards.map((card, index) => (
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {features.map((feature, index) => (
               <motion.div
                 key={index}
                 initial={{ opacity: 0, y: 40 }}
@@ -452,54 +631,314 @@ export default function LandingPage() {
                 }}
                 transition={{ 
                   duration: 0.6,
+                  delay: index * 0.1,
+                }}
+                viewport={{ once: true }}
+                className="relative group"
+              >
+                <Card className="h-full border-white/10 bg-white/5 backdrop-blur-xl hover:border-white/20 transition-all duration-300">
+                  <CardContent className="p-6 text-center h-full flex flex-col">
+                    <div className="flex items-center justify-center mb-4">
+                      <div className={`p-3 rounded-full bg-gradient-to-r ${feature.gradient} shadow-lg`}>
+                        <feature.icon className="h-6 w-6 text-white" />
+                      </div>
+                    </div>
+                    
+                    <h3 className="text-xl font-bold text-white mb-3">
+                      {feature.title}
+                    </h3>
+                    
+                    <p className="text-white/70 flex-grow">
+                      {feature.description}
+                    </p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section className="py-20 px-6 relative">
+        <motion.div
+          style={{ y: y2 }}
+          className="absolute inset-0 opacity-5"
+        >
+          <div className="absolute top-20 left-20 text-6xl">🎓</div>
+          <div className="absolute bottom-20 right-20 text-6xl">💕</div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          viewport={{ once: true }}
+          className="container mx-auto relative z-10"
+        >
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-6xl font-bold font-poppins mb-4">
+              <span className="text-gradient">Real Stories</span> from Real Students
+            </h2>
+            <p className="text-xl text-white/70 max-w-3xl mx-auto">
+              See how Cufy has transformed college relationships across India's top universities.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {testimonials.map((testimonial, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 40 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                whileHover={{ 
+                  scale: 1.02,
+                  y: -5,
+                }}
+                transition={{ 
+                  duration: 0.6,
+                  delay: index * 0.1,
+                }}
+                viewport={{ once: true }}
+                className="relative group"
+              >
+                <Card className="h-full border-white/10 bg-white/5 backdrop-blur-xl hover:border-white/20 transition-all duration-300 hover:glow">
+                  <CardContent className="p-6">
+                    {/* Avatar */}
+                    <div className="flex items-center mb-4">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 flex items-center justify-center text-white font-bold text-lg">
+                        {testimonial.name.charAt(0)}
+                      </div>
+                      <div className="ml-3">
+                        <h4 className="text-white font-semibold">{testimonial.name}</h4>
+                        <p className="text-white/60 text-sm">{testimonial.university}</p>
+                      </div>
+                    </div>
+                    
+                    {/* Rating */}
+                    <div className="flex mb-3">
+                      {[...Array(testimonial.rating)].map((_, i) => (
+                        <Star key={i} className="h-4 w-4 text-yellow-400 fill-current" />
+                      ))}
+                    </div>
+                    
+                    {/* Testimonial */}
+                    <p className="text-white/80 text-sm leading-relaxed italic">
+                      "{testimonial.text}"
+                    </p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+      </section>
+
+      {/* Pricing Section */}
+      <section className="py-20 px-6 relative">
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          viewport={{ once: true }}
+          className="container mx-auto"
+        >
+          <div className="text-center mb-16">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6 }}
+              viewport={{ once: true }}
+            >
+              <h2 className="text-4xl md:text-6xl font-bold font-poppins mb-4">
+                <span className="text-gradient">Premium Plans</span> for College Boys
+              </h2>
+              <p className="text-xl text-white/70 max-w-3xl mx-auto">
+                Choose the perfect plan to unlock meaningful connections and find your college soulmate.
+              </p>
+            </motion.div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            {pricingCards.map((card, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 40 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                whileHover={{ 
+                  scale: 1.03,
+                  rotateY: 2,
+                }}
+                transition={{ 
+                  duration: 0.6,
                   delay: index * 0.2,
                 }}
                 viewport={{ once: true }}
                 className="relative group"
               >
-                <Card className={`relative overflow-hidden ${card.popular ? 'ring-2 ring-primary glow' : ''}`}>
+                <Card className={`relative overflow-hidden border-white/10 bg-white/5 backdrop-blur-xl ${
+                  card.popular ? 'ring-2 ring-primary glow shadow-2xl shadow-primary/25' : ''
+                }`}>
                   {card.popular && (
-                    <div className="absolute top-0 right-0 bg-gradient-to-r from-primary to-secondary px-4 py-1 text-xs font-semibold rounded-bl-lg">
-                      POPULAR
-                    </div>
+                    <motion.div
+                      initial={{ opacity: 0, x: 100 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.5 }}
+                      className="absolute top-0 right-0 bg-gradient-to-r from-primary to-secondary px-6 py-2 text-sm font-bold rounded-bl-xl"
+                    >
+                      ⭐ MOST POPULAR
+                    </motion.div>
                   )}
 
                   <CardContent className="p-8">
                     <div className="flex items-center justify-center mb-6">
-                      <card.icon className={`h-12 w-12 bg-gradient-to-r ${card.gradient} text-white p-2 rounded-full`} />
+                      <div className={`p-4 rounded-2xl bg-gradient-to-r ${card.gradient} shadow-lg`}>
+                        <card.icon className="h-8 w-8 text-white" />
+                      </div>
                     </div>
 
                     <div className="text-center mb-6">
                       <h3 className="text-2xl font-bold text-white mb-2">
                         {card.title}
                       </h3>
-                      <div className={`text-4xl font-bold mb-2 bg-gradient-to-r ${card.gradient} text-transparent bg-clip-text`}>
+                      <div className={`text-5xl font-bold mb-3 bg-gradient-to-r ${card.gradient} text-transparent bg-clip-text`}>
                         {card.price}
                       </div>
-                      <p className="text-white/70">
+                      <p className="text-white/70 text-lg">
                         {card.description}
                       </p>
                     </div>
 
-                    <ul className="space-y-3 mb-8">
+                    <ul className="space-y-4 mb-8">
                       {card.features.map((feature, featureIndex) => (
-                        <li key={featureIndex} className="flex items-center text-white/80">
-                          <Star className="h-4 w-4 text-primary mr-3 fill-current" />
+                        <motion.li 
+                          key={featureIndex} 
+                          initial={{ opacity: 0, x: -20 }}
+                          whileInView={{ opacity: 1, x: 0 }}
+                          transition={{ delay: featureIndex * 0.1 }}
+                          className="flex items-center text-white/80"
+                        >
+                          <div className={`p-1 rounded-full bg-gradient-to-r ${card.gradient} mr-3`}>
+                            <Star className="h-3 w-3 text-white fill-current" />
+                          </div>
                           {feature}
-                        </li>
+                        </motion.li>
                       ))}
                     </ul>
 
-                    <Button 
-                      className={`w-full bg-gradient-to-r ${card.gradient} hover:scale-105 transition-transform`}
-                      size="lg"
-                    >
-                      Get Started
-                    </Button>
+                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                      <Button 
+                        className={`w-full bg-gradient-to-r ${card.gradient} hover:shadow-lg transition-all duration-300 text-lg py-3 ${
+                          card.popular ? 'shadow-lg shadow-primary/30' : ''
+                        }`}
+                        size="lg"
+                      >
+                        {card.popular ? '🚀 Get Premium' : 'Get Started'}
+                      </Button>
+                    </motion.div>
                   </CardContent>
                 </Card>
               </motion.div>
             ))}
+          </div>
+
+          {/* Additional Benefits */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            viewport={{ once: true }}
+            className="mt-12 text-center"
+          >
+            <p className="text-white/60 mb-4">✨ All plans include</p>
+            <div className="flex flex-wrap justify-center gap-6 text-sm text-white/70">
+              <div className="flex items-center gap-2">
+                <Shield className="h-4 w-4 text-green-400" />
+                <span>Verified College Profiles</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <MessageCircle className="h-4 w-4 text-blue-400" />
+                <span>Secure Messaging</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Heart className="h-4 w-4 text-pink-400" />
+                <span>Smart Compatibility Matching</span>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      </section>
+
+      {/* Call-to-Action Section */}
+      <section className="py-20 px-6 relative">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.8 }}
+          viewport={{ once: true }}
+          className="container mx-auto text-center"
+        >
+          <div className="bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-blue-500/10 border border-white/10 rounded-3xl p-12 backdrop-blur-xl">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              viewport={{ once: true }}
+            >
+              <h2 className="text-4xl md:text-5xl font-bold font-poppins mb-6">
+                Ready to find your <span className="text-gradient">college soulmate</span>?
+              </h2>
+              <p className="text-xl text-white/70 mb-8 max-w-2xl mx-auto">
+                Join thousands of college students who've found love, friendship, and meaningful relationships on Cufy.
+              </p>
+              
+              {userState === 'no-auth' && (
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Button 
+                      size="lg" 
+                      className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-xl px-10 py-4 shadow-2xl shadow-pink-500/25"
+                      onClick={() => handleJoinClick('female')}
+                    >
+                      <Heart className="mr-2 h-6 w-6" />
+                      Start as College Girl
+                    </Button>
+                  </motion.div>
+                  
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Button 
+                      size="lg" 
+                      variant="glass"
+                      className={`text-xl px-10 py-4 ${
+                        !boysRegistrationEnabled 
+                          ? 'opacity-50 cursor-not-allowed' 
+                          : 'shadow-2xl shadow-blue-500/25'
+                      }`}
+                      disabled={!boysRegistrationEnabled}
+                      onClick={() => handleJoinClick('male')}
+                    >
+                      <Sparkles className="mr-2 h-6 w-6" />
+                      {!boysRegistrationEnabled ? 'Boys Registration Closed' : 'Start as College Boy'}
+                    </Button>
+                  </motion.div>
+                </div>
+              )}
+
+              <div className="mt-8 flex justify-center items-center gap-8 text-white/50 text-sm">
+                <div className="flex items-center gap-2">
+                  <Coffee className="h-4 w-4" />
+                  <span>Coffee dates</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <BookOpen className="h-4 w-4" />
+                  <span>Study partners</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Music className="h-4 w-4" />
+                  <span>Concert buddies</span>
+                </div>
+              </div>
+            </motion.div>
           </div>
         </motion.div>
       </section>
