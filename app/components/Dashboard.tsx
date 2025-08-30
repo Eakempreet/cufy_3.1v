@@ -36,7 +36,10 @@ import {
   Upload,
   AlertTriangle,
   Instagram,
-  UserMinus
+  UserMinus,
+  QrCode,
+  Copy,
+  Smartphone
 } from 'lucide-react'
 import FloatingShapes from './FloatingShapes'
 
@@ -1386,6 +1389,32 @@ const PermanentMatchCard = ({ match, currentUserId }: {
 const PaymentsSection = ({ user }: { user: UserProfile }) => {
   const [paymentProof, setPaymentProof] = useState<File | null>(null)
   const [isUploading, setIsUploading] = useState(false)
+  const [copiedText, setCopiedText] = useState<string | null>(null)
+
+  // Copy to clipboard function
+  const copyToClipboard = async (text: string, label: string) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopiedText(label)
+      setTimeout(() => setCopiedText(null), 2000)
+    } catch (err) {
+      console.error('Failed to copy:', err)
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea')
+      textArea.value = text
+      document.body.appendChild(textArea)
+      textArea.focus()
+      textArea.select()
+      try {
+        document.execCommand('copy')
+        setCopiedText(label)
+        setTimeout(() => setCopiedText(null), 2000)
+      } catch (fallbackErr) {
+        console.error('Fallback copy failed:', fallbackErr)
+      }
+      document.body.removeChild(textArea)
+    }
+  }
 
   const handleProofUpload = async (file: File) => {
     setIsUploading(true)
@@ -1433,6 +1462,130 @@ const PaymentsSection = ({ user }: { user: UserProfile }) => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Payment QR Code & UPI Section */}
+      {!user.payment_confirmed && user.subscription_type && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <QrCode className="h-5 w-5" />
+              <span>Quick Payment</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* QR Code Section */}
+            <div className="bg-white p-6 rounded-lg flex flex-col items-center space-y-4">
+              <div className="text-center">
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                  Scan QR Code to Pay
+                </h3>
+                <p className="text-gray-600 text-sm">
+                  {user.subscription_type === 'basic' ? '₹99' : '₹249'} - {user.subscription_type === 'basic' ? 'Basic Plan' : 'Premium Plan'}
+                </p>
+              </div>
+              
+              {/* QR Code Placeholder - You can replace this with actual QR code generation */}
+              <div className="w-48 h-48 bg-gray-100 border-2 border-gray-300 rounded-lg flex items-center justify-center">
+                <QrCode className="h-20 w-20 text-gray-400" />
+              </div>
+              
+              <p className="text-xs text-gray-500 text-center max-w-xs">
+                Scan with any UPI app (Paytm, PhonePe, Google Pay, etc.)
+              </p>
+            </div>
+
+            {/* UPI Details Section */}
+            <div className="space-y-4">
+              <div className="flex items-center space-x-2 mb-4">
+                <Smartphone className="h-5 w-5 text-blue-400" />
+                <h4 className="text-white font-semibold">UPI Payment Details</h4>
+              </div>
+              
+              {/* UPI ID */}
+              <div className="bg-white/10 border border-white/20 rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <p className="text-white/70 text-sm">UPI ID</p>
+                    <p className="text-white font-mono text-lg">cufy.online@paytm</p>
+                  </div>
+                  <Button
+                    onClick={() => copyToClipboard('cufy.online@paytm', 'UPI ID')}
+                    variant="outline"
+                    size="sm"
+                    className="border-white/20 text-white hover:bg-white/10"
+                  >
+                    {copiedText === 'UPI ID' ? (
+                      <CheckCircle className="h-4 w-4" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Account Name */}
+              <div className="bg-white/10 border border-white/20 rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <p className="text-white/70 text-sm">Account Name</p>
+                    <p className="text-white font-semibold">CUFY ONLINE</p>
+                  </div>
+                  <Button
+                    onClick={() => copyToClipboard('CUFY ONLINE', 'Account Name')}
+                    variant="outline"
+                    size="sm"
+                    className="border-white/20 text-white hover:bg-white/10"
+                  >
+                    {copiedText === 'Account Name' ? (
+                      <CheckCircle className="h-4 w-4" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Amount */}
+              <div className="bg-gradient-to-r from-green-500/20 to-blue-500/20 border border-green-500/30 rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <p className="text-white/70 text-sm">Amount to Pay</p>
+                    <p className="text-white font-bold text-xl">
+                      ₹{user.subscription_type === 'basic' ? '99' : '249'}
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() => copyToClipboard(user.subscription_type === 'basic' ? '99' : '249', 'Amount')}
+                    variant="outline"
+                    size="sm"
+                    className="border-white/20 text-white hover:bg-white/10"
+                  >
+                    {copiedText === 'Amount' ? (
+                      <CheckCircle className="h-4 w-4" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Payment Instructions */}
+              <div className="bg-blue-500/20 border border-blue-500/30 rounded-lg p-4">
+                <h5 className="text-blue-300 font-semibold mb-2 flex items-center">
+                  <AlertTriangle className="h-4 w-4 mr-2" />
+                  Payment Instructions
+                </h5>
+                <ul className="text-white/70 text-sm space-y-1">
+                  <li>• Use any UPI app to pay to: cufy.online@paytm</li>
+                  <li>• Amount: ₹{user.subscription_type === 'basic' ? '99' : '249'}</li>
+                  <li>• After payment, upload screenshot below</li>
+                  <li>• Your account will be activated after verification</li>
+                </ul>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Upload Payment Proof */}
       <Card>
