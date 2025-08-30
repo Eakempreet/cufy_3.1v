@@ -111,9 +111,12 @@ export default function Dashboard() {
     full_name: '',
     age: '',
     university: '',
-    bio: ''
+    bio: '',
+    instagram: ''
   })
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false)
+  const [instagramInput, setInstagramInput] = useState('')
+  const [isSubmittingInstagram, setIsSubmittingInstagram] = useState(false)
 
   useEffect(() => {
     if (session?.user?.email) {
@@ -181,7 +184,8 @@ export default function Dashboard() {
           full_name: profileData.user.full_name || '',
           age: profileData.user.age?.toString() || '',
           university: profileData.user.university || '',
-          bio: profileData.user.bio || ''
+          bio: profileData.user.bio || '',
+          instagram: profileData.user.instagram || ''
         })
         setAssignments(assignmentsData.assignments || [])
         setTemporaryMatches(temporaryData.matches || [])
@@ -281,7 +285,8 @@ export default function Dashboard() {
           full_name: profileData.full_name,
           age: parseInt(profileData.age),
           university: profileData.university,
-          bio: profileData.bio
+          bio: profileData.bio,
+          instagram: profileData.instagram
         }),
       })
 
@@ -305,6 +310,34 @@ export default function Dashboard() {
       ...prev,
       [field]: value
     }))
+  }
+
+  const handleInstagramSubmission = async () => {
+    if (!instagramInput.trim()) return
+    
+    setIsSubmittingInstagram(true)
+    try {
+      const response = await fetch('/api/user/update-instagram', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          instagram: instagramInput.replace('@', '')
+        }),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setUser(data.user)
+        setInstagramInput('')
+        console.log('Instagram profile updated successfully')
+      } else {
+        console.error('Failed to update Instagram profile')
+      }
+    } catch (error) {
+      console.error('Error updating Instagram profile:', error)
+    } finally {
+      setIsSubmittingInstagram(false)
+    }
   }
 
   const formatTimeRemaining = (milliseconds: number) => {
@@ -420,6 +453,66 @@ export default function Dashboard() {
             </div>
           </Card>
         </motion.div>
+
+        {/* Instagram Resubmission Section - Only show if user has no Instagram */}
+        {!user.instagram && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8"
+          >
+            <Card className="border-pink-500/30 bg-gradient-to-r from-pink-500/10 to-purple-500/10">
+              <CardContent className="p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+                  <div className="flex items-center space-x-4">
+                    <div className="p-3 bg-pink-500/20 rounded-full">
+                      <Instagram className="h-6 w-6 text-pink-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-white">
+                        Complete Your Profile
+                      </h3>
+                      <p className="text-white/70 text-sm">
+                        Please resubmit your Instagram profile for verification
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 w-full sm:w-auto">
+                    <Input
+                      placeholder="@yourhandle (without @)"
+                      value={instagramInput}
+                      onChange={(e) => setInstagramInput(e.target.value.replace('@', ''))}
+                      className="bg-white/10 border-white/20 text-white placeholder-white/50"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && instagramInput.trim()) {
+                          handleInstagramSubmission()
+                        }
+                      }}
+                    />
+                    <Button
+                      onClick={handleInstagramSubmission}
+                      disabled={!instagramInput.trim() || isSubmittingInstagram}
+                      className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 whitespace-nowrap"
+                    >
+                      {isSubmittingInstagram ? (
+                        <>
+                          <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                          Submitting...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="h-4 w-4 mr-2" />
+                          Submit
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
 
         {/* Main Content */}
         <Tabs defaultValue={user.gender === 'male' ? 'matches' : 'matches'} className="w-full">
@@ -667,6 +760,17 @@ export default function Dashboard() {
                       value={profileData.bio}
                       onChange={(e) => handleInputChange('bio', e.target.value)}
                       className="min-h-[80px] sm:min-h-[100px]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-white mb-2">
+                      Instagram Username
+                    </label>
+                    <Input 
+                      placeholder="@yourhandle (without @)"
+                      value={profileData.instagram}
+                      onChange={(e) => handleInputChange('instagram', e.target.value.replace('@', ''))}
                     />
                   </div>
 

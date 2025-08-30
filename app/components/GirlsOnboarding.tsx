@@ -92,8 +92,8 @@ export default function GirlsOnboarding() {
         love_language: data.loveLanguage,
         connection_statement: data.connectionStatement,
         gender: 'female' as const,
-        // Note: Instagram temporarily removed due to database schema
-        // ...(data.instagram && { instagram: data.instagram }),
+        // Include Instagram if provided
+        ...(data.instagram && { instagram: data.instagram }),
       }
 
       const response = await fetch('/api/user/create', {
@@ -123,7 +123,7 @@ export default function GirlsOnboarding() {
       case 5: return data.yearOfStudy !== ''
       case 6: return data.profilePhoto !== null
       case 7: return data.bio.trim() !== ''
-      case 8: return true // Instagram is optional
+      case 8: return data.instagram.trim() !== '' // Instagram is required
       case 9: return data.energyStyle !== ''
       case 10: return data.groupSetting !== ''
       case 11: return data.idealWeekend.length === 2
@@ -337,7 +337,7 @@ export default function GirlsOnboarding() {
           <OnboardingStep
             step={currentStep}
             totalSteps={totalSteps}
-            title="Your Instagram username (optional)"
+            title="Your Instagram username"
             onNext={() => setCurrentStep(9)}
             onBack={() => setCurrentStep(7)}
             canGoNext={canGoNext()}
@@ -360,7 +360,7 @@ export default function GirlsOnboarding() {
                 className="text-center text-xl"
               />
               <p className="text-sm text-white/60 text-center">
-                This helps matches connect with you easily! Skip if you prefer not to share.
+                This helps matches connect with you easily!
               </p>
             </div>
           </OnboardingStep>

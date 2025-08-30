@@ -38,11 +38,7 @@ import {
   ArrowLeft,
   ArrowRight,
   RefreshCw,
-  Database,
-  StickyNote,
-  Plus,
-  Edit,
-  Save
+  Database
 } from 'lucide-react'
 
 interface User {
@@ -65,15 +61,6 @@ interface User {
   instagram?: string
 }
 
-interface AdminNote {
-  id: string
-  user_id: string
-  admin_email: string
-  note: string
-  created_at: string
-  updated_at: string
-}
-
 export default function AdminPanel() {
   const { data: session } = useSession()
   const router = useRouter()
@@ -85,19 +72,11 @@ export default function AdminPanel() {
   const [userViewDialogOpen, setUserViewDialogOpen] = useState(false)
   const [selectedPaymentProof, setSelectedPaymentProof] = useState<string | null>(null)
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false)
-  const [showImageModal, setShowImageModal] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const [usersPerPage] = useState(20)
   const [totalUsers, setTotalUsers] = useState(0)
   const [fetchedUsers, setFetchedUsers] = useState(0)
   const [boysRegistrationEnabled, setBoysRegistrationEnabled] = useState(true)
-  
-  // Admin Notes state
-  const [adminNotes, setAdminNotes] = useState<AdminNote[]>([])
-  const [newNote, setNewNote] = useState('')
-  const [isAddingNote, setIsAddingNote] = useState(false)
-  const [editingNoteId, setEditingNoteId] = useState<string | null>(null)
-  const [editingNoteText, setEditingNoteText] = useState('')
 
   useEffect(() => {
     checkAdminAccess()
@@ -148,7 +127,6 @@ export default function AdminPanel() {
   const handleViewUser = (user: User) => {
     setSelectedUser(user)
     setUserViewDialogOpen(true)
-    fetchAdminNotes(user.id)
   }
 
   const handleDeleteUser = async (user: User) => {
@@ -197,101 +175,6 @@ export default function AdminPanel() {
     } catch (error) {
       console.error('Error confirming payment:', error)
       alert('An error occurred while confirming payment')
-    }
-  }
-
-  // Admin Notes Functions
-  const fetchAdminNotes = async (userId: string) => {
-    try {
-      const response = await fetch(`/api/admin/notes?userId=${userId}&adminEmail=${session?.user?.email}`)
-      const result = await response.json()
-      
-      if (response.ok) {
-        setAdminNotes(result.notes || [])
-      } else {
-        console.error('Error fetching notes:', result.error)
-      }
-    } catch (error) {
-      console.error('Error fetching admin notes:', error)
-    }
-  }
-
-  const addAdminNote = async () => {
-    if (!newNote.trim() || !selectedUser) return
-
-    try {
-      const response = await fetch('/api/admin/notes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: selectedUser.id,
-          adminEmail: session?.user?.email,
-          note: newNote.trim()
-        }),
-      })
-
-      const result = await response.json()
-
-      if (response.ok) {
-        setAdminNotes(prev => [result.note, ...prev])
-        setNewNote('')
-        setIsAddingNote(false)
-      } else {
-        alert(result.error || 'Failed to add note')
-      }
-    } catch (error) {
-      console.error('Error adding note:', error)
-      alert('An error occurred while adding the note')
-    }
-  }
-
-  const updateAdminNote = async (noteId: string, noteText: string) => {
-    try {
-      const response = await fetch('/api/admin/notes', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          noteId,
-          adminEmail: session?.user?.email,
-          note: noteText
-        }),
-      })
-
-      const result = await response.json()
-
-      if (response.ok) {
-        setAdminNotes(prev => prev.map(note => 
-          note.id === noteId ? result.note : note
-        ))
-        setEditingNoteId(null)
-        setEditingNoteText('')
-      } else {
-        alert(result.error || 'Failed to update note')
-      }
-    } catch (error) {
-      console.error('Error updating note:', error)
-      alert('An error occurred while updating the note')
-    }
-  }
-
-  const deleteAdminNote = async (noteId: string) => {
-    if (!confirm('Are you sure you want to delete this note?')) return
-
-    try {
-      const response = await fetch(`/api/admin/notes?noteId=${noteId}&adminEmail=${session?.user?.email}`, {
-        method: 'DELETE',
-      })
-
-      const result = await response.json()
-
-      if (response.ok) {
-        setAdminNotes(prev => prev.filter(note => note.id !== noteId))
-      } else {
-        alert(result.error || 'Failed to delete note')
-      }
-    } catch (error) {
-      console.error('Error deleting note:', error)
-      alert('An error occurred while deleting the note')
     }
   }
 
@@ -844,53 +727,25 @@ export default function AdminPanel() {
         </Tabs>
 
         {/* User View Dialog */}
-        <Dialog open={userViewDialogOpen} onOpenChange={(open) => {
-          setUserViewDialogOpen(open)
-          if (!open) {
-            // Reset notes state when dialog closes
-            setAdminNotes([])
-            setNewNote('')
-            setIsAddingNote(false)
-            setEditingNoteId(null)
-            setEditingNoteText('')
-          }
-        }}>
-          <DialogContent className="max-w-6xl bg-slate-900/95 backdrop-blur-xl border border-white/20">
+        <Dialog open={userViewDialogOpen} onOpenChange={setUserViewDialogOpen}>
+          <DialogContent className="max-w-4xl bg-slate-900/95 backdrop-blur-xl border border-white/20">
             <DialogHeader>
-              <DialogTitle className="text-2xl font-bold text-white">
-                Complete Profile View - {selectedUser?.full_name || 'Unknown User'}
+              <DialogTitle className="text-2xl font-bold text-white flex items-center space-x-3">
+                <Avatar className="h-12 w-12 border-2 border-white/20">
+                  <AvatarImage src={selectedUser?.profile_photo} />
+                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                    {selectedUser?.full_name?.charAt(0) || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <span>{selectedUser?.full_name || 'Unknown User'}</span>
+                  <div className="text-sm text-slate-400 font-normal">Complete Profile View</div>
+                </div>
               </DialogTitle>
             </DialogHeader>
             
             {selectedUser && (
-              <div className="py-6 max-h-[80vh] overflow-y-auto">
-                <div className="flex gap-8">
-                  {/* Large Profile Image - Left Side */}
-                  <div className="flex-shrink-0">
-                    <div className="w-80 h-96 bg-white/5 rounded-2xl border border-white/10 overflow-hidden">
-                      {selectedUser.profile_photo ? (
-                        <img 
-                          src={selectedUser.profile_photo} 
-                          alt={selectedUser.full_name}
-                          className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform duration-300"
-                          onClick={() => {
-                            setSelectedPaymentProof(selectedUser.profile_photo)
-                            setShowImageModal(true)
-                          }}
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-500/20 to-purple-600/20">
-                          <div className="text-center">
-                            <User className="h-20 w-20 text-white/50 mx-auto mb-4" />
-                            <div className="text-white/70 text-lg font-medium">No Profile Photo</div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Profile Details - Right Side */}
-                  <div className="flex-1 space-y-6">
+              <div className="py-6 space-y-6 max-h-[70vh] overflow-y-auto">
                 {/* Basic Information */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <Card className="bg-white/5 border-white/10">
@@ -996,148 +851,6 @@ export default function AdminPanel() {
                     </div>
                   </CardContent>
                 </Card>
-
-                {/* Admin Notes Section */}
-                <Card className="bg-white/5 border-white/10">
-                  <CardHeader>
-                    <CardTitle className="text-white flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <StickyNote className="h-5 w-5 text-yellow-400" />
-                        <span>Admin Notes</span>
-                      </div>
-                      <Button
-                        onClick={() => setIsAddingNote(true)}
-                        variant="outline"
-                        size="sm"
-                        className="border-white/20 text-white hover:bg-white/10"
-                      >
-                        <Plus className="h-4 w-4 mr-1" />
-                        Add Note
-                      </Button>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {/* Add New Note */}
-                    {isAddingNote && (
-                      <div className="space-y-3 p-4 bg-white/5 rounded-lg border border-white/10">
-                        <textarea
-                          value={newNote}
-                          onChange={(e) => setNewNote(e.target.value)}
-                          placeholder="Add a note about this user..."
-                          className="w-full bg-slate-800 border border-white/20 rounded-lg p-3 text-white placeholder-slate-400 focus:border-blue-400 focus:outline-none resize-none"
-                          rows={3}
-                        />
-                        <div className="flex justify-end space-x-2">
-                          <Button
-                            onClick={() => {
-                              setIsAddingNote(false)
-                              setNewNote('')
-                            }}
-                            variant="outline"
-                            size="sm"
-                            className="border-white/20 text-white hover:bg-white/10"
-                          >
-                            Cancel
-                          </Button>
-                          <Button
-                            onClick={addAdminNote}
-                            size="sm"
-                            className="bg-blue-600 hover:bg-blue-700 text-white"
-                            disabled={!newNote.trim()}
-                          >
-                            <Save className="h-4 w-4 mr-1" />
-                            Save Note
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Existing Notes */}
-                    {adminNotes.length === 0 ? (
-                      <div className="text-center py-8 text-slate-400">
-                        <StickyNote className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                        <p>No admin notes yet</p>
-                        <p className="text-sm mt-1">Add notes to keep track of important information about this user</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        {adminNotes.map((note) => (
-                          <div key={note.id} className="p-4 bg-white/5 rounded-lg border border-white/10">
-                            {editingNoteId === note.id ? (
-                              <div className="space-y-3">
-                                <textarea
-                                  value={editingNoteText}
-                                  onChange={(e) => setEditingNoteText(e.target.value)}
-                                  className="w-full bg-slate-800 border border-white/20 rounded-lg p-3 text-white focus:border-blue-400 focus:outline-none resize-none"
-                                  rows={3}
-                                />
-                                <div className="flex justify-end space-x-2">
-                                  <Button
-                                    onClick={() => {
-                                      setEditingNoteId(null)
-                                      setEditingNoteText('')
-                                    }}
-                                    variant="outline"
-                                    size="sm"
-                                    className="border-white/20 text-white hover:bg-white/10"
-                                  >
-                                    Cancel
-                                  </Button>
-                                  <Button
-                                    onClick={() => updateAdminNote(note.id, editingNoteText)}
-                                    size="sm"
-                                    className="bg-blue-600 hover:bg-blue-700 text-white"
-                                  >
-                                    <Save className="h-4 w-4 mr-1" />
-                                    Update
-                                  </Button>
-                                </div>
-                              </div>
-                            ) : (
-                              <>
-                                <div className="flex justify-between items-start mb-2">
-                                  <div className="text-sm text-slate-400">
-                                    By {note.admin_email} • {new Date(note.created_at).toLocaleDateString('en-US', {
-                                      year: 'numeric',
-                                      month: 'short',
-                                      day: 'numeric',
-                                      hour: '2-digit',
-                                      minute: '2-digit'
-                                    })}
-                                  </div>
-                                  <div className="flex space-x-1">
-                                    <Button
-                                      onClick={() => {
-                                        setEditingNoteId(note.id)
-                                        setEditingNoteText(note.note)
-                                      }}
-                                      variant="outline"
-                                      size="sm"
-                                      className="border-white/20 text-white hover:bg-white/10 p-1 h-8 w-8"
-                                    >
-                                      <Edit className="h-3 w-3" />
-                                    </Button>
-                                    <Button
-                                      onClick={() => deleteAdminNote(note.id)}
-                                      variant="outline"
-                                      size="sm"
-                                      className="border-red-500/20 text-red-400 hover:bg-red-500/10 p-1 h-8 w-8"
-                                    >
-                                      <X className="h-3 w-3" />
-                                    </Button>
-                                  </div>
-                                </div>
-                                <div className="text-white whitespace-pre-wrap">{note.note}</div>
-                              </>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-                  </div>
-                </div>
               </div>
             )}
             
@@ -1229,29 +942,6 @@ export default function AdminPanel() {
               >
                 Close
               </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        {/* Large Image Modal */}
-        <Dialog open={showImageModal} onOpenChange={setShowImageModal}>
-          <DialogContent className="max-w-4xl bg-slate-900/95 backdrop-blur-xl border border-white/20 p-2">
-            <div className="relative">
-              <Button
-                onClick={() => setShowImageModal(false)}
-                variant="outline"
-                size="sm"
-                className="absolute top-2 right-2 z-10 bg-black/50 border-white/20 text-white hover:bg-black/70"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-              {selectedPaymentProof && (
-                <img 
-                  src={selectedPaymentProof} 
-                  alt="Large view"
-                  className="w-full h-auto max-h-[80vh] object-contain rounded-lg"
-                />
-              )}
             </div>
           </DialogContent>
         </Dialog>
