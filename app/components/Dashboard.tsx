@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
+import QRCode from 'qrcode'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/Card'
 import { Button } from './ui/Button'
@@ -1390,6 +1391,28 @@ const PaymentsSection = ({ user }: { user: UserProfile }) => {
   const [paymentProof, setPaymentProof] = useState<File | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const [copiedText, setCopiedText] = useState<string | null>(null)
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string | null>(null)
+
+  // Generate QR code for UPI payment
+  useEffect(() => {
+    if (user?.subscription_type && !user.payment_confirmed) {
+      const amount = user.subscription_type === 'basic' ? '99' : '249'
+      const upiId = '9211660455@fam'
+      const name = 'Eakempreet Singh'
+      
+      // UPI payment URL format with your details
+      const upiUrl = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(name)}&am=${amount}.0`
+      
+      QRCode.toDataURL(upiUrl, {
+        width: 200,
+        margin: 2,
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF'
+        }
+      }).then(setQrCodeDataUrl).catch(console.error)
+    }
+  }, [user])
 
   // Copy to clipboard function
   const copyToClipboard = async (text: string, label: string) => {
@@ -1486,12 +1509,37 @@ const PaymentsSection = ({ user }: { user: UserProfile }) => {
               
               {/* QR Code Placeholder - You can replace this with actual QR code generation */}
               <div className="w-48 h-48 bg-gray-100 border-2 border-gray-300 rounded-lg flex items-center justify-center">
-                <QrCode className="h-20 w-20 text-gray-400" />
+                {qrCodeDataUrl ? (
+                  <img 
+                    src={qrCodeDataUrl} 
+                    alt="UPI Payment QR Code" 
+                    className="w-44 h-44 rounded-lg"
+                  />
+                ) : (
+                  <QrCode className="h-20 w-20 text-gray-400" />
+                )}
               </div>
               
               <p className="text-xs text-gray-500 text-center max-w-xs">
                 Scan with any UPI app (Paytm, PhonePe, Google Pay, etc.)
               </p>
+              
+              {/* Direct UPI Payment Button for Mobile */}
+              <Button
+                onClick={() => {
+                  const amount = user.subscription_type === 'basic' ? '99' : '249'
+                  const upiId = '9211660455@fam'
+                  const name = 'Eakempreet Singh'
+                  const upiUrl = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(name)}&am=${amount}.0`
+                  
+                  // Try to open UPI app directly
+                  window.location.href = upiUrl
+                }}
+                className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg flex items-center space-x-2"
+              >
+                <Smartphone className="h-4 w-4" />
+                <span>Pay Now via UPI</span>
+              </Button>
             </div>
 
             {/* UPI Details Section */}
@@ -1506,10 +1554,10 @@ const PaymentsSection = ({ user }: { user: UserProfile }) => {
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <p className="text-white/70 text-sm">UPI ID</p>
-                    <p className="text-white font-mono text-lg">cufy.online@paytm</p>
+                    <p className="text-white font-mono text-lg">9211660455@fam</p>
                   </div>
                   <Button
-                    onClick={() => copyToClipboard('cufy.online@paytm', 'UPI ID')}
+                    onClick={() => copyToClipboard('9211660455@fam', 'UPI ID')}
                     variant="outline"
                     size="sm"
                     className="border-white/20 text-white hover:bg-white/10"
@@ -1528,10 +1576,10 @@ const PaymentsSection = ({ user }: { user: UserProfile }) => {
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <p className="text-white/70 text-sm">Account Name</p>
-                    <p className="text-white font-semibold">CUFY ONLINE</p>
+                    <p className="text-white font-semibold">Eakempreet Singh</p>
                   </div>
                   <Button
-                    onClick={() => copyToClipboard('CUFY ONLINE', 'Account Name')}
+                    onClick={() => copyToClipboard('Eakempreet Singh', 'Account Name')}
                     variant="outline"
                     size="sm"
                     className="border-white/20 text-white hover:bg-white/10"
@@ -1576,11 +1624,58 @@ const PaymentsSection = ({ user }: { user: UserProfile }) => {
                   Payment Instructions
                 </h5>
                 <ul className="text-white/70 text-sm space-y-1">
-                  <li>• Use any UPI app to pay to: cufy.online@paytm</li>
+                  <li>• Use any UPI app to pay to: 9211660455@fam</li>
                   <li>• Amount: ₹{user.subscription_type === 'basic' ? '99' : '249'}</li>
                   <li>• After payment, upload screenshot below</li>
                   <li>• Your account will be activated after verification</li>
                 </ul>
+              </div>
+
+              {/* Quick UPI App Links */}
+              <div className="bg-white/5 border border-white/10 rounded-lg p-4">
+                <h5 className="text-white font-semibold mb-3 flex items-center">
+                  <Smartphone className="h-4 w-4 mr-2" />
+                  Quick Payment Options
+                </h5>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { name: 'PhonePe', url: 'phonepe://pay', color: 'bg-purple-600' },
+                    { name: 'Google Pay', url: 'tez://upi/pay', color: 'bg-blue-600' },
+                    { name: 'Paytm', url: 'paytmmp://pay', color: 'bg-indigo-600' },
+                    { name: 'Amazon Pay', url: 'amazonpay://pay', color: 'bg-orange-600' }
+                  ].map((app) => (
+                    <Button
+                      key={app.name}
+                      onClick={() => {
+                        const amount = user.subscription_type === 'basic' ? '99' : '249'
+                        const upiId = '9211660455@fam'
+                        const name = 'Eakempreet Singh'
+                        const upiUrl = `${app.url}?pa=${upiId}&pn=${encodeURIComponent(name)}&am=${amount}.0`
+                        
+                        // Fallback to generic UPI URL if app-specific doesn't work
+                        const fallbackUrl = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(name)}&am=${amount}.0`
+                        
+                        try {
+                          window.location.href = upiUrl
+                          // If app-specific URL fails, try generic UPI after a short delay
+                          setTimeout(() => {
+                            window.location.href = fallbackUrl
+                          }, 1000)
+                        } catch (error) {
+                          window.location.href = fallbackUrl
+                        }
+                      }}
+                      variant="outline"
+                      size="sm"
+                      className={`${app.color} border-white/20 text-white hover:opacity-80 text-xs py-2`}
+                    >
+                      {app.name}
+                    </Button>
+                  ))}
+                </div>
+                <p className="text-white/50 text-xs mt-3 text-center">
+                  Click to open payment in your preferred UPI app
+                </p>
               </div>
             </div>
           </CardContent>

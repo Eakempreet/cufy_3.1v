@@ -252,10 +252,10 @@ export default function PaymentPage({ subscriptionType, onPaymentProofUploaded }
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 py-4 sm:py-8">
-        <div className="grid lg:grid-cols-3 gap-4 lg:gap-8">
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        <div className="grid lg:grid-cols-3 gap-8">
           {/* Left Column - Order Summary */}
-          <div className="lg:col-span-1 order-2 lg:order-1">
+          <div className="lg:col-span-1">
             <Card className="bg-white border shadow-sm">
               <CardHeader className="pb-4">
                 <CardTitle className="text-lg font-semibold text-gray-900">Order Summary</CardTitle>
@@ -284,12 +284,22 @@ export default function PaymentPage({ subscriptionType, onPaymentProofUploaded }
                   <span className="text-lg font-semibold text-gray-900">Total</span>
                   <span className="text-2xl font-bold text-gray-900">₹{planAmount}</span>
                 </div>
+
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
+                  <div className="flex items-start space-x-3">
+                    <CheckCircle2 className="h-5 w-5 text-blue-600 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium text-blue-900">Money-back guarantee</p>
+                      <p className="text-xs text-blue-700">Full refund within 7 days if not satisfied</p>
+                    </div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </div>
 
           {/* Right Column - Payment Methods */}
-          <div className="lg:col-span-2 order-1 lg:order-2">
+          <div className="lg:col-span-2">
             {currentStep === 1 && (
               <Card className="bg-white border shadow-sm">
                 <CardHeader className="pb-6">
@@ -475,14 +485,13 @@ export default function PaymentPage({ subscriptionType, onPaymentProofUploaded }
                     </div>
                   )}
 
-                  <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
+                  <div className="flex space-x-4">
                     <Button
                       variant="outline"
                       onClick={() => setCurrentStep(1)}
-                      className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-50 flex items-center justify-center"
+                      className="flex-1"
                     >
-                      <ArrowLeft className="h-4 w-4 mr-2" />
-                      Back to Payment
+                      Back
                     </Button>
                     <Button
                       onClick={submitPaymentProof}
