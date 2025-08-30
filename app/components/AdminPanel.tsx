@@ -130,6 +130,7 @@ export default function AdminPanel() {
   const fetchData = async () => {
     setLoading(true)
     try {
+      // Fetch users data
       const response = await fetch('/api/admin/users')
       const data = await response.json()
       
@@ -138,10 +139,37 @@ export default function AdminPanel() {
       setUsers(data.users || [])
       setTotalUsers(data.total || 0)
       setFetchedUsers(data.fetched || 0)
+
+      // Fetch system settings to get current boys registration status
+      await fetchSystemSettings()
     } catch (error) {
       console.error('Error fetching data:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchSystemSettings = async () => {
+    try {
+      const response = await fetch('/api/admin/system-settings')
+      const data = await response.json()
+      
+      if (data.success && data.settings) {
+        // Find boys registration setting
+        const boysRegSetting = data.settings.find((setting: any) => 
+          setting.setting_key === 'boys_registration_enabled'
+        )
+        
+        if (boysRegSetting) {
+          const isEnabled = boysRegSetting.setting_value === true || boysRegSetting.setting_value === 'true'
+          setBoysRegistrationEnabled(isEnabled)
+          console.log('Boys registration status from DB:', isEnabled)
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching system settings:', error)
+      // Fallback to true if unable to fetch
+      setBoysRegistrationEnabled(true)
     }
   }
 
@@ -306,8 +334,14 @@ export default function AdminPanel() {
       const result = await response.json()
 
       if (result.success) {
+        // Update UI state immediately
         setBoysRegistrationEnabled(result.new_value)
+        
+        // Also fetch from database to ensure consistency
+        await fetchSystemSettings()
+        
         alert(result.message)
+        console.log('Boys registration toggled to:', result.new_value)
       } else {
         alert('Failed to toggle boys registration')
       }
