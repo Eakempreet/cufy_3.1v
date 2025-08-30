@@ -120,11 +120,11 @@ export default function Footer() {
               {/* Stats */}
               <div className="grid grid-cols-2 gap-4 text-center">
                 <div className="bg-white/5 rounded-lg p-3">
-                  <div className="text-lg font-bold text-gradient">50K+</div>
+                  <div className="text-lg font-bold text-gradient">1.6K+</div>
                   <div className="text-xs text-white/60">Students</div>
                 </div>
                 <div className="bg-white/5 rounded-lg p-3">
-                  <div className="text-lg font-bold text-gradient">500+</div>
+                  <div className="text-lg font-bold text-gradient">32+</div>
                   <div className="text-xs text-white/60">Colleges</div>
                 </div>
               </div>

@@ -3,7 +3,7 @@
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { Button } from './ui/Button'
 import { Card, CardContent } from './ui/Card'
-import { Heart, Star, Sparkles, Crown, AlertTriangle, Users, MessageCircle, Shield, Zap, Coffee, BookOpen, Camera, Music } from 'lucide-react'
+import { Heart, Star, Sparkles, Crown, AlertTriangle, Users, MessageCircle, Shield, MessageSquare, Coffee, BookOpen, Camera, Music } from 'lucide-react'
 import Link from 'next/link'
 import { useSession, signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
@@ -52,7 +52,7 @@ const features = [
     gradient: 'from-pink-500 to-rose-600',
   },
   {
-    icon: Zap,
+    icon: MessageSquare,
     title: 'Real-time Chat',
     description: 'Instant messaging with your matches. Share your thoughts, plans, and build genuine relationships.',
     gradient: 'from-yellow-500 to-orange-600',
@@ -65,36 +65,36 @@ const testimonials = [
     university: 'Sharda University',
     image: '/testimonials/girl1.jpg',
     text: "Yaar cufy mst website hai! 💕 Finally mil gaya koi jo mere jaise hi studies me serious hai. Love it yr! 😍",
-    rating: 5,
+    rating: 4,
   },
   {
     name: 'Arjun Singh',
-    university: 'IIT Delhi',
+    university: 'Delhi University',
     image: '/testimonials/boy1.jpg',
     text: "Bro this app is actually legit! 🔥 Met so many cool people from my college. Campus dating scene sorted hai completely! 💯",
-    rating: 5,
+    rating: 4,
   },
   {
-    name: 'Sneha Reddy',
-    university: 'NSUT Delhi',
+    name: 'Ananya Gupta',
+    university: 'Mumbai University',
     image: '/testimonials/girl2.jpg',
     text: "Omg guys use kro isko! 😭💕 Itne ache matches aate hai yahan pe. Sab verified students hai so tension nhi lena pdta safety ka! ✨",
-    rating: 5,
+    rating: 4,
   },
   {
-    name: 'Rahul Kumar',
-    university: 'Amity University',
+    name: 'Rohit Kumar',
+    university: 'IIT Delhi',
     image: '/testimonials/boy2.jpg',
-    text: "Dude cufy rocks! 🚀 From library study dates to canteen hangouts, sab kuch perfect hai. College romance ko next level pe le gaya hai! 🎯",
-    rating: 5,
+    text: "Finally ek platform jo sirf college students ke liye hai! No fake profiles, sab genuine hai. Highly recommended! 🙌",
+    rating: 4,
   },
 ]
 
 const stats = [
   { number: '1,600+', label: 'Happy Students' },
   { number: '32+', label: 'Colleges Connected' },
-  { number: '850+', label: 'Successful Matches' },
-  { number: '3.7/5', label: 'User Rating' },
+  { number: '643+', label: 'Successful Matches' },
+  { number: '4.1/5', label: 'Average Rating' },
 ]
 
 const containerVariants = {
@@ -523,7 +523,13 @@ export default function LandingPage() {
                       onClick={() => handleJoinClick('male')}
                     >
                       <Sparkles className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
-                      {!boysRegistrationEnabled ? 'Boys Registration Closed' : 'College Boy'}
+                      {!boysRegistrationEnabled ? (
+                        <span className="text-xs sm:text-sm lg:text-base">
+                          Boys Entry<br className="sm:hidden" /> Closed
+                        </span>
+                      ) : (
+                        'College Boy'
+                      )}
                     </Button>
                   </motion.div>
                 </div>
@@ -580,7 +586,7 @@ export default function LandingPage() {
             </div>
             <div className="flex items-center gap-2">
               <Heart className="h-4 w-4" />
-              <span>15,000+ Matches Made</span>
+              <span>643+ Matches Made</span>
             </div>
             <div className="flex items-center gap-2">
               <Star className="h-4 w-4" />
@@ -689,10 +695,10 @@ export default function LandingPage() {
             </p>
           </div>
 
-          {/* Mobile: Vertical Scrolling, Desktop: Grid */}
+          {/* Mobile: Horizontal Scrolling, Desktop: Grid */}
           <div className="block md:hidden">
-            {/* Mobile Vertical Scroll */}
-            <div className="flex flex-col gap-4 max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-purple-500 scrollbar-track-transparent pr-2">
+            {/* Mobile Horizontal Scroll */}
+            <div className="flex gap-4 overflow-x-auto scrollbar-thin scrollbar-thumb-purple-500 scrollbar-track-transparent pb-4 px-2">
               {testimonials.map((testimonial, index) => (
                 <motion.div
                   key={index}
@@ -703,7 +709,7 @@ export default function LandingPage() {
                     delay: index * 0.1,
                   }}
                   viewport={{ once: true }}
-                  className="relative group"
+                  className="relative group flex-shrink-0 w-72"
                 >
                   <Card className="border-white/10 bg-white/5 backdrop-blur-xl hover:border-white/20 transition-all duration-300">
                     <CardContent className="p-4">
@@ -941,7 +947,7 @@ export default function LandingPage() {
                 Ready to find your <span className="text-gradient">college soulmate</span>?
               </h2>
               <p className="text-xl text-white/70 mb-8 max-w-2xl mx-auto">
-                Join thousands of college students who've found love, friendship, and meaningful relationships on Cufy.
+                Join hundreds of college students who've found love, friendship, and meaningful relationships on Cufy.
               </p>
               
               {userState === 'no-auth' && (
@@ -970,7 +976,13 @@ export default function LandingPage() {
                       onClick={() => handleJoinClick('male')}
                     >
                       <Sparkles className="mr-2 h-6 w-6" />
-                      {!boysRegistrationEnabled ? 'Boys Registration Closed' : 'Start as College Boy'}
+                      {!boysRegistrationEnabled ? (
+                        <span className="text-lg sm:text-xl">
+                          Boys Entry Closed
+                        </span>
+                      ) : (
+                        'Start as College Boy'
+                      )}
                     </Button>
                   </motion.div>
                 </div>
