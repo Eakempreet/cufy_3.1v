@@ -271,7 +271,7 @@ export default function PaymentPage({ subscriptionType, onPaymentProofUploaded }
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={copyUpiId}
+                          onClick={() => navigator.clipboard.writeText(upiId)}
                           className="ml-2 h-6 w-6 p-0"
                         >
                           <Copy className="w-3 h-3" />
