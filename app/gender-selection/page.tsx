@@ -27,10 +27,20 @@ export default function GenderSelection() {
   useEffect(() => {
     const checkRegistrationStatus = async () => {
       try {
-        const response = await fetch('/api/registration-status')
+        // Add cache busting to force fresh data
+        const timestamp = new Date().getTime()
+        const response = await fetch(`/api/registration-status?t=${timestamp}`, {
+          method: 'GET',
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
+        })
         const data = await response.json()
         
-        setBoysRegistrationEnabled(data.boys_registration_enabled)
+        console.log('Gender selection registration status response:', data)
+        
+        setBoysRegistrationEnabled(data.boys_registration_enabled === true)
         setBoysRegistrationMessage(data.boys_registration_message || 'Boys registration will open soon! Girls can join now.')
       } catch (error) {
         console.error('Error checking registration status:', error)
@@ -38,6 +48,10 @@ export default function GenderSelection() {
     }
 
     checkRegistrationStatus()
+    
+    // Set up interval to refetch every 30 seconds to stay in sync
+    const interval = setInterval(checkRegistrationStatus, 30000)
+    return () => clearInterval(interval)
   }, [])
 
   const handleGenderSelection = async (gender: 'male' | 'female') => {

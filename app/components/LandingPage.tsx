@@ -132,8 +132,18 @@ export default function LandingPage() {
   useEffect(() => {
     const fetchSystemSettings = async () => {
       try {
-        const response = await fetch('/api/registration-status')
+        // Add cache busting to force fresh data
+        const timestamp = new Date().getTime()
+        const response = await fetch(`/api/registration-status?t=${timestamp}`, {
+          method: 'GET',
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
+        })
         const data = await response.json()
+        
+        console.log('Landing page system settings response:', data)
         
         if (data.success) {
           setBoysRegistrationEnabled(data.boys_registration_enabled === true)
@@ -148,6 +158,10 @@ export default function LandingPage() {
     }
 
     fetchSystemSettings()
+    
+    // Set up interval to refetch every 30 seconds to stay in sync
+    const interval = setInterval(fetchSystemSettings, 30000)
+    return () => clearInterval(interval)
   }, [])
 
   // Handle automatic routing after login
