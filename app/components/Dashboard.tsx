@@ -43,6 +43,7 @@ import {
   Smartphone
 } from 'lucide-react'
 import FloatingShapes from './FloatingShapes'
+import ImageUpload from './ImageUpload'
 
 interface UserProfile {
   id: string
@@ -121,6 +122,7 @@ export default function Dashboard() {
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false)
   const [instagramInput, setInstagramInput] = useState('')
   const [isSubmittingInstagram, setIsSubmittingInstagram] = useState(false)
+  const [showPhotoUpload, setShowPhotoUpload] = useState(false)
 
   useEffect(() => {
     if (session?.user?.email) {
@@ -341,6 +343,29 @@ export default function Dashboard() {
       console.error('Error updating Instagram profile:', error)
     } finally {
       setIsSubmittingInstagram(false)
+    }
+  }
+
+  const handlePhotoUpload = async (photoUrl: string) => {
+    try {
+      const response = await fetch('/api/user/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          profile_photo: photoUrl
+        }),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setUser(data.user)
+        setShowPhotoUpload(false)
+        console.log('Profile photo updated successfully')
+      } else {
+        console.error('Failed to update profile photo')
+      }
+    } catch (error) {
+      console.error('Error updating profile photo:', error)
     }
   }
 
@@ -712,16 +737,39 @@ export default function Dashboard() {
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="text-center">
-                    <Avatar className="h-24 w-24 sm:h-32 sm:w-32 mx-auto mb-4">
-                      <AvatarImage src={user.profile_photo} />
-                      <AvatarFallback className="text-lg sm:text-2xl">
-                        {user.full_name.charAt(0)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <Button variant="outline" className="text-sm sm:text-base">
-                      <Camera className="h-4 w-4 mr-2" />
-                      Change Photo
-                    </Button>
+                    {!showPhotoUpload ? (
+                      <div>
+                        <Avatar className="h-24 w-24 sm:h-32 sm:w-32 mx-auto mb-4">
+                          <AvatarImage src={user.profile_photo} />
+                          <AvatarFallback className="text-lg sm:text-2xl">
+                            {user.full_name.charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <Button 
+                          variant="outline" 
+                          className="text-sm sm:text-base"
+                          onClick={() => setShowPhotoUpload(true)}
+                        >
+                          <Camera className="h-4 w-4 mr-2" />
+                          Change Photo
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        <ImageUpload
+                          onImageUploaded={handlePhotoUpload}
+                          currentImage={user.profile_photo}
+                          className="w-full"
+                        />
+                        <Button 
+                          variant="outline" 
+                          onClick={() => setShowPhotoUpload(false)}
+                          className="text-sm"
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
