@@ -130,22 +130,22 @@ export default function LandingPage() {
 
   // Fetch system settings on component mount
   useEffect(() => {
+    let isActive = true // Prevent race conditions
+    
     const fetchSystemSettings = async () => {
       try {
-        // Add cache busting to force fresh data
-        const timestamp = new Date().getTime()
-        const response = await fetch(`/api/registration-status?t=${timestamp}`, {
+        const response = await fetch('/api/registration-status', {
           method: 'GET',
           headers: {
             'Cache-Control': 'no-cache',
             'Pragma': 'no-cache'
           }
         })
+        
+        if (!response.ok) throw new Error('Network response was not ok')
         const data = await response.json()
         
-        console.log('Landing page system settings response:', data)
-        
-        if (data.success) {
+        if (isActive && data.success) {
           setBoysRegistrationEnabled(data.boys_registration_enabled === true)
           setBoysRegistrationMessage(data.boys_registration_message || 'Boys registration will open soon! Girls can join now.')
         }
@@ -153,15 +153,25 @@ export default function LandingPage() {
         console.error('Error fetching system settings:', error)
         // Keep defaults on error
       } finally {
-        setSettingsLoaded(true)
+        if (isActive) {
+          setSettingsLoaded(true)
+        }
       }
     }
 
     fetchSystemSettings()
     
-    // Set up interval to refetch every 30 seconds to stay in sync
-    const interval = setInterval(fetchSystemSettings, 30000)
-    return () => clearInterval(interval)
+    // Set up interval to refetch every 60 seconds (reduced from 30 for better performance)
+    const interval = setInterval(() => {
+      if (isActive) {
+        fetchSystemSettings()
+      }
+    }, 60000)
+    
+    return () => {
+      isActive = false
+      clearInterval(interval)
+    }
   }, [])
 
   // Handle automatic routing after login
@@ -220,9 +230,38 @@ export default function LandingPage() {
     handlePostLoginRouting()
   }, [session, status, router])
 
-  const handleCompleteProfile = () => {
-    // Redirect to gender selection page
-    router.push('/gender-selection')
+  const handleCompleteProfile = async () => {
+    if (isCheckingProfile) return
+    
+    setIsCheckingProfile(true)
+    try {
+      // Check if user exists in database first
+      const response = await fetch('/api/auth/user')
+      
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`)
+      }
+      
+      const data = await response.json()
+      
+      if (data.exists) {
+        // User has a profile, redirect to appropriate dashboard
+        if (data.user.is_admin) {
+          router.push('/admin')
+        } else {
+          router.push('/dashboard')
+        }
+      } else {
+        // User doesn't have a profile, redirect to homepage to complete profile
+        router.push('/')
+      }
+    } catch (error) {
+      console.error('Error checking user profile:', error)
+      // Show error message and keep user on current page
+      alert('Error checking profile. Please try again.')
+    } finally {
+      setIsCheckingProfile(false)
+    }
   }
 
   const handleJoinClick = async (gender: 'male' | 'female') => {
@@ -385,7 +424,7 @@ export default function LandingPage() {
       <Navbar />
 
       {/* Hero Section - Enhanced */}
-      <section className="relative pt-24 sm:pt-32 pb-16 sm:pb-20 px-3 sm:px-6 min-h-screen flex items-center bg-mesh overflow-hidden">
+      <section className="relative pt-24 sm:pt-28 pb-8 sm:pb-12 px-3 sm:px-6 min-h-[70vh] flex items-center bg-mesh overflow-hidden">
         {/* Enhanced Background Elements */}
         <div className="absolute inset-0">
           {/* Primary gradient overlays */}
@@ -477,10 +516,10 @@ export default function LandingPage() {
 
           <motion.div
             variants={itemVariants}
-            className="mb-8"
+            className="mb-6"
           >
             <motion.span 
-              className="inline-block px-8 py-3 rounded-full glass-medium border-gradient text-gradient font-semibold text-sm mb-8 hover-glow transition-all-smooth cursor-pointer"
+              className="inline-block px-8 py-3 rounded-full glass-medium border-gradient text-gradient font-semibold text-sm hover-glow transition-all-smooth cursor-pointer"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -492,7 +531,7 @@ export default function LandingPage() {
 
           <motion.h1
             variants={itemVariants}
-            className="text-fluid-2xl font-space font-bold mb-8 leading-tight px-4 sm:px-0"
+            className="text-fluid-xl font-space font-bold mb-4 leading-tight px-4 sm:px-0"
           >
             <motion.span 
               className="text-gradient-cosmic block"
@@ -522,7 +561,7 @@ export default function LandingPage() {
 
           <motion.p
             variants={itemVariants}
-            className="text-fluid-lg text-white/80 mb-12 max-w-4xl mx-auto leading-relaxed px-4 sm:px-6 lg:px-0"
+            className="text-fluid-base text-white/80 mb-6 max-w-4xl mx-auto leading-relaxed px-4 sm:px-6 lg:px-0"
           >
             <motion.span
               initial={{ opacity: 0 }}
@@ -545,7 +584,7 @@ export default function LandingPage() {
           {/* Enhanced Stats Section */}
           <motion.div
             variants={itemVariants}
-            className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16 max-w-5xl mx-auto px-4 sm:px-6 lg:px-0"
+            className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6 max-w-4xl mx-auto px-4 sm:px-6 lg:px-0"
           >
             {stats.map((stat, index) => (
               <motion.div
@@ -554,15 +593,15 @@ export default function LandingPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1.2 + index * 0.1 }}
                 whileHover={{ scale: 1.05, y: -5 }}
-                className="card-premium p-6 text-center group cursor-pointer"
+                className="card-premium p-3 text-center group cursor-pointer"
               >
                 <motion.div 
-                  className="text-3xl md:text-4xl font-bold text-gradient-cosmic mb-2 group-hover:text-gradient-aurora transition-all duration-500"
+                  className="text-xl md:text-2xl font-bold text-gradient-cosmic mb-1 group-hover:text-gradient-aurora transition-all duration-500"
                   whileHover={{ scale: 1.1 }}
                 >
                   {stat.number}
                 </motion.div>
-                <div className="text-white/70 text-sm font-medium group-hover:text-white/90 transition-all duration-300">
+                <div className="text-white/70 text-xs font-medium group-hover:text-white/90 transition-all duration-300">
                   {stat.label}
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-3xl" />
@@ -572,7 +611,7 @@ export default function LandingPage() {
 
           <motion.div
             variants={itemVariants}
-            className="flex flex-col items-center gap-6 sm:gap-8"
+            className="flex flex-col items-center gap-4 sm:gap-6"
           >
             {/* Show different UI based on user state */}
             {userState === 'no-auth' && (
@@ -582,15 +621,15 @@ export default function LandingPage() {
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="glass-medium border-gradient rounded-2xl p-4 sm:p-6 max-w-sm sm:max-w-md mx-auto mb-4 hover-glow"
+                    className="glass-medium border-gradient rounded-2xl p-3 sm:p-4 max-w-sm sm:max-w-md mx-auto mb-3 hover-glow"
                   >
-                    <div className="flex items-center space-x-3 text-orange-400 text-sm sm:text-base">
-                      <div className="p-2 rounded-full bg-orange-500/20">
-                        <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                    <div className="flex items-center space-x-3 text-orange-400 text-sm">
+                      <div className="p-1.5 rounded-full bg-orange-500/20">
+                        <AlertTriangle className="h-4 w-4 flex-shrink-0" />
                       </div>
                       <span className="font-semibold">Registration Update</span>
                     </div>
-                    <p className="text-orange-200 text-sm sm:text-base mt-3 leading-relaxed">
+                    <p className="text-orange-200 text-xs sm:text-sm mt-2 leading-relaxed">
                       {boysRegistrationMessage}
                     </p>
                   </motion.div>
@@ -605,15 +644,15 @@ export default function LandingPage() {
                   <Button 
                     size="lg" 
                     variant="glass"
-                    className="w-full btn-primary text-white font-semibold text-base sm:text-lg px-8 sm:px-10 py-4 sm:py-5 rounded-2xl border-0 shadow-2xl hover:shadow-purple-500/50 transition-all-smooth"
+                    className="w-full btn-primary text-white font-semibold text-base px-8 py-4 rounded-2xl border-0 shadow-2xl hover:shadow-purple-500/50 transition-all-smooth"
                     onClick={handleLoginClick}
                   >
-                    <Users className="mr-3 h-5 w-5 sm:h-6 sm:w-6" />
+                    <Users className="mr-3 h-5 w-5" />
                     Login with Google
                   </Button>
                 </motion.div>
 
-                <div className="text-white/60 text-sm sm:text-base font-medium px-4 relative">
+                <div className="text-white/60 text-sm font-medium px-4 relative">
                   <span className="relative z-10 bg-black px-4">or join as</span>
                   <div className="absolute inset-0 flex items-center">
                     <div className="w-full border-t border-white/20"></div>
@@ -621,7 +660,7 @@ export default function LandingPage() {
                 </div>
 
                 {/* Enhanced Action Buttons Container */}
-                <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 w-full max-w-lg justify-center items-stretch px-4 sm:px-0">
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full max-w-lg justify-center items-stretch px-4 sm:px-0">
                   <motion.div 
                     whileHover={{ scale: 1.02, y: -2 }} 
                     whileTap={{ scale: 0.98 }} 
@@ -629,10 +668,10 @@ export default function LandingPage() {
                   >
                     <Button 
                       size="lg" 
-                      className="w-full btn-secondary text-white font-semibold text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 rounded-2xl border-0 shadow-2xl hover:shadow-pink-500/50 transition-all-smooth min-h-[60px] group"
+                      className="w-full btn-secondary text-white font-semibold text-base px-6 py-4 rounded-2xl border-0 shadow-2xl hover:shadow-pink-500/50 transition-all-smooth min-h-[56px] group"
                       onClick={() => handleJoinClick('female')}
                     >
-                      <Heart className="mr-3 h-5 w-5 sm:h-6 sm:w-6 group-hover:scale-110 transition-transform" />
+                      <Heart className="mr-3 h-5 w-5 group-hover:scale-110 transition-transform" />
                       <span className="relative">
                         College Girl
                         <div className="absolute inset-0 bg-white/10 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -648,7 +687,7 @@ export default function LandingPage() {
                     <Button 
                       size="lg" 
                       variant="glass"
-                      className={`w-full text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 rounded-2xl min-h-[60px] transition-all-smooth group ${
+                      className={`w-full text-base px-6 py-4 rounded-2xl min-h-[56px] transition-all-smooth group ${
                         !boysRegistrationEnabled 
                           ? 'opacity-60 cursor-not-allowed bg-gray-700/50 border-gray-600/50' 
                           : 'glass-strong hover:glass-medium border-gradient hover:shadow-2xl hover:shadow-blue-500/50 text-white font-semibold'
@@ -656,10 +695,10 @@ export default function LandingPage() {
                       disabled={!boysRegistrationEnabled}
                       onClick={() => handleJoinClick('male')}
                     >
-                      <Sparkles className={`mr-3 h-5 w-5 sm:h-6 sm:w-6 transition-transform ${!boysRegistrationEnabled ? '' : 'group-hover:scale-110'}`} />
+                      <Sparkles className={`mr-3 h-5 w-5 transition-transform ${!boysRegistrationEnabled ? '' : 'group-hover:scale-110'}`} />
                       <span className="relative">
                         {!boysRegistrationEnabled ? (
-                          <span className="text-sm sm:text-base">{boysRegistrationMessage.split(' ').slice(0, 3).join(' ')}</span>
+                          <span className="text-sm">Boys Entry Closed</span>
                         ) : (
                           <>
                             College Boy
@@ -685,9 +724,10 @@ export default function LandingPage() {
                     size="lg" 
                     className="w-full sm:w-auto bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 glow-pink text-lg px-8 py-4"
                     onClick={handleCompleteProfile}
+                    disabled={isCheckingProfile}
                   >
                     <Heart className="mr-2 h-5 w-5" />
-                    Complete Your Profile
+                    {isCheckingProfile ? 'Checking Profile...' : 'Complete Your Profile'}
                   </Button>
                 </motion.div>
 
