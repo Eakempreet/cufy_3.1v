@@ -316,9 +316,9 @@ export default function PaymentPage({ subscriptionType, onPaymentProofUploaded }
 
                     <div className="grid md:grid-cols-2 gap-6">
                       {/* QR Code */}
-                      <div className="bg-white rounded-lg p-6 border text-center">
+                      <div className="bg-white rounded-lg p-4 md:p-6 border text-center">
                         <h4 className="font-medium text-gray-900 mb-4">Scan QR Code</h4>
-                        <div className="w-48 h-48 mx-auto bg-white rounded-lg border-2 border-gray-200 flex items-center justify-center mb-4">
+                        <div className="w-40 h-40 sm:w-48 sm:h-48 mx-auto bg-white rounded-lg border-2 border-gray-200 flex items-center justify-center mb-4">
                           {qrCodeDataUrl ? (
                             <img 
                               src={qrCodeDataUrl} 
@@ -326,7 +326,7 @@ export default function PaymentPage({ subscriptionType, onPaymentProofUploaded }
                               className="w-full h-full object-contain rounded-lg"
                             />
                           ) : (
-                            <QrCode className="h-20 w-20 text-gray-400" />
+                            <QrCode className="h-16 w-16 sm:h-20 sm:w-20 text-gray-400" />
                           )}
                         </div>
                         <p className="text-sm text-gray-600">Open any UPI app and scan this code</p>
@@ -449,10 +449,10 @@ export default function PaymentPage({ subscriptionType, onPaymentProofUploaded }
                     </AlertDescription>
                   </Alert>
 
-                  <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-blue-400 transition-colors">
-                    <Camera className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 md:p-8 text-center hover:border-blue-400 transition-colors">
+                    <Camera className="h-10 w-10 md:h-12 md:w-12 text-gray-400 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 mb-2">Upload Screenshot</h3>
-                    <p className="text-gray-600 mb-6">
+                    <p className="text-gray-600 mb-6 text-sm md:text-base">
                       Take a screenshot of your payment confirmation and upload it here
                     </p>
                     

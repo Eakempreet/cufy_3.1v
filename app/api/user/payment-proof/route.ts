@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
       .from('payments')
       .insert({
         user_id: userData.id,
-        amount: userData.subscription_type === 'premium' ? 999 : 499,
+        amount: userData.subscription_type === 'premium' ? 249 : 99,
         payment_method: 'upi',
         status: 'pending',
         subscription_type: userData.subscription_type,

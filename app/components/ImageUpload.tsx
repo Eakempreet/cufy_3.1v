@@ -56,7 +56,8 @@ export default function ImageUpload({ onImageUploaded, currentImage, className =
       onImageUploaded(publicUrl)
 
     } catch (error: any) {
-      alert(error.message)
+      console.error('Image upload error:', error)
+      alert(error.message || 'Failed to upload image. Please try again.')
     } finally {
       setUploading(false)
     }
@@ -69,13 +70,13 @@ export default function ImageUpload({ onImageUploaded, currentImage, className =
           <div className="relative">
             <img
               src={previewUrl}
-              alt="Profile preview"
-              className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg"
+              alt="Payment proof preview"
+              className="w-28 h-28 sm:w-32 sm:h-32 rounded-lg object-cover border-4 border-white shadow-lg"
             />
           </div>
         ) : (
-          <div className="w-32 h-32 rounded-full border-2 border-dashed border-white/30 flex items-center justify-center">
-            <Camera className="h-12 w-12 text-white/50" />
+          <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-lg border-2 border-dashed border-white/30 flex items-center justify-center">
+            <Camera className="h-10 w-10 sm:h-12 sm:w-12 text-white/50" />
           </div>
         )}
         
@@ -93,14 +94,14 @@ export default function ImageUpload({ onImageUploaded, currentImage, className =
               type="button"
               disabled={uploading}
               onClick={() => document.getElementById('image-upload')?.click()}
-              className="cursor-pointer bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600"
+              className="cursor-pointer bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 min-h-[44px] px-4 sm:px-6"
             >
               <Camera className="mr-2 h-4 w-4" />
               {uploading ? 'Uploading...' : previewUrl ? 'Change Photo' : 'Upload Photo'}
             </Button>
           </label>
           <p className="text-sm text-white/60 text-center">
-            Upload a profile photo (max 5MB)<br />
+            Upload payment proof (max 5MB)<br />
             Supported: JPG, PNG, WebP, GIF
           </p>
         </div>

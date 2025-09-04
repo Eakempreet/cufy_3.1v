@@ -1545,7 +1545,7 @@ const PaymentsSection = ({ user }: { user: UserProfile }) => {
           </CardHeader>
           <CardContent className="space-y-6">
             {/* QR Code Section */}
-            <div className="bg-white p-6 rounded-lg flex flex-col items-center space-y-4">
+            <div className="bg-white p-4 sm:p-6 rounded-lg flex flex-col items-center space-y-4">
               <div className="text-center">
                 <h3 className="text-lg font-semibold text-gray-800 mb-2">
                   Scan QR Code to Pay
@@ -1556,15 +1556,15 @@ const PaymentsSection = ({ user }: { user: UserProfile }) => {
               </div>
               
               {/* QR Code Placeholder - You can replace this with actual QR code generation */}
-              <div className="w-48 h-48 bg-gray-100 border-2 border-gray-300 rounded-lg flex items-center justify-center">
+              <div className="w-40 h-40 sm:w-48 sm:h-48 bg-gray-100 border-2 border-gray-300 rounded-lg flex items-center justify-center">
                 {qrCodeDataUrl ? (
                   <img 
                     src={qrCodeDataUrl} 
                     alt="UPI Payment QR Code" 
-                    className="w-44 h-44 rounded-lg"
+                    className="w-full h-full rounded-lg object-contain"
                   />
                 ) : (
-                  <QrCode className="h-20 w-20 text-gray-400" />
+                  <QrCode className="h-16 w-16 sm:h-20 sm:w-20 text-gray-400" />
                 )}
               </div>
               
