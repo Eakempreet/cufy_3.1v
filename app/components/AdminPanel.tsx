@@ -91,6 +91,7 @@ export default function AdminPanel() {
   const [totalUsers, setTotalUsers] = useState(0)
   const [fetchedUsers, setFetchedUsers] = useState(0)
   const [boysRegistrationEnabled, setBoysRegistrationEnabled] = useState(true)
+  const [activeTab, setActiveTab] = useState('users')
   
   // Admin Notes state
   const [adminNotes, setAdminNotes] = useState<AdminNote[]>([])
@@ -98,6 +99,30 @@ export default function AdminPanel() {
   const [isAddingNote, setIsAddingNote] = useState(false)
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null)
   const [editingNoteText, setEditingNoteText] = useState('')
+
+  // Payments pagination
+  const [paymentPage, setPaymentPage] = useState(1)
+  const paymentsPerPage = 10
+
+  useEffect(() => {
+    // Check URL parameters for active tab
+    const urlParams = new URLSearchParams(window.location.search)
+    const tabParam = urlParams.get('tab')
+    if (tabParam && ['users', 'system', 'payments'].includes(tabParam)) {
+      setActiveTab(tabParam)
+    }
+    
+    checkAdminAccess()
+    fetchData()
+  }, [])
+
+  // Update URL when tab changes
+  const handleTabChange = (newTab: string) => {
+    setActiveTab(newTab)
+    const url = new URL(window.location.href)
+    url.searchParams.set('tab', newTab)
+    window.history.replaceState({}, '', url.toString())
+  }
 
   useEffect(() => {
     checkAdminAccess()
@@ -464,7 +489,7 @@ export default function AdminPanel() {
         </motion.div>
 
         {/* Tabs */}
-        <Tabs defaultValue="users" className="w-full">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           <TabsList className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-1 mb-8">
             <TabsTrigger 
               value="users" 
@@ -805,73 +830,146 @@ export default function AdminPanel() {
                     <p className="text-slate-400">Review and confirm user payments</p>
                   </div>
                 </div>
-                
-                <div className="space-y-4">
-                  {users.filter(user => user.gender === 'male' && user.subscription_type).map((user) => (
-                    <div 
-                      key={user.id} 
-                      className="bg-white/5 border border-white/20 rounded-xl p-6 hover:bg-white/10 transition-all"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-4">
-                          <Avatar className="h-12 w-12 border-2 border-purple-500/50">
-                            <AvatarImage src={user.profile_photo} />
-                            <AvatarFallback className="bg-purple-500 text-white">
-                              {user.full_name?.charAt(0)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="space-y-1">
-                            <div className="font-semibold text-white text-lg">
-                              {user.full_name}
-                            </div>
-                            <div className="text-sm text-slate-400">
-                              {user.email} • {user.subscription_type === 'premium' ? '₹249 Premium' : '₹99 Basic'}
-                            </div>
-                          </div>
+
+                {(() => {
+                  const paymentUsers = users.filter(user => user.gender === 'male' && user.subscription_type)
+                  const totalPaymentPages = Math.ceil(paymentUsers.length / paymentsPerPage)
+                  const startIndex = (paymentPage - 1) * paymentsPerPage
+                  const endIndex = startIndex + paymentsPerPage
+                  const currentPaymentUsers = paymentUsers.slice(startIndex, endIndex)
+
+                  return (
+                    <>
+                      {/* Pagination Info for Payments */}
+                      <div className="flex items-center justify-between mb-4 pb-4 border-b border-white/10">
+                        <div className="text-sm text-slate-400">
+                          Showing {startIndex + 1}-{Math.min(endIndex, paymentUsers.length)} of {paymentUsers.length} payment records
                         </div>
-                        
-                        <div className="flex items-center space-x-4">
-                          <Badge 
-                            variant="outline" 
-                            className={`${
-                              user.payment_confirmed 
-                                ? 'border-green-500 text-green-400 bg-green-500/10' 
-                                : 'border-yellow-500 text-yellow-400 bg-yellow-500/10'
-                            } rounded-full px-3 py-1`}
+                        <div className="flex items-center space-x-2">
+                          <Button
+                            onClick={() => setPaymentPage(prev => Math.max(prev - 1, 1))}
+                            disabled={paymentPage === 1}
+                            variant="outline"
+                            size="sm"
+                            className="border-white/20 text-white hover:bg-white/10"
                           >
-                            {user.payment_confirmed ? 'Confirmed' : 'Pending'}
-                          </Badge>
-                          
-                          <div className="flex space-x-2">
-                            <Button 
-                              onClick={() => handleViewPaymentProof(user)}
-                              className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2"
-                            >
-                              <Eye className="h-4 w-4 mr-2" />
-                              View Proof
-                            </Button>
-                            {!user.payment_confirmed && (
-                              <Button 
-                                onClick={() => confirmPayment(user.id)}
-                                className="bg-green-600 hover:bg-green-700 text-white rounded-lg px-4 py-2"
-                              >
-                                <CheckCircle className="h-4 w-4 mr-2" />
-                                Confirm
-                              </Button>
-                            )}
-                          </div>
+                            <ArrowLeft className="h-4 w-4 mr-1" />
+                            Previous
+                          </Button>
+                          <span className="px-3 py-1 bg-white/10 rounded-lg text-white text-sm">
+                            Page {paymentPage} of {totalPaymentPages}
+                          </span>
+                          <Button
+                            onClick={() => setPaymentPage(prev => Math.min(prev + 1, totalPaymentPages))}
+                            disabled={paymentPage === totalPaymentPages}
+                            variant="outline"
+                            size="sm"
+                            className="border-white/20 text-white hover:bg-white/10"
+                          >
+                            Next
+                            <ArrowRight className="h-4 w-4 ml-1" />
+                          </Button>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                  
-                  {users.filter(user => user.gender === 'male' && user.subscription_type).length === 0 && (
-                    <div className="text-center py-12 text-slate-500">
-                      <DollarSign className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                      <p className="text-lg">No payment records found</p>
-                    </div>
-                  )}
-                </div>
+                
+                      <div className="space-y-4">
+                        {currentPaymentUsers.map((user) => (
+                          <motion.div
+                            key={user.id}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            whileHover={{ scale: 1.01 }}
+                            className="bg-white/5 border border-white/20 rounded-xl p-6 hover:bg-white/10 transition-all"
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-4">
+                                <Avatar className="h-16 w-16 border-2 border-purple-500/50">
+                                  <AvatarImage src={user.profile_photo} />
+                                  <AvatarFallback className="bg-purple-500 text-white text-lg">
+                                    {user.full_name?.charAt(0)}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="space-y-2">
+                                  <div className="font-semibold text-white text-xl">
+                                    {user.full_name}
+                                  </div>
+                                  <div className="text-sm text-slate-400">
+                                    {user.email}
+                                  </div>
+                                  <div className="flex items-center space-x-3">
+                                    <Badge 
+                                      variant="outline" 
+                                      className={`${
+                                        user.subscription_type === 'premium' 
+                                          ? 'border-purple-500 text-purple-400 bg-purple-500/10' 
+                                          : 'border-green-500 text-green-400 bg-green-500/10'
+                                      } rounded-full px-3 py-1`}
+                                    >
+                                      {user.subscription_type === 'premium' ? '₹249 Premium' : '₹99 Basic'}
+                                    </Badge>
+                                    <span className="text-xs text-slate-500">
+                                      Joined {new Date(user.created_at).toLocaleDateString()}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              <div className="flex items-center space-x-4">
+                                <Badge 
+                                  variant="outline" 
+                                  className={`${
+                                    user.payment_confirmed 
+                                      ? 'border-green-500 text-green-400 bg-green-500/10' 
+                                      : 'border-yellow-500 text-yellow-400 bg-yellow-500/10'
+                                  } rounded-full px-4 py-2 text-sm font-medium`}
+                                >
+                                  {user.payment_confirmed ? (
+                                    <>
+                                      <CheckCircle className="h-4 w-4 mr-1" />
+                                      Confirmed
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Clock className="h-4 w-4 mr-1" />
+                                      Pending
+                                    </>
+                                  )}
+                                </Badge>
+                                
+                                <div className="flex space-x-2">
+                                  <Button 
+                                    onClick={() => handleViewPaymentProof(user)}
+                                    className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2"
+                                  >
+                                    <Eye className="h-4 w-4 mr-2" />
+                                    View Proof
+                                  </Button>
+                                  {!user.payment_confirmed && (
+                                    <Button 
+                                      onClick={() => confirmPayment(user.id)}
+                                      className="bg-green-600 hover:bg-green-700 text-white rounded-lg px-4 py-2"
+                                    >
+                                      <CheckCircle className="h-4 w-4 mr-2" />
+                                      Confirm
+                                    </Button>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </motion.div>
+                        ))}
+                        
+                        {paymentUsers.length === 0 && (
+                          <div className="text-center py-12 text-slate-500">
+                            <DollarSign className="h-16 w-16 mx-auto mb-4 opacity-50" />
+                            <p className="text-lg">No payment records found</p>
+                            <p className="text-sm mt-2">No male users with subscriptions found</p>
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )
+                })()}
               </div>
             </motion.div>
           </TabsContent>
@@ -1228,7 +1326,7 @@ export default function AdminPanel() {
 
         {/* Payment Proof Dialog */}
         <Dialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen}>
-          <DialogContent className="max-w-3xl bg-slate-900/95 backdrop-blur-xl border border-white/20">
+          <DialogContent className="max-w-5xl max-h-[90vh] bg-slate-900/95 backdrop-blur-xl border border-white/20">
             <DialogHeader>
               <DialogTitle className="text-xl font-bold text-white flex items-center space-x-2">
                 <Eye className="h-5 w-5 text-blue-400" />
@@ -1236,21 +1334,29 @@ export default function AdminPanel() {
               </DialogTitle>
             </DialogHeader>
             
-            <div className="py-6">
+            <div className="py-6 max-h-[70vh] overflow-y-auto">
               {selectedPaymentProof ? (
                 <div className="text-center space-y-4">
-                  <img 
-                    src={selectedPaymentProof} 
-                    alt="Payment Proof" 
-                    className="max-w-full h-auto rounded-xl border border-white/20 shadow-2xl mx-auto"
-                  />
-                  <p className="text-slate-400 text-sm">Review the payment proof above and confirm if valid</p>
+                  <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                    <img 
+                      src={selectedPaymentProof} 
+                      alt="Payment Proof" 
+                      className="max-w-full max-h-[60vh] h-auto rounded-xl border border-white/20 shadow-2xl mx-auto cursor-pointer hover:scale-105 transition-transform duration-300"
+                      onClick={() => {
+                        setShowImageModal(true)
+                        setPaymentDialogOpen(false)
+                      }}
+                    />
+                  </div>
+                  <p className="text-slate-400 text-sm">
+                    Click on the image to view in full size • Review the payment proof and confirm if valid
+                  </p>
                 </div>
               ) : (
                 <div className="text-center py-12 text-slate-500">
                   <AlertTriangle className="h-16 w-16 mx-auto mb-4 opacity-50" />
                   <p className="text-lg">No payment proof available</p>
-                  <p className="text-sm mt-2">The user hasn't uploaded payment proof yet</p>
+                  <p className="text-sm mt-2">The user hasn&apos;t uploaded payment proof yet</p>
                 </div>
               )}
             </div>

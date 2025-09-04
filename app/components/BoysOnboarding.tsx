@@ -672,8 +672,20 @@ export default function BoysOnboarding() {
   }
 
   return (
-    <div className="bg-dark min-h-screen">
-      {renderStep()}
+    <div className="bg-dark min-h-screen relative overflow-hidden">
+      {/* Animated Background */}
+      <div className="absolute inset-0 bg-dark-gradient-animated opacity-80"></div>
+      <div className="absolute inset-0 bg-cyber-pattern opacity-10"></div>
+      
+      {/* Floating Orbs */}
+      <div className="floating-orb orb-1"></div>
+      <div className="floating-orb orb-2"></div>
+      <div className="floating-orb orb-3"></div>
+      
+      {/* Content */}
+      <div className="relative z-10">
+        {renderStep()}
+      </div>
     </div>
   )
 }

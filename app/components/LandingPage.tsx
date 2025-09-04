@@ -384,166 +384,289 @@ export default function LandingPage() {
       <FloatingShapes />
       <Navbar />
 
-      {/* Hero Section */}
-      <section className="relative pt-24 sm:pt-32 pb-16 sm:pb-20 px-3 sm:px-6 min-h-screen flex items-center">
+      {/* Hero Section - Enhanced */}
+      <section className="relative pt-24 sm:pt-32 pb-16 sm:pb-20 px-3 sm:px-6 min-h-screen flex items-center bg-mesh overflow-hidden">
+        {/* Enhanced Background Elements */}
+        <div className="absolute inset-0">
+          {/* Primary gradient overlays */}
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-gradient-to-br from-purple-500/20 to-transparent rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-gradient-to-br from-pink-500/20 to-transparent rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-gradient-to-br from-cyan-500/15 to-transparent rounded-full blur-3xl animate-pulse" style={{ animationDelay: '4s' }} />
+          
+          {/* Grid overlay */}
+          <div className="absolute inset-0 bg-grid opacity-30" />
+          
+          {/* Floating particles */}
+          <div className="absolute inset-0">
+            {[...Array(15)].map((_, i) => (
+              <motion.div
+                key={i}
+                className="absolute w-1 h-1 bg-white/20 rounded-full"
+                style={{
+                  left: `${Math.random() * 100}%`,
+                  top: `${Math.random() * 100}%`,
+                }}
+                animate={{
+                  y: [-20, 20],
+                  opacity: [0.2, 0.8, 0.2],
+                }}
+                transition={{
+                  duration: 3 + Math.random() * 4,
+                  repeat: Infinity,
+                  delay: Math.random() * 2,
+                }}
+              />
+            ))}
+          </div>
+        </div>
+
         <motion.div
           variants={containerVariants}
           initial="hidden"
           animate="visible"
           className="container mx-auto text-center relative z-10"
         >
-          {/* Floating Elements */}
+          {/* Enhanced Floating Elements */}
           <motion.div
-            initial={{ y: 0 }}
+            initial={{ y: 0, rotate: 0 }}
             animate={{ 
-              y: [-10, 10, -10],
+              y: [-15, 15, -15],
+              rotate: [-5, 5, -5],
               transition: {
-                duration: 4,
+                duration: 6,
                 repeat: Infinity,
                 ease: "easeInOut"
               }
             }}
-            className="absolute -top-10 -left-10 text-6xl opacity-20"
+            className="absolute -top-10 -left-10 text-6xl opacity-30 blur-sm"
           >
             💕
           </motion.div>
           <motion.div
-            initial={{ y: 0 }}
+            initial={{ y: 0, rotate: 0 }}
             animate={{ 
-              y: [-10, 10, -10],
+              y: [-10, 20, -10],
+              rotate: [5, -5, 5],
               transition: {
-                duration: 4,
+                duration: 8,
                 repeat: Infinity,
                 ease: "easeInOut",
                 delay: 1
               }
             }}
-            className="absolute -top-5 -right-10 text-4xl opacity-20"
+            className="absolute -top-5 -right-10 text-4xl opacity-30 blur-sm"
           >
             ✨
+          </motion.div>
+          <motion.div
+            initial={{ y: 0, scale: 1 }}
+            animate={{ 
+              y: [-8, 12, -8],
+              scale: [1, 1.1, 1],
+              transition: {
+                duration: 7,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: 2
+              }
+            }}
+            className="absolute top-20 left-20 text-3xl opacity-25 blur-sm"
+          >
+            💫
           </motion.div>
 
           <motion.div
             variants={itemVariants}
-            className="mb-6"
+            className="mb-8"
           >
-            <span className="inline-block px-6 py-2 rounded-full bg-gradient-to-r from-pink-500/20 to-purple-500/20 border border-pink-500/30 text-pink-300 font-medium text-sm mb-6">
-              🎓 The #1 College Dating Platform in India
-            </span>
+            <motion.span 
+              className="inline-block px-8 py-3 rounded-full glass-medium border-gradient text-gradient font-semibold text-sm mb-8 hover-glow transition-all-smooth cursor-pointer"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <span className="flex items-center gap-2 justify-center">
+                🎓 <span className="text-gradient-aurora">The #1 College Dating Platform in India</span>
+              </span>
+            </motion.span>
           </motion.div>
 
           <motion.h1
             variants={itemVariants}
-            className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold font-poppins mb-4 sm:mb-6 leading-tight px-4 sm:px-0"
+            className="text-fluid-2xl font-space font-bold mb-8 leading-tight px-4 sm:px-0"
           >
-            <span className="text-gradient">Where Matches</span>{' '}
-            <span className="text-white">Are Meant</span>{' '}
-            <br className="hidden sm:block" />
-            <span className="text-gradient">to Meet</span>
+            <motion.span 
+              className="text-gradient-cosmic block"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              Where Matches
+            </motion.span>
+            <motion.span 
+              className="text-white block"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+              Are Meant
+            </motion.span>
+            <motion.span 
+              className="text-gradient-aurora block"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+            >
+              to Meet
+            </motion.span>
           </motion.h1>
 
           <motion.p
             variants={itemVariants}
-            className="text-base sm:text-lg md:text-xl lg:text-2xl text-white/70 mb-6 sm:mb-8 max-w-4xl mx-auto leading-relaxed px-4 sm:px-6 lg:px-0"
+            className="text-fluid-lg text-white/80 mb-12 max-w-4xl mx-auto leading-relaxed px-4 sm:px-6 lg:px-0"
           >
-            Connect with genuine college students, build meaningful relationships, and discover your perfect study partner or soulmate. 
+            <motion.span
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.8 }}
+            >
+              Connect with genuine college students, build meaningful relationships, and discover your perfect study partner or soulmate.
+            </motion.span>
             <br className="hidden md:block" />
-            <span className="text-gradient font-semibold">Where campus romance meets real connections.</span>
+            <motion.span 
+              className="text-gradient-cosmic font-semibold"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.0 }}
+            >
+              Where campus romance meets real connections.
+            </motion.span>
           </motion.p>
 
-          {/* Stats Section */}
+          {/* Enhanced Stats Section */}
           <motion.div
             variants={itemVariants}
-            className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-8 sm:mb-12 max-w-4xl mx-auto px-4 sm:px-6 lg:px-0"
+            className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16 max-w-5xl mx-auto px-4 sm:px-6 lg:px-0"
           >
             {stats.map((stat, index) => (
               <motion.div
                 key={index}
-                whileHover={{ scale: 1.05 }}
-                className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-3 sm:p-4 text-center"
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.2 + index * 0.1 }}
+                whileHover={{ scale: 1.05, y: -5 }}
+                className="card-premium p-6 text-center group cursor-pointer"
               >
-                <div className="text-lg sm:text-2xl md:text-3xl font-bold text-gradient mb-1">
+                <motion.div 
+                  className="text-3xl md:text-4xl font-bold text-gradient-cosmic mb-2 group-hover:text-gradient-aurora transition-all duration-500"
+                  whileHover={{ scale: 1.1 }}
+                >
                   {stat.number}
-                </div>
-                <div className="text-white/60 text-xs sm:text-sm">
+                </motion.div>
+                <div className="text-white/70 text-sm font-medium group-hover:text-white/90 transition-all duration-300">
                   {stat.label}
                 </div>
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-3xl" />
               </motion.div>
             ))}
           </motion.div>
 
           <motion.div
             variants={itemVariants}
-            className="flex flex-col items-center gap-4 sm:gap-6"
+            className="flex flex-col items-center gap-6 sm:gap-8"
           >
             {/* Show different UI based on user state */}
             {userState === 'no-auth' && (
               <>
-                {/* Warning above buttons */}
+                {/* Enhanced Warning above buttons */}
                 {!boysRegistrationEnabled && (
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-orange-500/10 border border-orange-500/20 rounded-xl p-3 sm:p-4 max-w-sm sm:max-w-md mx-auto backdrop-blur-xl mb-2"
+                    className="glass-medium border-gradient rounded-2xl p-4 sm:p-6 max-w-sm sm:max-w-md mx-auto mb-4 hover-glow"
                   >
-                    <div className="flex items-center space-x-2 text-orange-400 text-xs sm:text-sm">
-                      <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                      <span className="font-medium">Registration Update</span>
+                    <div className="flex items-center space-x-3 text-orange-400 text-sm sm:text-base">
+                      <div className="p-2 rounded-full bg-orange-500/20">
+                        <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                      </div>
+                      <span className="font-semibold">Registration Update</span>
                     </div>
-                    <p className="text-orange-200 text-xs sm:text-sm mt-1">
+                    <p className="text-orange-200 text-sm sm:text-base mt-3 leading-relaxed">
                       {boysRegistrationMessage}
                     </p>
                   </motion.div>
                 )}
 
-                {/* Login Button */}
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="w-full max-w-xs px-4 sm:px-0">
+                {/* Enhanced Login Button */}
+                <motion.div 
+                  whileHover={{ scale: 1.02 }} 
+                  whileTap={{ scale: 0.98 }} 
+                  className="w-full max-w-sm px-4 sm:px-0"
+                >
                   <Button 
                     size="lg" 
                     variant="glass"
-                    className="w-full hover:glow text-sm sm:text-base lg:text-lg px-6 sm:px-8 py-3 sm:py-4"
+                    className="w-full btn-primary text-white font-semibold text-base sm:text-lg px-8 sm:px-10 py-4 sm:py-5 rounded-2xl border-0 shadow-2xl hover:shadow-purple-500/50 transition-all-smooth"
                     onClick={handleLoginClick}
                   >
-                    <Users className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+                    <Users className="mr-3 h-5 w-5 sm:h-6 sm:w-6" />
                     Login with Google
                   </Button>
                 </motion.div>
 
-                <div className="text-white/50 text-xs sm:text-sm font-medium px-4">or join as</div>
+                <div className="text-white/60 text-sm sm:text-base font-medium px-4 relative">
+                  <span className="relative z-10 bg-black px-4">or join as</span>
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-white/20"></div>
+                  </div>
+                </div>
 
-                {/* Action Buttons Container */}
-                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full max-w-md justify-center items-stretch px-4 sm:px-0">
-                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex-1">
+                {/* Enhanced Action Buttons Container */}
+                <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 w-full max-w-lg justify-center items-stretch px-4 sm:px-0">
+                  <motion.div 
+                    whileHover={{ scale: 1.02, y: -2 }} 
+                    whileTap={{ scale: 0.98 }} 
+                    className="flex-1"
+                  >
                     <Button 
                       size="lg" 
-                      className="w-full bg-gradient-to-r from-pink-500 via-rose-500 to-pink-600 hover:from-pink-600 hover:via-rose-600 hover:to-pink-700 glow-pink text-sm sm:text-base lg:text-lg px-4 sm:px-8 py-4 sm:py-4 shadow-2xl shadow-pink-500/25 min-h-[48px]"
+                      className="w-full btn-secondary text-white font-semibold text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 rounded-2xl border-0 shadow-2xl hover:shadow-pink-500/50 transition-all-smooth min-h-[60px] group"
                       onClick={() => handleJoinClick('female')}
                     >
-                      <Heart className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
-                      College Girl
+                      <Heart className="mr-3 h-5 w-5 sm:h-6 sm:w-6 group-hover:scale-110 transition-transform" />
+                      <span className="relative">
+                        College Girl
+                        <div className="absolute inset-0 bg-white/10 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      </span>
                     </Button>
                   </motion.div>
 
-                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex-1">
+                  <motion.div 
+                    whileHover={{ scale: !boysRegistrationEnabled ? 1 : 1.02, y: !boysRegistrationEnabled ? 0 : -2 }} 
+                    whileTap={{ scale: !boysRegistrationEnabled ? 1 : 0.98 }} 
+                    className="flex-1"
+                  >
                     <Button 
                       size="lg" 
                       variant="glass"
-                      className={`w-full text-sm sm:text-base lg:text-lg px-4 sm:px-8 py-4 sm:py-4 min-h-[48px] ${
+                      className={`w-full text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 rounded-2xl min-h-[60px] transition-all-smooth group ${
                         !boysRegistrationEnabled 
-                          ? 'opacity-50 cursor-not-allowed bg-gray-600' 
-                          : 'hover:glow shadow-2xl shadow-blue-500/25'
+                          ? 'opacity-60 cursor-not-allowed bg-gray-700/50 border-gray-600/50' 
+                          : 'glass-strong hover:glass-medium border-gradient hover:shadow-2xl hover:shadow-blue-500/50 text-white font-semibold'
                       }`}
                       disabled={!boysRegistrationEnabled}
                       onClick={() => handleJoinClick('male')}
                     >
-                      <Sparkles className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
-                      {!boysRegistrationEnabled ? (
-                        <span className="text-xs sm:text-sm lg:text-base">
-                          Boys Entry<br className="sm:hidden" /> Closed
-                        </span>
-                      ) : (
-                        'College Boy'
-                      )}
+                      <Sparkles className={`mr-3 h-5 w-5 sm:h-6 sm:w-6 transition-transform ${!boysRegistrationEnabled ? '' : 'group-hover:scale-110'}`} />
+                      <span className="relative">
+                        {!boysRegistrationEnabled ? (
+                          <span className="text-sm sm:text-base">{boysRegistrationMessage.split(' ').slice(0, 3).join(' ')}</span>
+                        ) : (
+                          <>
+                            College Boy
+                            <div className="absolute inset-0 bg-white/5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                          </>
+                        )}
+                      </span>
                     </Button>
                   </motion.div>
                 </div>
