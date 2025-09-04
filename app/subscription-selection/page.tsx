@@ -48,7 +48,7 @@ export default function SubscriptionSelectionPage() {
   // Show loading while session is loading
   if (status === 'loading') {
     return (
-      <div className="bg-dark min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-white">Checking authentication...</div>
       </div>
     )
@@ -93,14 +93,14 @@ export default function SubscriptionSelectionPage() {
 
   if (isLoading) {
     return (
-      <div className="bg-dark min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-white">Loading...</div>
       </div>
     )
   }
 
   return (
-    <div className="bg-dark min-h-screen">
+    <div className="min-h-screen">
       <SubscriptionSelection onSelect={handleSubscriptionSelect} />
     </div>
   )

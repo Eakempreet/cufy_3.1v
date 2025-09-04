@@ -1445,8 +1445,8 @@ const PaymentsSection = ({ user }: { user: UserProfile }) => {
   useEffect(() => {
     if (user?.subscription_type && !user.payment_confirmed) {
       const amount = user.subscription_type === 'basic' ? '99' : '249'
-      const upiId = '9211660455@fam'
-      const name = 'Eakempreet Singh'
+      const upiId = '9773978753@fam'
+      const name = 'Aman Singh'
       
       // UPI payment URL format with your details
       const upiUrl = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(name)}&am=${amount}.0`
@@ -1576,8 +1576,8 @@ const PaymentsSection = ({ user }: { user: UserProfile }) => {
               <Button
                 onClick={() => {
                   const amount = user.subscription_type === 'basic' ? '99' : '249'
-                  const upiId = '9211660455@fam'
-                  const name = 'Eakempreet Singh'
+                  const upiId = '9773978753@fam'
+                  const name = 'Aman Singh'
                   const upiUrl = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(name)}&am=${amount}.0`
                   
                   // Try to open UPI app directly
@@ -1602,10 +1602,10 @@ const PaymentsSection = ({ user }: { user: UserProfile }) => {
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <p className="text-white/70 text-sm">UPI ID</p>
-                    <p className="text-white font-mono text-lg">9211660455@fam</p>
+                    <p className="text-white font-mono text-lg">9773978753@fam</p>
                   </div>
                   <Button
-                    onClick={() => copyToClipboard('9211660455@fam', 'UPI ID')}
+                    onClick={() => copyToClipboard('9773978753@fam', 'UPI ID')}
                     variant="outline"
                     size="sm"
                     className="border-white/20 text-white hover:bg-white/10"
@@ -1624,10 +1624,10 @@ const PaymentsSection = ({ user }: { user: UserProfile }) => {
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <p className="text-white/70 text-sm">Account Name</p>
-                    <p className="text-white font-semibold">Eakempreet Singh</p>
+                    <p className="text-white font-semibold">Aman Singh</p>
                   </div>
                   <Button
-                    onClick={() => copyToClipboard('Eakempreet Singh', 'Account Name')}
+                    onClick={() => copyToClipboard('Aman Singh', 'Account Name')}
                     variant="outline"
                     size="sm"
                     className="border-white/20 text-white hover:bg-white/10"
@@ -1672,7 +1672,7 @@ const PaymentsSection = ({ user }: { user: UserProfile }) => {
                   Payment Instructions
                 </h5>
                 <ul className="text-white/70 text-sm space-y-1">
-                  <li>• Use any UPI app to pay to: 9211660455@fam</li>
+                  <li>• Use any UPI app to pay to: 9773978753@fam</li>
                   <li>• Amount: ₹{user.subscription_type === 'basic' ? '99' : '249'}</li>
                   <li>• After payment, upload screenshot below</li>
                   <li>• Your account will be activated after verification</li>
@@ -1696,8 +1696,8 @@ const PaymentsSection = ({ user }: { user: UserProfile }) => {
                       key={app.name}
                       onClick={() => {
                         const amount = user.subscription_type === 'basic' ? '99' : '249'
-                        const upiId = '9211660455@fam'
-                        const name = 'Eakempreet Singh'
+                        const upiId = '9773978753@fam'
+                        const name = 'Aman Singh'
                         const upiUrl = `${app.url}?pa=${upiId}&pn=${encodeURIComponent(name)}&am=${amount}.0`
                         
                         // Fallback to generic UPI URL if app-specific doesn't work

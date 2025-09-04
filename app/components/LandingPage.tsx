@@ -393,8 +393,8 @@ export default function LandingPage() {
           <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-gradient-to-br from-pink-500/20 to-transparent rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-gradient-to-br from-cyan-500/15 to-transparent rounded-full blur-3xl animate-pulse" style={{ animationDelay: '4s' }} />
           
-          {/* Grid overlay */}
-          <div className="absolute inset-0 bg-grid opacity-30" />
+          {/* Grid overlay - reduced opacity */}
+          <div className="absolute inset-0 bg-grid opacity-5" />
           
           {/* Floating particles */}
           <div className="absolute inset-0">
@@ -737,7 +737,7 @@ export default function LandingPage() {
       <section className="py-20 px-6 relative">
         <motion.div
           style={{ y: y1 }}
-          className="absolute top-0 left-0 w-full h-full opacity-10"
+          className="absolute top-0 left-0 w-full h-full opacity-5"
         >
           <div className="absolute top-10 left-10 text-8xl">💖</div>
           <div className="absolute bottom-10 right-10 text-8xl">✨</div>

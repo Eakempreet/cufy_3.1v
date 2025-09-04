@@ -390,6 +390,18 @@ export default function AdminPanel() {
   const currentUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser)
   const totalPages = Math.ceil(filteredUsers.length / usersPerPage)
 
+  // Calculate total earnings
+  const calculateTotalEarnings = () => {
+    return users
+      .filter(user => user.gender === 'male' && user.payment_confirmed && user.subscription_type)
+      .reduce((total, user) => {
+        const amount = user.subscription_type === 'premium' ? 249 : 99
+        return total + amount
+      }, 0)
+  }
+
+  const totalEarnings = calculateTotalEarnings()
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
@@ -403,32 +415,35 @@ export default function AdminPanel() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      <div className="container mx-auto px-6 py-8">
+    <div className="min-h-screen bg-dark relative overflow-hidden">
+      {/* Background effects matching the site theme */}
+      <div className="absolute inset-0 bg-mesh"></div>
+      
+      <div className="container mx-auto px-4 py-6 relative z-10">
         {/* Enhanced Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
+          className="mb-6"
         >
-          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8">
-            <div className="flex items-center justify-between mb-6">
+          <div className="glass-medium rounded-2xl p-6">
+            <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-4">
-                <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl">
-                  <Settings className="h-8 w-8 text-white" />
+                <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl">
+                  <Settings className="h-6 w-6 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold text-white">
-                    Professional Admin Dashboard
+                  <h1 className="text-2xl font-bold text-white">
+                    Admin Dashboard
                   </h1>
-                  <p className="text-slate-400 mt-1">
-                    Complete user management & analytics platform
+                  <p className="text-white/70 mt-1">
+                    Manage users & analytics
                   </p>
                 </div>
               </div>
               <div className="flex items-center space-x-4">
                 <div className="text-right">
-                  <div className="text-sm text-slate-400">Database Status</div>
+                  <div className="text-sm text-white/60">Database Status</div>
                   <div className="flex items-center space-x-2">
                     <Database className="h-4 w-4 text-green-400" />
                     <span className="text-green-400 font-medium">Connected</span>
@@ -446,30 +461,169 @@ export default function AdminPanel() {
             </div>
 
             {/* Statistics Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              <div className="bg-white/10 rounded-xl p-4 text-center">
-                <div className="text-2xl font-bold text-white">{totalUsers}</div>
-                <div className="text-xs text-slate-400">Total DB</div>
-              </div>
-              <div className="bg-white/10 rounded-xl p-4 text-center">
-                <div className="text-2xl font-bold text-blue-400">{fetchedUsers}</div>
-                <div className="text-xs text-slate-400">Fetched</div>
-              </div>
-              <div className="bg-white/10 rounded-xl p-4 text-center">
-                <div className="text-2xl font-bold text-pink-400">{users.filter(u => u.gender === 'female').length}</div>
-                <div className="text-xs text-slate-400">Girls</div>
-              </div>
-              <div className="bg-white/10 rounded-xl p-4 text-center">
-                <div className="text-2xl font-bold text-blue-400">{users.filter(u => u.gender === 'male').length}</div>
-                <div className="text-xs text-slate-400">Boys</div>
-              </div>
-              <div className="bg-white/10 rounded-xl p-4 text-center">
-                <div className="text-2xl font-bold text-green-400">{users.filter(u => u.payment_confirmed).length}</div>
-                <div className="text-xs text-slate-400">Paid</div>
-              </div>
-              <div className="bg-white/10 rounded-xl p-4 text-center">
-                <div className="text-2xl font-bold text-purple-400">{users.filter(u => u.subscription_type === 'premium').length}</div>
-                <div className="text-xs text-slate-400">Premium</div>
+            <div className="grid grid-cols-1 lg:grid-cols-7 gap-4 mb-6">
+              {/* Total Earnings - Featured Card */}
+              <motion.div 
+                className="lg:col-span-3 relative overflow-hidden"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+                whileHover={{ scale: 1.02 }}
+              >
+                <div className="relative glass-medium rounded-2xl p-6 overflow-hidden border border-emerald-500/20">
+                  {/* Background accent */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-green-600/5"></div>
+                  <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-emerald-400/10 to-transparent rounded-full blur-3xl"></div>
+                  <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-green-400/10 to-transparent rounded-full blur-2xl"></div>
+                  
+                  {/* Content */}
+                  <div className="relative z-10">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-3">
+                        <motion.div 
+                          className="p-2 bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl shadow-lg"
+                          whileHover={{ scale: 1.1, rotate: 5 }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          <DollarSign className="h-6 w-6 text-white" />
+                        </motion.div>
+                        <div>
+                          <div className="text-emerald-300 text-sm font-semibold tracking-wide">TOTAL REVENUE</div>
+                          <div className="text-emerald-200/70 text-xs">From confirmed payments</div>
+                        </div>
+                      </div>
+                      <motion.div 
+                        className="text-emerald-300/60 text-xs bg-emerald-500/10 px-2 py-1 rounded-full border border-emerald-500/20"
+                        animate={{ opacity: [0.6, 1, 0.6] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                      >
+                        Live
+                      </motion.div>
+                    </div>
+                    
+                    <motion.div 
+                      className="text-3xl lg:text-4xl font-bold bg-gradient-to-br from-emerald-300 to-green-400 bg-clip-text text-transparent mb-3"
+                      initial={{ opacity: 0, scale: 0.5 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.8, delay: 0.2 }}
+                    >
+                      ₹{totalEarnings.toLocaleString()}
+                    </motion.div>
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm text-emerald-200/80">
+                        <span className="font-semibold">{users.filter(u => u.payment_confirmed).length}</span> confirmed payments
+                      </div>
+                      <motion.div 
+                        className="flex items-center space-x-1 text-xs text-emerald-300/60"
+                        animate={{ x: [0, 3, 0] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                      >
+                        <span>↗</span>
+                        <span>Growing</span>
+                      </motion.div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Premium Other Stats */}
+              <div className="lg:col-span-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+                <motion.div 
+                  className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 text-center hover:bg-white/10 hover:border-white/20 transition-all duration-300 group"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.1 }}
+                  whileHover={{ scale: 1.05, y: -5 }}
+                >
+                  <motion.div 
+                    className="text-3xl font-bold text-white mb-2 group-hover:text-blue-300 transition-colors duration-300"
+                    whileHover={{ scale: 1.1 }}
+                  >
+                    {totalUsers}
+                  </motion.div>
+                  <div className="text-xs text-slate-400 font-medium">Total Users</div>
+                  <div className="mt-2 w-full bg-white/10 rounded-full h-1 overflow-hidden">
+                    <motion.div 
+                      className="h-full bg-gradient-to-r from-blue-400 to-blue-500"
+                      initial={{ width: 0 }}
+                      animate={{ width: '100%' }}
+                      transition={{ duration: 1, delay: 0.5 }}
+                    />
+                  </div>
+                </motion.div>
+
+                <motion.div 
+                  className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 text-center hover:bg-white/10 hover:border-white/20 transition-all duration-300 group"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.2 }}
+                  whileHover={{ scale: 1.05, y: -5 }}
+                >
+                  <motion.div 
+                    className="text-3xl font-bold text-pink-400 mb-2 group-hover:text-pink-300 transition-colors duration-300"
+                    whileHover={{ scale: 1.1 }}
+                  >
+                    {users.filter(u => u.gender === 'female').length}
+                  </motion.div>
+                  <div className="text-xs text-slate-400 font-medium">Girls</div>
+                  <div className="mt-2 w-full bg-white/10 rounded-full h-1 overflow-hidden">
+                    <motion.div 
+                      className="h-full bg-gradient-to-r from-pink-400 to-pink-500"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${(users.filter(u => u.gender === 'female').length / totalUsers) * 100}%` }}
+                      transition={{ duration: 1, delay: 0.7 }}
+                    />
+                  </div>
+                </motion.div>
+
+                <motion.div 
+                  className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 text-center hover:bg-white/10 hover:border-white/20 transition-all duration-300 group"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.3 }}
+                  whileHover={{ scale: 1.05, y: -5 }}
+                >
+                  <motion.div 
+                    className="text-3xl font-bold text-blue-400 mb-2 group-hover:text-blue-300 transition-colors duration-300"
+                    whileHover={{ scale: 1.1 }}
+                  >
+                    {users.filter(u => u.gender === 'male').length}
+                  </motion.div>
+                  <div className="text-xs text-slate-400 font-medium">Boys</div>
+                  <div className="mt-2 w-full bg-white/10 rounded-full h-1 overflow-hidden">
+                    <motion.div 
+                      className="h-full bg-gradient-to-r from-blue-400 to-blue-500"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${(users.filter(u => u.gender === 'male').length / totalUsers) * 100}%` }}
+                      transition={{ duration: 1, delay: 0.9 }}
+                    />
+                  </div>
+                </motion.div>
+
+                <motion.div 
+                  className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 text-center hover:bg-white/10 hover:border-white/20 transition-all duration-300 group"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.4 }}
+                  whileHover={{ scale: 1.05, y: -5 }}
+                >
+                  <motion.div 
+                    className="text-3xl font-bold text-purple-400 mb-2 group-hover:text-purple-300 transition-colors duration-300"
+                    whileHover={{ scale: 1.1 }}
+                  >
+                    {users.filter(u => u.subscription_type === 'premium').length}
+                  </motion.div>
+                  <div className="text-xs text-slate-400 font-medium">Premium</div>
+                  <div className="mt-2 w-full bg-white/10 rounded-full h-1 overflow-hidden">
+                    <motion.div 
+                      className="h-full bg-gradient-to-r from-purple-400 to-purple-500"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${(users.filter(u => u.subscription_type === 'premium').length / totalUsers) * 100}%` }}
+                      transition={{ duration: 1, delay: 1.1 }}
+                    />
+                  </div>
+                </motion.div>
               </div>
             </div>
 
@@ -490,27 +644,36 @@ export default function AdminPanel() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-          <TabsList className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-1 mb-8">
+          <TabsList className="glass-medium rounded-xl p-1 mb-6 shadow-lg">
             <TabsTrigger 
               value="users" 
-              className="data-[state=active]:bg-blue-500 data-[state=active]:text-white rounded-lg px-6 py-3 transition-all"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg px-6 py-3 transition-all duration-300 hover:bg-white/10 font-medium group"
             >
-              <Users className="h-4 w-4 mr-2" />
-              Users ({users.length})
+              <Users className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform duration-300" />
+              <span className="flex flex-col items-start">
+                <span>Users</span>
+                <span className="text-xs opacity-70">({users.length})</span>
+              </span>
             </TabsTrigger>
             <TabsTrigger 
               value="system" 
-              className="data-[state=active]:bg-red-500 data-[state=active]:text-white rounded-lg px-6 py-3 transition-all"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-red-500 data-[state=active]:to-red-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg px-6 py-3 transition-all duration-300 hover:bg-white/10 font-medium group"
             >
-              <Shield className="h-4 w-4 mr-2" />
-              System Controls
+              <Shield className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform duration-300" />
+              <span className="flex flex-col items-start">
+                <span>System</span>
+                <span className="text-xs opacity-70">Controls</span>
+              </span>
             </TabsTrigger>
             <TabsTrigger 
               value="payments" 
-              className="data-[state=active]:bg-purple-500 data-[state=active]:text-white rounded-lg px-6 py-3 transition-all"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg px-6 py-3 transition-all duration-300 hover:bg-white/10 font-medium group"
             >
-              <DollarSign className="h-4 w-4 mr-2" />
-              Payments
+              <DollarSign className="h-5 w-5 mr-3 group-hover:scale-110 transition-transform duration-300" />
+              <span className="flex flex-col items-start">
+                <span>Payments</span>
+                <span className="text-xs opacity-70">(₹{totalEarnings.toLocaleString()})</span>
+              </span>
             </TabsTrigger>
           </TabsList>
 
