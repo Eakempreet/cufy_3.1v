@@ -51,28 +51,28 @@ const footerLinks = [
   {
     title: 'Platform',
     links: [
-      { name: 'How it Works', href: '#' },
-      { name: 'Safety', href: '#' },
-      { name: 'Success Stories', href: '#' },
-      { name: 'Blog', href: '#' }
+      { name: 'How it Works', href: '/how-it-works' },
+      { name: 'Safety', href: '/safety' },
+      { name: 'Success Stories', href: '/success-stories' },
+      { name: 'Blog', href: '/blog' }
     ]
   },
   {
     title: 'Support',
     links: [
-      { name: 'Help Center', href: '#' },
-      { name: 'Contact Us', href: '#' },
-      { name: 'Privacy Policy', href: '#' },
-      { name: 'Terms of Service', href: '#' }
+      { name: 'Help Center', href: '/help-center' },
+      { name: 'Contact Us', href: '/contact-us' },
+      { name: 'Privacy Policy', href: '/privacy-policy' },
+      { name: 'Terms of Service', href: '/terms-of-service' }
     ]
   },
   {
     title: 'Community',
     links: [
-      { name: 'College Partners', href: '#' },
-      { name: 'Campus Events', href: '#' },
-      { name: 'Student Discounts', href: '#' },
-      { name: 'Referral Program', href: '#' }
+      { name: 'College Partners', href: '/college-partners' },
+      { name: 'Campus Events', href: '/campus-events' },
+      { name: 'Student Discounts', href: '/student-discounts' },
+      { name: 'Referral Program', href: '/referral-program' }
     ]
   }
 ]
