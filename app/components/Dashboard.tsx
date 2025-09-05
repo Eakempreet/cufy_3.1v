@@ -120,6 +120,8 @@ export default function Dashboard() {
     instagram: ''
   })
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false)
+  const [profileUpdateSuccess, setProfileUpdateSuccess] = useState(false)
+  const [profileUpdateError, setProfileUpdateError] = useState<string | null>(null)
   const [instagramInput, setInstagramInput] = useState('')
   const [isSubmittingInstagram, setIsSubmittingInstagram] = useState(false)
   const [showPhotoUpload, setShowPhotoUpload] = useState(false)
@@ -322,6 +324,9 @@ export default function Dashboard() {
 
   const handleProfileUpdate = async () => {
     setIsUpdatingProfile(true)
+    setProfileUpdateError(null)
+    setProfileUpdateSuccess(false)
+    
     try {
       const response = await fetch('/api/user/profile', {
         method: 'PUT',
@@ -338,12 +343,21 @@ export default function Dashboard() {
       if (response.ok) {
         const data = await response.json()
         setUser(data.user)
-        // Show success message (you could add a toast notification here)
+        setProfileUpdateSuccess(true)
+        
+        // Auto-hide success message after 3 seconds
+        setTimeout(() => {
+          setProfileUpdateSuccess(false)
+        }, 3000)
+        
         console.log('Profile updated successfully')
       } else {
+        const errorData = await response.json()
+        setProfileUpdateError(errorData.message || 'Failed to update profile')
         console.error('Failed to update profile')
       }
     } catch (error) {
+      setProfileUpdateError('Network error. Please check your connection and try again.')
       console.error('Error updating profile:', error)
     } finally {
       setIsUpdatingProfile(false)
@@ -355,6 +369,11 @@ export default function Dashboard() {
       ...prev,
       [field]: value
     }))
+    
+    // Clear any existing error when user starts typing
+    if (profileUpdateError) {
+      setProfileUpdateError(null)
+    }
   }
 
   const handleInstagramSubmission = async () => {
@@ -869,13 +888,49 @@ export default function Dashboard() {
                     />
                   </div>
 
+                  {/* Success Message */}
+                  {profileUpdateSuccess && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="p-4 bg-green-500/20 border border-green-500 rounded-lg"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <CheckCircle className="h-5 w-5 text-green-400" />
+                        <span className="text-green-400 font-medium">Profile Saved Successfully!</span>
+                      </div>
+                      <p className="text-green-300 text-sm mt-1">Your changes have been saved.</p>
+                    </motion.div>
+                  )}
+
+                  {/* Error Message */}
+                  {profileUpdateError && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="p-4 bg-red-500/20 border border-red-500 rounded-lg"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <X className="h-5 w-5 text-red-400" />
+                        <span className="text-red-400 font-medium">Error</span>
+                      </div>
+                      <p className="text-red-300 text-sm mt-1">{profileUpdateError}</p>
+                    </motion.div>
+                  )}
+
                   <Button 
-                    className="w-full gradient-primary text-sm sm:text-base"
+                    className={`w-full text-sm sm:text-base transition-all duration-300 ${
+                      profileUpdateSuccess 
+                        ? 'bg-green-500 hover:bg-green-600 border-green-500' 
+                        : 'gradient-primary'
+                    }`}
                     onClick={handleProfileUpdate}
                     disabled={isUpdatingProfile}
                   >
                     <CheckCircle className="h-4 w-4 mr-2" />
-                    {isUpdatingProfile ? 'Saving...' : 'Save Changes'}
+                    {isUpdatingProfile ? 'Saving...' : profileUpdateSuccess ? 'Saved!' : 'Save Changes'}
                   </Button>
                 </CardContent>
               </Card>
