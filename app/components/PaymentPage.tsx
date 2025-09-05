@@ -50,7 +50,7 @@ export default function PaymentPage({ subscriptionType, onPaymentProofUploaded }
   const upiId = "eakempreet55-1@okhdfcbank"
   const recipientName = "Eakempreet Singh"
   const planAmount = plan === 'basic' ? 99 : plan === 'premium' ? 249 : 500
-  const upiLink = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(recipientName)}&am=${planAmount}.0`
+  const upiLink = "upi://pay?pa=eakempreet55-1@okhdfcbank&pn=Eakempreet%20Singh&aid=uGICAgODUm9LWVw"
 
   // Generate QR code
   useEffect(() => {
@@ -104,8 +104,8 @@ export default function PaymentPage({ subscriptionType, onPaymentProofUploaded }
 
   // Open UPI app
   const openUpiApp = (appUrl: string) => {
-    const fullUrl = `${appUrl}?pa=${upiId}&pn=${encodeURIComponent(recipientName)}&am=${planAmount}.0`
-    window.location.href = fullUrl
+    const upiUrl = "upi://pay?pa=eakempreet55-1@okhdfcbank&pn=Eakempreet%20Singh&aid=uGICAgODUm9LWVw"
+    window.location.href = upiUrl
   }
 
   const checkExistingPayment = async () => {

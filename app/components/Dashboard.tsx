@@ -1569,7 +1569,7 @@ const PaymentsSection = ({ user }: { user: UserProfile }) => {
       const upiId = 'eakempreet55-1@okhdfcbank'
       const name = 'Eakempreet Singh'
       
-      // UPI payment URL format with your details
+      // Updated UPI payment URL with your new details
       const upiUrl = "upi://pay?pa=eakempreet55-1@okhdfcbank&pn=Eakempreet%20Singh&aid=uGICAgODUm9LWVw"
       
       QRCode.toDataURL(upiUrl, {

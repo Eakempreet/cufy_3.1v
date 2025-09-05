@@ -985,12 +985,12 @@ export default function AdminPanel() {
             >
               <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-6">
                 <div className="flex items-center space-x-3 mb-6">
-                  <div className="p-3 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl">
+                  <div className="p-3 bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl shadow-lg">
                     <DollarSign className="h-6 w-6 text-white" />
                   </div>
                   <div>
                     <h2 className="text-2xl font-bold text-white">Payment Management</h2>
-                    <p className="text-slate-400">Review and confirm user payments</p>
+                    <p className="text-slate-400">Review and confirm user payments • Updated UPI: eakempreet55-1@okhdfcbank</p>
                   </div>
                 </div>
 
