@@ -252,8 +252,8 @@ export default function LandingPage() {
           router.push('/dashboard')
         }
       } else {
-        // User doesn't have a profile, redirect to homepage to complete profile
-        router.push('/')
+        // User doesn't have a profile, redirect to gender selection to complete profile
+        router.push('/gender-selection')
       }
     } catch (error) {
       console.error('Error checking user profile:', error)
