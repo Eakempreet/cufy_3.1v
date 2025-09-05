@@ -434,17 +434,10 @@ export default function Dashboard() {
       <FloatingShapes />
       
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-        {/* Header with Complete Profile and Logout */}
+        {/* Header with Logout */}
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-white">Dashboard</h1>
           <div className="flex space-x-3">
-            <Button
-              onClick={handleCompleteProfile}
-              className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600"
-            >
-              <User className="h-4 w-4 mr-2" />
-              Complete Profile
-            </Button>
             <Button
               onClick={handleLogout}
               variant="outline"
@@ -591,78 +584,7 @@ export default function Dashboard() {
           </motion.div>
         )}
 
-        {/* Main Complete Profile Section */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <Card className="text-center bg-gradient-to-br from-purple-500/20 to-pink-500/20 border-purple-500/30">
-            <CardContent className="p-6 sm:p-8">
-              <div className="max-w-2xl mx-auto">
-                <motion.div
-                  initial={{ scale: 0.9 }}
-                  animate={{ scale: 1 }}
-                  transition={{ duration: 0.5 }}
-                  className="mb-6"
-                >
-                  <div className="text-4xl sm:text-6xl mb-4">
-                    <span className="text-purple-400">Where Matches</span>
-                    <br />
-                    <span className="text-white">Are Meant</span>
-                    <br />
-                    <span className="text-white">to Meet</span>
-                  </div>
-                </motion.div>
-                
-                <p className="text-white/80 text-lg mb-4">
-                  Connect with genuine college students, build meaningful relationships, and discover your perfect study partner or soulmate.
-                </p>
-                
-                <p className="text-purple-300 text-sm mb-6 font-medium">
-                  Where campus romance meets real connections.
-                </p>
 
-                {/* Stats */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-                  <div className="bg-purple-500/20 rounded-lg p-3">
-                    <div className="text-2xl font-bold text-purple-400">1,600+</div>
-                    <div className="text-white/70 text-sm">Happy Students</div>
-                  </div>
-                  <div className="bg-pink-500/20 rounded-lg p-3">
-                    <div className="text-2xl font-bold text-pink-400">32+</div>
-                    <div className="text-white/70 text-sm">Colleges Connected</div>
-                  </div>
-                  <div className="bg-purple-500/20 rounded-lg p-3">
-                    <div className="text-2xl font-bold text-purple-400">643+</div>
-                    <div className="text-white/70 text-sm">Successful Matches</div>
-                  </div>
-                  <div className="bg-pink-500/20 rounded-lg p-3">
-                    <div className="text-2xl font-bold text-pink-400">4.1/5</div>
-                    <div className="text-white/70 text-sm">Average Rating</div>
-                  </div>
-                </div>
-
-                <div className="mb-6">
-                  <p className="text-white text-lg mb-2">
-                    Welcome back, {user.full_name.split(' ')[0]}! 👋
-                  </p>
-                  <p className="text-white/70">
-                    Complete your profile to start meeting amazing people
-                  </p>
-                </div>
-
-                <Button
-                  onClick={handleCompleteProfile}
-                  className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white text-lg px-8 py-4 rounded-full font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-                >
-                  <Heart className="h-5 w-5 mr-2" />
-                  Complete Your Profile
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
 
         {/* Main Content */}
         <Tabs defaultValue={user.gender === 'male' ? 'matches' : 'matches'} className="w-full">
