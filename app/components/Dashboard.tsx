@@ -1445,11 +1445,11 @@ const PaymentsSection = ({ user }: { user: UserProfile }) => {
   useEffect(() => {
     if (user?.subscription_type && !user.payment_confirmed) {
       const amount = user.subscription_type === 'basic' ? '99' : '249'
-      const upiId = '9773978753@fam'
-      const name = 'Aman Singh'
+      const upiId = 'eakempreet55-1@okhdfcbank'
+      const name = 'Eakempreet Singh'
       
       // UPI payment URL format with your details
-      const upiUrl = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(name)}&am=${amount}.0`
+      const upiUrl = "upi://pay?pa=eakempreet55-1@okhdfcbank&pn=Eakempreet%20Singh&aid=uGICAgODUm9LWVw"
       
       QRCode.toDataURL(upiUrl, {
         width: 200,
@@ -1576,9 +1576,9 @@ const PaymentsSection = ({ user }: { user: UserProfile }) => {
               <Button
                 onClick={() => {
                   const amount = user.subscription_type === 'basic' ? '99' : '249'
-                  const upiId = '9773978753@fam'
-                  const name = 'Aman Singh'
-                  const upiUrl = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(name)}&am=${amount}.0`
+                  const upiId = 'eakempreet55-1@okhdfcbank'
+                  const name = 'Eakempreet Singh'
+                  const upiUrl = "upi://pay?pa=eakempreet55-1@okhdfcbank&pn=Eakempreet%20Singh&aid=uGICAgODUm9LWVw"
                   
                   // Try to open UPI app directly
                   window.location.href = upiUrl
@@ -1602,10 +1602,10 @@ const PaymentsSection = ({ user }: { user: UserProfile }) => {
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <p className="text-white/70 text-sm">UPI ID</p>
-                    <p className="text-white font-mono text-lg">9773978753@fam</p>
+                    <p className="text-white font-mono text-lg">eakempreet55-1@okhdfcbank</p>
                   </div>
                   <Button
-                    onClick={() => copyToClipboard('9773978753@fam', 'UPI ID')}
+                    onClick={() => copyToClipboard('eakempreet55-1@okhdfcbank', 'UPI ID')}
                     variant="outline"
                     size="sm"
                     className="border-white/20 text-white hover:bg-white/10"
@@ -1624,10 +1624,10 @@ const PaymentsSection = ({ user }: { user: UserProfile }) => {
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <p className="text-white/70 text-sm">Account Name</p>
-                    <p className="text-white font-semibold">Aman Singh</p>
+                    <p className="text-white font-semibold">Eakempreet Singh</p>
                   </div>
                   <Button
-                    onClick={() => copyToClipboard('Aman Singh', 'Account Name')}
+                    onClick={() => copyToClipboard('Eakempreet Singh', 'Account Name')}
                     variant="outline"
                     size="sm"
                     className="border-white/20 text-white hover:bg-white/10"
@@ -1672,7 +1672,7 @@ const PaymentsSection = ({ user }: { user: UserProfile }) => {
                   Payment Instructions
                 </h5>
                 <ul className="text-white/70 text-sm space-y-1">
-                  <li>• Use any UPI app to pay to: 9773978753@fam</li>
+                  <li>• Use any UPI app to pay to: eakempreet55-1@okhdfcbank</li>
                   <li>• Amount: ₹{user.subscription_type === 'basic' ? '99' : '249'}</li>
                   <li>• After payment, upload screenshot below</li>
                   <li>• Your account will be activated after verification</li>
@@ -1696,12 +1696,12 @@ const PaymentsSection = ({ user }: { user: UserProfile }) => {
                       key={app.name}
                       onClick={() => {
                         const amount = user.subscription_type === 'basic' ? '99' : '249'
-                        const upiId = '9773978753@fam'
-                        const name = 'Aman Singh'
-                        const upiUrl = `${app.url}?pa=${upiId}&pn=${encodeURIComponent(name)}&am=${amount}.0`
+                        const upiId = 'eakempreet55-1@okhdfcbank'
+                        const name = 'Eakempreet Singh'
+                        const upiUrl = "upi://pay?pa=eakempreet55-1@okhdfcbank&pn=Eakempreet%20Singh&aid=uGICAgODUm9LWVw"
                         
                         // Fallback to generic UPI URL if app-specific doesn't work
-                        const fallbackUrl = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(name)}&am=${amount}.0`
+                        const fallbackUrl = "upi://pay?pa=eakempreet55-1@okhdfcbank&pn=Eakempreet%20Singh&aid=uGICAgODUm9LWVw"
                         
                         try {
                           window.location.href = upiUrl

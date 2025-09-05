@@ -60,8 +60,8 @@
 8. [ ] Payment status shows as pending
 
 ### UPI Integration Testing:
-- [ ] QR code contains correct UPI ID: 9773978753@fam
-- [ ] QR code contains correct payee name: Aman Singh
+- [ ] QR code contains correct UPI ID: eakempreet55-1@okhdfcbank
+- [ ] QR code contains correct payee name: Eakempreet Singh
 - [ ] QR code contains correct amounts (99/249)
 - [ ] UPI links work on mobile devices
 - [ ] UPI apps open correctly from links

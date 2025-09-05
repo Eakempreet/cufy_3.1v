@@ -47,8 +47,8 @@ export default function PaymentPage({ subscriptionType, onPaymentProofUploaded }
   const plan = subscriptionType || searchParams.get('plan')
 
   // Updated UPI details
-  const upiId = "9773978753@fam"
-  const recipientName = "Aman Singh"
+  const upiId = "eakempreet55-1@okhdfcbank"
+  const recipientName = "Eakempreet Singh"
   const planAmount = plan === 'basic' ? 99 : plan === 'premium' ? 249 : 500
   const upiLink = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(recipientName)}&am=${planAmount}.0`
 
