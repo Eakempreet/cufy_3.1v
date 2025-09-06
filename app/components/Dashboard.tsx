@@ -1722,10 +1722,10 @@ const PaymentsSection = ({ user }: { user: UserProfile }) => {
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <p className="text-white/70 text-sm">Account Name</p>
-                    <p className="text-white font-semibold">Eakempreet Singh</p>
+                    <p className="text-white font-semibold">Aman Singh</p>
                   </div>
                   <Button
-                    onClick={() => copyToClipboard('Eakempreet Singh', 'Account Name')}
+                    onClick={() => copyToClipboard('Aman Singh', 'Account Name')}
                     variant="outline"
                     size="sm"
                     className="border-white/20 text-white hover:bg-white/10"
