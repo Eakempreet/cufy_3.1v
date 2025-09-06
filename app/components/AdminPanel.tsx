@@ -990,7 +990,7 @@ export default function AdminPanel() {
                   </div>
                   <div>
                     <h2 className="text-2xl font-bold text-white">Payment Management</h2>
-                    <p className="text-slate-400">Review and confirm user payments • Updated UPI: eakempreet55-1@okhdfcbank</p>
+                    <p className="text-slate-400">Review and confirm user payments • Updated UPI: 9773978753@fam</p>
                   </div>
                 </div>
 

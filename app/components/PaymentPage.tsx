@@ -47,10 +47,10 @@ export default function PaymentPage({ subscriptionType, onPaymentProofUploaded }
   const plan = subscriptionType || searchParams.get('plan')
 
   // Updated UPI details
-  const upiId = "eakempreet55-1@okhdfcbank"
-  const recipientName = "Eakempreet Singh"
+  const upiId = "9773978753@fam"
+  const recipientName = "Aman Singh"
   const planAmount = plan === 'basic' ? 99 : plan === 'premium' ? 249 : 500
-  const upiLink = "upi://pay?pa=eakempreet55-1@okhdfcbank&pn=Eakempreet%20Singh&aid=uGICAgODUm9LWVw"
+  const upiLink = "upi://pay?pa=9773978753@fam&pn=Aman%20Singh"
 
   // Generate QR code
   useEffect(() => {
@@ -104,7 +104,7 @@ export default function PaymentPage({ subscriptionType, onPaymentProofUploaded }
 
   // Open UPI app
   const openUpiApp = (appUrl: string) => {
-    const upiUrl = "upi://pay?pa=eakempreet55-1@okhdfcbank&pn=Eakempreet%20Singh&aid=uGICAgODUm9LWVw"
+    const upiUrl = "upi://pay?pa=9773978753@fam&pn=Aman%20Singh"
     window.location.href = upiUrl
   }
 
