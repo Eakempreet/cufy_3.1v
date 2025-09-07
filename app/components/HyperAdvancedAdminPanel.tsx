@@ -281,12 +281,23 @@ export default function AdminPanel() {
   const [boysRegistrationEnabled, setBoysRegistrationEnabled] = useState(true)
   const [systemMaintenanceMode, setSystemMaintenanceMode] = useState(false)
   
-  // Real-time updates
-  const [realTimeUpdates, setRealTimeUpdates] = useState(true)
+  // Real-time updates - DISABLED by default to prevent excessive refreshing
+  const [realTimeUpdates, setRealTimeUpdates] = useState(false)
   const [lastUpdateTime, setLastUpdateTime] = useState<Date | null>(null)
+  const [lastFetchTime, setLastFetchTime] = useState<number>(0) // Add caching timestamp
+  const [isTabVisible, setIsTabVisible] = useState(true) // Track tab visibility
 
-  const fetchUsers = useCallback(async () => {
+  const fetchUsers = useCallback(async (forceRefresh = false) => {
     try {
+      // Implement caching - don't fetch if data is fresh (less than 2 minutes old)
+      const now = Date.now()
+      const CACHE_DURATION = 2 * 60 * 1000 // 2 minutes
+      
+      if (!forceRefresh && lastFetchTime && (now - lastFetchTime) < CACHE_DURATION && users.length > 0) {
+        console.log('Using cached data, skipping fetch')
+        return
+      }
+      
       const queryParams = new URLSearchParams()
       queryParams.append('page', currentPage.toString())
       queryParams.append('limit', usersPerPage.toString())
@@ -307,11 +318,13 @@ export default function AdminPanel() {
         setUsers(data.users)
         setTotalUsers(data.total)
         setLastUpdateTime(new Date())
+        setLastFetchTime(now) // Update cache timestamp
+        console.log('Data fetched successfully at', new Date().toLocaleTimeString())
       }
     } catch (error) {
       console.error('Error fetching users:', error)
     }
-  }, [currentPage, usersPerPage, debouncedSearchTerm, filters])
+  }, [currentPage, usersPerPage, debouncedSearchTerm, filters, lastFetchTime, users.length])
 
   const fetchSystemSettings = useCallback(async () => {
     try {
@@ -331,7 +344,7 @@ export default function AdminPanel() {
   const handleRefresh = useCallback(async () => {
     setRefreshing(true)
     try {
-      await fetchUsers()
+      await fetchUsers(true) // Force refresh, bypass cache
     } finally {
       setRefreshing(false)
     }
@@ -341,7 +354,7 @@ export default function AdminPanel() {
     setLoading(true)
     try {
       await Promise.all([
-        fetchUsers(),
+        fetchUsers(true), // Force initial fetch
         fetchSystemSettings()
       ])
     } catch (error) {
@@ -367,12 +380,12 @@ export default function AdminPanel() {
     initializeAdminPanel()
   }, [session, router, initializeAdminPanel])
 
-  // Debounce search term to prevent instant refresh
+  // Debounce search term to prevent instant refresh - increased delay
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm)
       setCurrentPage(1) // Reset to first page when searching
-    }, 800) // Increased delay to 800ms to prevent constant refreshing
+    }, 1200) // Increased delay to 1.2 seconds to further reduce API calls
 
     return () => clearTimeout(timer)
   }, [searchTerm])
@@ -380,7 +393,7 @@ export default function AdminPanel() {
   // Fetch users only when debounced search term changes, not on every keystroke
   useEffect(() => {
     if (!loading) {
-      fetchUsers()
+      fetchUsers(true) // Force refresh when search changes
     }
   }, [debouncedSearchTerm, currentPage, usersPerPage, filters, fetchUsers, loading])
 
@@ -681,19 +694,29 @@ export default function AdminPanel() {
 
   const totalPages = Math.ceil(filteredUsers.length / usersPerPage)
 
-  // Real-time updates effect
+  // Tab visibility detection to prevent unnecessary refreshing
   useEffect(() => {
-    if (!realTimeUpdates) return
+    const handleVisibilityChange = () => {
+      setIsTabVisible(!document.hidden)
+    }
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [])
+
+  // Real-time updates effect - much more conservative
+  useEffect(() => {
+    if (!realTimeUpdates || !isTabVisible) return
     
     const interval = setInterval(() => {
-      if (!loading && !refreshing) {
+      if (!loading && !refreshing && isTabVisible) {
         setRefreshing(true)
-        fetchUsers().finally(() => setRefreshing(false))
+        fetchUsers(true).finally(() => setRefreshing(false)) // Force refresh for real-time updates
       }
-    }, 30000) // Update every 30 seconds
+    }, 120000) // Update every 2 minutes instead of 30 seconds
     
     return () => clearInterval(interval)
-  }, [realTimeUpdates, loading, refreshing, fetchUsers])
+  }, [realTimeUpdates, loading, refreshing, fetchUsers, isTabVisible])
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -801,6 +824,14 @@ export default function AdminPanel() {
                   {refreshing && <div className="w-3 h-3 border border-purple-400 border-t-transparent rounded-full animate-spin"></div>}
                 </div>
               )}
+              
+              {/* Cache status indicator */}
+              {lastFetchTime && (
+                <div className="flex items-center space-x-2 text-sm text-green-400">
+                  <Database className="h-4 w-4" />
+                  <span>Cache: {Math.round((Date.now() - lastFetchTime) / 1000)}s ago</span>
+                </div>
+              )}
             </div>
             
             <div className="flex items-center space-x-3">
@@ -808,10 +839,10 @@ export default function AdminPanel() {
                 onClick={() => setRealTimeUpdates(!realTimeUpdates)}
                 variant="outline"
                 size="sm"
-                className={`border-white/20 text-white hover:bg-white/10 ${realTimeUpdates ? 'bg-green-500/20 border-green-500' : ''}`}
+                className={`border-white/20 text-white hover:bg-white/10 ${realTimeUpdates ? 'bg-green-500/20 border-green-500' : 'bg-gray-500/20 border-gray-500'}`}
               >
                 <Activity className="h-4 w-4 mr-2" />
-                Real-time {realTimeUpdates ? 'ON' : 'OFF'}
+                Real-time {realTimeUpdates ? 'ON' : 'OFF (Performance Mode)'}
               </Button>
               
               <Button
