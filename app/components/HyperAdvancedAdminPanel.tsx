@@ -1538,7 +1538,7 @@ function PaymentsManagement({ users, onConfirmPayment, paymentLoading, setSelect
   // Debug logging for premium users
   console.log('Total users count:', users.length)
   console.log('Premium users found:', premiumUsers.length)
-  console.log('Sample users subscription types:', users.slice(0, 5).map(u => ({ email: u.email, subscription_type: u.subscription_type })))
+  console.log('Sample users subscription types:', users.slice(0, 5).map((u: EnhancedUser) => ({ email: u.email, subscription_type: u.subscription_type })))
   
   // Calculate total revenue live from confirmed payments
   const totalRevenue = confirmedPayments.reduce((sum: number, u: EnhancedUser) => {
