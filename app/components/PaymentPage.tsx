@@ -460,6 +460,8 @@ export default function PaymentPage({ subscriptionType, onPaymentProofUploaded }
                       onImageUploaded={(url) => setPaymentProof(url)}
                       currentImage={paymentProof || undefined}
                       className="w-full"
+                      uploadType="payment-proof"
+                      userId={userPaymentStatus?.id || 'temp'}
                     />
                   </div>
 

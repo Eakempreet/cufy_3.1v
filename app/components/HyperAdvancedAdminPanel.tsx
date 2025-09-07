@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabase'
 import Image from 'next/image'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/Card'
@@ -205,6 +206,23 @@ interface FilterOptions {
   date_range: { start: string, end: string }
   sort_by: 'created_at' | 'last_active' | 'full_name' | 'age' | 'matches_count'
   sort_order: 'asc' | 'desc'
+}
+
+// Helper function to get payment proof URL
+const getPaymentProofUrl = (filename: string | null) => {
+  if (!filename) return null
+  
+  // If it's already a full URL, return as-is
+  if (filename.startsWith('http') || filename.startsWith('https')) {
+    return filename
+  }
+  
+  // Otherwise, construct the Supabase Storage URL
+  const { data } = supabase.storage
+    .from('payment-proofs')
+    .getPublicUrl(filename)
+  
+  return data.publicUrl
 }
 
 export default function AdminPanel() {
@@ -1578,7 +1596,7 @@ function PaymentsManagement({ users, onConfirmPayment, paymentLoading, setSelect
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-400 text-sm font-medium">Basic Users</p>
+                <p className="text-gray-400 text-sm font-medium">Paid Basic Users</p>
                 <p className="text-2xl font-bold text-blue-400 mt-1">{basicUsers.length}</p>
               </div>
               <Users className="h-8 w-8 text-blue-400/60" />
@@ -1590,7 +1608,7 @@ function PaymentsManagement({ users, onConfirmPayment, paymentLoading, setSelect
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-400 text-sm font-medium">Premium Users</p>
+                <p className="text-gray-400 text-sm font-medium">Paid Premium Users</p>
                 <p className="text-2xl font-bold text-purple-400 mt-1">{premiumUsers.length}</p>
               </div>
               <Crown className="h-8 w-8 text-purple-400/60" />
@@ -1667,7 +1685,10 @@ function PaymentsManagement({ users, onConfirmPayment, paymentLoading, setSelect
                     {user.payment_proof_url ? (
                       <div className="bg-white/5 border border-white/10 rounded-lg p-4 text-center">
                         <Button
-                          onClick={() => setSelectedPaymentProof({ url: user.payment_proof_url, user: user.full_name })}
+                          onClick={() => setSelectedPaymentProof({ 
+                            url: user.payment_proof_url ? getPaymentProofUrl(user.payment_proof_url) : null,
+                            user: user.full_name 
+                          })}
                           variant="outline"
                           className="border-blue-500 text-blue-400 hover:bg-blue-500/10 w-full"
                         >
@@ -2164,7 +2185,10 @@ function UserDetailDialog({
                             <div className="flex items-center justify-between">
                               <span className="text-white">Payment screenshot uploaded</span>
                               <Button
-                                onClick={() => window.open(user.payment_proof_url, '_blank')}
+                                onClick={() => {
+                                  const proofUrl = user.payment_proof_url ? getPaymentProofUrl(user.payment_proof_url) : null
+                                  if (proofUrl) window.open(proofUrl, '_blank')
+                                }}
                                 variant="outline"
                                 size="sm"
                                 className="border-blue-500 text-blue-400 hover:bg-blue-500/10"
@@ -2445,7 +2469,7 @@ function PaymentDetailDialog({ user, open, onOpenChange, onConfirmPayment }: any
               <h3 className="text-white font-medium mb-4">Payment Proof</h3>
               <div className="bg-white/5 border border-white/10 rounded-lg p-4">
                 <Image 
-                  src={user.payment_proof_url}
+                  src={(user.payment_proof_url ? getPaymentProofUrl(user.payment_proof_url) : null) || ''}
                   alt="Payment Proof"
                   width={500}
                   height={400}

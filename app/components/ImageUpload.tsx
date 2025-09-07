@@ -7,9 +7,17 @@ interface ImageUploadProps {
   onImageUploaded: (url: string) => void
   currentImage?: string
   className?: string
+  uploadType?: 'profile' | 'payment-proof'
+  userId?: string
 }
 
-export default function ImageUpload({ onImageUploaded, currentImage, className = "" }: ImageUploadProps) {
+export default function ImageUpload({ 
+  onImageUploaded, 
+  currentImage, 
+  className = "",
+  uploadType = 'profile',
+  userId
+}: ImageUploadProps) {
   const [uploading, setUploading] = useState(false)
   const [previewUrl, setPreviewUrl] = useState<string | null>(currentImage || null)
 
@@ -34,26 +42,45 @@ export default function ImageUpload({ onImageUploaded, currentImage, className =
       }
 
       const fileExt = file.name.split('.').pop()
-      const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`
-      const filePath = `profile-photos/${fileName}`
+      let fileName: string
+      let bucketName: string
+      
+      if (uploadType === 'payment-proof' && userId) {
+        // For payment proofs, use user-specific naming to allow easy replacement
+        fileName = `payment_proof_${userId}_${Date.now()}.${fileExt}`
+        bucketName = 'payment-proofs'
+      } else {
+        // For profile photos, use random naming
+        fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`
+        bucketName = 'profile-photos'
+      }
+      
+      const filePath = uploadType === 'payment-proof' ? fileName : `profile-photos/${fileName}`
 
       // Upload to Supabase Storage
       const { error: uploadError } = await supabase.storage
-        .from('profile-photos')
-        .upload(filePath, file)
+        .from(bucketName)
+        .upload(uploadType === 'payment-proof' ? fileName : filePath, file)
 
       if (uploadError) {
         throw uploadError
       }
 
-      // Get public URL
-      const { data } = supabase.storage
-        .from('profile-photos')
-        .getPublicUrl(filePath)
+      // Get public URL or return the filename for payment proofs
+      if (uploadType === 'payment-proof') {
+        // For payment proofs, return just the filename to be stored in DB
+        setPreviewUrl(URL.createObjectURL(file)) // Local preview
+        onImageUploaded(fileName)
+      } else {
+        // For profile photos, return the full public URL
+        const { data } = supabase.storage
+          .from(bucketName)
+          .getPublicUrl(filePath)
 
-      const publicUrl = data.publicUrl
-      setPreviewUrl(publicUrl)
-      onImageUploaded(publicUrl)
+        const publicUrl = data.publicUrl
+        setPreviewUrl(publicUrl)
+        onImageUploaded(publicUrl)
+      }
 
     } catch (error: any) {
       console.error('Image upload error:', error)
@@ -70,7 +97,7 @@ export default function ImageUpload({ onImageUploaded, currentImage, className =
           <div className="relative">
             <img
               src={previewUrl}
-              alt="Payment proof preview"
+              alt={uploadType === 'payment-proof' ? 'Payment proof preview' : 'Profile photo preview'}
               className="w-28 h-28 sm:w-32 sm:h-32 rounded-lg object-cover border-4 border-white shadow-lg"
             />
           </div>
@@ -97,11 +124,15 @@ export default function ImageUpload({ onImageUploaded, currentImage, className =
               className="cursor-pointer bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 min-h-[44px] px-4 sm:px-6"
             >
               <Camera className="mr-2 h-4 w-4" />
-              {uploading ? 'Uploading...' : previewUrl ? 'Change Photo' : 'Upload Photo'}
+              {uploading ? 'Uploading...' : previewUrl ? 'Change Photo' : 
+                (uploadType === 'payment-proof' ? 'Upload Payment Proof' : 'Upload Photo')}
             </Button>
           </label>
           <p className="text-sm text-white/60 text-center">
-            Upload payment proof (max 5MB)<br />
+            {uploadType === 'payment-proof' ? 
+              'Upload payment proof (max 5MB)' : 
+              'Upload profile photo (max 5MB)'
+            }<br />
             Supported: JPG, PNG, WebP, GIF
           </p>
         </div>
