@@ -1549,14 +1549,19 @@ function PaymentsManagement({ users, onConfirmPayment, paymentLoading, setSelect
   const pendingPayments = users.filter((u: EnhancedUser) => u.payment_proof_url && !u.payment_confirmed)
   const confirmedPayments = users.filter((u: EnhancedUser) => u.payment_confirmed)
   
-  // Calculate user type statistics
-  const basicUsers = users.filter((u: EnhancedUser) => u.subscription_type === 'basic')
-  const premiumUsers = users.filter((u: EnhancedUser) => u.subscription_type === 'premium')
+  // Calculate user type statistics - only count users with CONFIRMED payments
+  const basicUsers = users.filter((u: EnhancedUser) => u.subscription_type === 'basic' && u.payment_confirmed)
+  const premiumUsers = users.filter((u: EnhancedUser) => u.subscription_type === 'premium' && u.payment_confirmed)
   
   // Debug logging for premium users
   console.log('Total users count:', users.length)
-  console.log('Premium users found:', premiumUsers.length)
-  console.log('Sample users subscription types:', users.slice(0, 5).map((u: EnhancedUser) => ({ email: u.email, subscription_type: u.subscription_type })))
+  console.log('Premium users with confirmed payment:', premiumUsers.length)
+  console.log('Basic users with confirmed payment:', basicUsers.length)
+  console.log('Sample users:', users.slice(0, 5).map((u: EnhancedUser) => ({ 
+    email: u.email, 
+    subscription_type: u.subscription_type, 
+    payment_confirmed: u.payment_confirmed 
+  })))
   
   // Calculate total revenue live from confirmed payments
   const totalRevenue = confirmedPayments.reduce((sum: number, u: EnhancedUser) => {
