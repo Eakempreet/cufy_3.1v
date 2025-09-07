@@ -36,6 +36,16 @@ export async function GET(request: NextRequest) {
 
     console.log(`Fetched ${(users || []).length} users from database`)
 
+    // Debug: Check subscription types in raw data
+    const premiumUsersRaw = (users || []).filter(user => user.subscription_type === 'premium')
+    console.log(`Raw premium users count: ${premiumUsersRaw.length}`)
+    
+    // Sample raw subscription types
+    console.log('Sample raw subscription types:', (users || []).slice(0, 5).map(u => ({ 
+      email: u.email, 
+      subscription_type: u.subscription_type 
+    })))
+
     // Format the data to match expected structure
     const formattedUsers = (users || []).map(user => ({
       id: user.id,

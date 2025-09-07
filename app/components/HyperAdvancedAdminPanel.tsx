@@ -1535,6 +1535,11 @@ function PaymentsManagement({ users, onConfirmPayment, paymentLoading, setSelect
   const basicUsers = users.filter((u: EnhancedUser) => u.subscription_type === 'basic')
   const premiumUsers = users.filter((u: EnhancedUser) => u.subscription_type === 'premium')
   
+  // Debug logging for premium users
+  console.log('Total users count:', users.length)
+  console.log('Premium users found:', premiumUsers.length)
+  console.log('Sample users subscription types:', users.slice(0, 5).map(u => ({ email: u.email, subscription_type: u.subscription_type })))
+  
   // Calculate total revenue live from confirmed payments
   const totalRevenue = confirmedPayments.reduce((sum: number, u: EnhancedUser) => {
     if (u.subscription_type === 'basic') return sum + 99
