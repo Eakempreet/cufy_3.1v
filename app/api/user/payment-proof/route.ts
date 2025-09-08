@@ -1,16 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-import { supabase, supabaseAdmin } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('=== PAYMENT PROOF API CALLED ===')
-    const session = await getServerSession(authOptions)
-    console.log('Session:', session?.user?.email)
+    const session = await getServerSession()
     
     if (!session?.user?.email) {
-      console.log('No session found, returning unauthorized')
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -18,18 +14,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Get user data first
-    console.log('Looking up user with email:', session.user.email)
     const { data: userData, error: userError } = await supabase
       .from('users')
       .select('id, subscription_type, payment_proof_url')
       .eq('email', session.user.email)
       .single()
 
-    console.log('User data:', userData)
-    console.log('User error:', userError)
-
     if (userError || !userData) {
-      console.log('User not found in database')
       return NextResponse.json(
         { error: 'User not found' },
         { status: 404 }
@@ -37,7 +28,6 @@ export async function POST(request: NextRequest) {
     }
 
     if (!userData.subscription_type) {
-      console.log('No subscription type found for user')
       return NextResponse.json(
         { error: 'No subscription selected' },
         { status: 400 }
@@ -46,7 +36,6 @@ export async function POST(request: NextRequest) {
 
     // Check if request is JSON (payment proof URL) or FormData (file upload)
     const contentType = request.headers.get('content-type')
-    console.log('Content type:', contentType)
     let paymentProofUrl: string
 
     if (contentType?.includes('application/json')) {
@@ -66,7 +55,7 @@ export async function POST(request: NextRequest) {
       if (userData.payment_proof_url && userData.payment_proof_url !== paymentProofUrl) {
         try {
           console.log('Deleting old payment proof:', userData.payment_proof_url)
-          const { error: deleteError } = await supabaseAdmin.storage
+          const { error: deleteError } = await supabase.storage
             .from('payment-proofs')
             .remove([userData.payment_proof_url])
           
@@ -82,13 +71,10 @@ export async function POST(request: NextRequest) {
       }
     } else {
       // Handle FormData file upload (legacy support)
-      console.log('Handling FormData file upload')
       const formData = await request.formData()
       const file = formData.get('file') as File
-      console.log('File received:', file?.name, file?.size, file?.type)
       
       if (!file) {
-        console.log('No file found in FormData')
         return NextResponse.json(
           { error: 'No file provided' },
           { status: 400 }
@@ -102,8 +88,7 @@ export async function POST(request: NextRequest) {
       // Delete old file first if it exists
       if (userData.payment_proof_url) {
         try {
-          console.log('Deleting old payment proof:', userData.payment_proof_url)
-          await supabaseAdmin.storage
+          await supabase.storage
             .from('payment-proofs')
             .remove([userData.payment_proof_url])
         } catch (deleteError) {
@@ -111,8 +96,7 @@ export async function POST(request: NextRequest) {
         }
       }
       
-      console.log('Uploading file to payment-proofs bucket:', fileName)
-      const { error: uploadError } = await supabaseAdmin.storage
+      const { error: uploadError } = await supabase.storage
         .from('payment-proofs')
         .upload(fileName, file)
 

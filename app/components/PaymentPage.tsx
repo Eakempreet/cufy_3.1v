@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useSession } from 'next-auth/react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -32,7 +31,6 @@ interface PaymentPageProps {
 }
 
 export default function PaymentPage({ subscriptionType, onPaymentProofUploaded }: PaymentPageProps = {}) {
-  const { data: session, status } = useSession()
   const [timeLeft, setTimeLeft] = useState(15 * 60) // 15 minutes in seconds
   const [planDetails, setPlanDetails] = useState<any>(null)
   const [showUpload, setShowUpload] = useState(false)
@@ -78,20 +76,13 @@ export default function PaymentPage({ subscriptionType, onPaymentProofUploaded }
   }, [plan, upiLink])
 
   useEffect(() => {
-    if (status === 'loading') return // Still loading session
-    
-    if (status === 'unauthenticated') {
-      router.push('/gender-selection') // Redirect to login
-      return
-    }
-    
     if (!plan) {
       router.push('/subscription-selection')
       return
     }
     fetchPlanDetails()
     checkExistingPayment()
-  }, [plan, status, router])
+  }, [plan])
 
   useEffect(() => {
     if (timeLeft > 0 && !submitted && !userPaymentStatus?.payment_confirmed) {
@@ -191,14 +182,6 @@ export default function PaymentPage({ subscriptionType, onPaymentProofUploaded }
     } finally {
       setSubmitting(false)
     }
-  }
-
-  if (status === 'loading') {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-600">Loading...</div>
-      </div>
-    )
   }
 
   if (!planDetails) {
