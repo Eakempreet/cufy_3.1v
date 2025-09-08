@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "functions": {
+    "/api/admin/assignments": {},
+    "/api/admin/matches": {},
+    "/api/admin/permanent-matches": {},
+    "/api/admin/temporary-matches": {},
+    "/api/admin/user-actions": {},
+    "/api/admin/users/delete": {},
+    "/api/admin/users": {},
+    "/api/dashboard": {},
+    "/api/auth/user": {},
+    "/api/debug/auth": {},
+    "/api/subscriptions": {},
+    "/api/user/assignments": {},
+    "/api/user/permanent-matches": {},
+    "/api/user/temporary-matches": {}
+  }
+}
