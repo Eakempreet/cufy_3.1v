@@ -53,6 +53,7 @@ interface UserProfile {
   profile_photo?: string
   bio: string
   gender: 'male' | 'female'
+  current_round?: number
   subscription_type?: string
   subscription_status?: string
   payment_confirmed?: boolean
@@ -71,12 +72,14 @@ interface UserProfile {
 interface Assignment {
   id: string
   female_user: UserProfile
-  status: 'assigned' | 'revealed' | 'disengaged'
+  status: 'assigned' | 'revealed' | 'disengaged' | 'selected'
   assigned_at: string
   revealed_at?: string
   disengaged_at?: string
   male_revealed?: boolean
   female_revealed?: boolean
+  is_selected?: boolean
+  timer_expires_at?: string
 }
 
 interface TemporaryMatch {
@@ -260,18 +263,77 @@ export default function Dashboard() {
 
   const handleDisengage = async (matchId: string) => {
     try {
+      setLoading(true)
+      console.log('🔄 Disengaging from assignment:', matchId)
+      
       const response = await fetch('/api/user/disengage', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ matchId }),
+        body: JSON.stringify({ assignmentId: matchId }), // Changed from matchId to assignmentId
       })
 
-      if (response.ok) {
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        console.log('✅ Disengage successful:', data.message)
         setShowDisengageWarning(null)
+        
+        // Clear current assignments and matches since user moved to Round 2
+        setAssignments([])
+        setTemporaryMatches([])
+        
+        // Refresh all user data to get Round 2 assignments
         await fetchUserData()
+        
+        // Show success message
+        if (data.changes?.movedToNextRound || data.changes?.completeClear) {
+          alert(`Success! ${data.message}\n\nMoved to Round ${data.nextRound}`)
+        }
+      } else {
+        console.error('Disengage error:', data.error)
+        alert(`Error: ${data.error}`)
       }
     } catch (error) {
       console.error('Error disengaging:', error)
+      alert('An error occurred while disengaging. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSelectProfile = async (assignmentId: string) => {
+    try {
+      setLoading(true)
+      console.log('🔄 Selecting profile:', assignmentId)
+      
+      const response = await fetch('/api/user/select-profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ assignmentId })
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        console.log('✅ Profile selected successfully:', data.message)
+        
+        // Refresh dashboard data to show only selected profile
+        await fetchUserData()
+        
+        // Show success message
+        setErrorMessage(`✅ Profile selected! You have 48 hours to decide. Other profiles have been hidden.`)
+        setTimeout(() => setErrorMessage(null), 5000)
+      } else {
+        console.error('❌ Failed to select profile:', data.error || 'Unknown error')
+        setErrorMessage(data.error || 'Failed to select profile. Please try again.')
+        setTimeout(() => setErrorMessage(null), 5000)
+      }
+    } catch (error) {
+      console.error('❌ Error selecting profile:', error)
+      setErrorMessage('An error occurred while selecting profile. Please try again.')
+      setTimeout(() => setErrorMessage(null), 5000)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -647,44 +709,110 @@ export default function Dashboard() {
               {/* For Male Users: Show Assigned Profiles */}
               {user.gender === 'male' && (
                 <>
-                  {/* Assigned Profiles */}
-                  {assignedProfiles.length > 0 && (
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="flex items-center space-x-2 text-lg sm:text-xl">
-                          <Eye className="h-5 w-5" />
-                          <span>Your Matches</span>
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                          {assignedProfiles.map((assignment) => (
-                            <MatchCard 
-                              key={assignment.id} 
-                              assignment={assignment} 
-                              isRevealing={isRevealing[assignment.id] || false}
-                              onReveal={() => handleRevealProfile(assignment.id)}
-                              onDisengage={(matchId) => setShowDisengageWarning(matchId)}
-                            />
-                          ))}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
-
-                  {assignments.length === 0 && (
-                    <Card>
-                      <CardContent className="p-8 sm:p-12 text-center">
-                        <Users className="h-12 w-12 sm:h-16 sm:w-16 text-white/30 mx-auto mb-4" />
-                        <h3 className="text-lg sm:text-xl font-semibold text-white mb-2">
-                          No Matches Assigned Yet
-                        </h3>
-                        <p className="text-white/60 text-sm sm:text-base">
-                          You'll receive matches to review. Check back soon!
-                        </p>
-                      </CardContent>
-                    </Card>
-                  )}
+                  {/* Smart Profile Display Logic */}
+                  {(() => {
+                    // Check if user has any selected profile
+                    const selectedProfiles = assignedProfiles.filter(a => a.is_selected === true || a.status === 'selected')
+                    const availableProfiles = assignedProfiles.filter(a => !['hidden', 'disengaged', 'selected'].includes(a.status) && a.is_selected !== true)
+                    
+                    console.log('Dashboard render - Selected profiles:', selectedProfiles.length, 'Available profiles:', availableProfiles.length)
+                    
+                    // If user has selected a profile, ONLY show the selected one
+                    if (selectedProfiles.length > 0) {
+                      return (
+                        <Card>
+                          <CardHeader>
+                            <CardTitle className="flex items-center space-x-2 text-lg sm:text-xl">
+                              <Heart className="h-5 w-5 text-pink-500" />
+                              <span>Your Selected Profile</span>
+                              <Badge className="bg-green-500/20 text-green-400 border-green-500/50">
+                                <Timer className="h-3 w-3 mr-1" />
+                                Selected
+                              </Badge>
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="max-w-md mx-auto">
+                              {selectedProfiles.map((assignment) => (
+                                <MatchCard 
+                                  key={assignment.id} 
+                                  assignment={assignment} 
+                                  user={user}
+                                  isRevealing={isRevealing[assignment.id] || false}
+                                  onReveal={() => handleRevealProfile(assignment.id)}
+                                  onSelectProfile={() => handleSelectProfile(assignment.id)}
+                                  onDisengage={(matchId) => setShowDisengageWarning(matchId)}
+                                />
+                              ))}
+                            </div>
+                            <div className="mt-6 p-4 bg-green-500/20 border border-green-500/50 rounded-lg text-center">
+                              <h4 className="text-green-400 font-semibold mb-2">✅ Profile Selected!</h4>
+                              <p className="text-green-300 text-sm">
+                                You have selected this profile. Other profiles have been hidden. 
+                                You have 48 hours to make a final decision.
+                              </p>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )
+                    }
+                    
+                    // If no selection, show all available profiles
+                    if (availableProfiles.length > 0) {
+                      return (
+                        <Card>
+                          <CardHeader>
+                            <CardTitle className="flex items-center space-x-2 text-lg sm:text-xl">
+                              <Eye className="h-5 w-5" />
+                              <span>Your Matches</span>
+                              <Badge variant="secondary" className="bg-blue-500/20 text-blue-400 border-blue-500/50">
+                                {availableProfiles.length} Available
+                              </Badge>
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                              {availableProfiles.map((assignment) => (
+                                <MatchCard 
+                                  key={assignment.id} 
+                                  assignment={assignment} 
+                                  user={user}
+                                  isRevealing={isRevealing[assignment.id] || false}
+                                  onReveal={() => handleRevealProfile(assignment.id)}
+                                  onSelectProfile={() => handleSelectProfile(assignment.id)}
+                                  onDisengage={(matchId) => setShowDisengageWarning(matchId)}
+                                />
+                              ))}
+                            </div>
+                            <div className="mt-6 p-4 bg-blue-500/20 border border-blue-500/50 rounded-lg text-center">
+                              <h4 className="text-blue-400 font-semibold mb-2">💡 How it works</h4>
+                              <p className="text-blue-300 text-sm">
+                                Reveal profiles to see full details. When you select one, other profiles will be hidden and reassigned to other users.
+                              </p>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )
+                    }
+                    
+                    // No profiles available
+                    return (
+                      <Card>
+                        <CardContent className="p-8 sm:p-12 text-center">
+                          <Users className="h-12 w-12 sm:h-16 sm:w-16 text-white/30 mx-auto mb-4" />
+                          <h3 className="text-lg sm:text-xl font-semibold text-white mb-2">
+                            No Matches Available
+                          </h3>
+                          <p className="text-white/60 text-sm sm:text-base">
+                            {assignments.length === 0 
+                              ? "You'll receive matches to review. Check back soon!" 
+                              : "You've already made your selection. Other profiles have been hidden."
+                            }
+                          </p>
+                        </CardContent>
+                      </Card>
+                    )
+                  })()}
                 </>
               )}
 
@@ -995,14 +1123,22 @@ export default function Dashboard() {
 }
 
 // Enhanced Match Card Component with modern UI for boys
-const MatchCard = ({ assignment, isRevealing, onReveal, onDisengage }: {
+const MatchCard = ({ assignment, isRevealing, onReveal, onSelectProfile, onDisengage, user }: {
   assignment: Assignment
   isRevealing: boolean
   onReveal: () => void
+  onSelectProfile: () => void
   onDisengage: (id: string) => void
+  user: UserProfile | null
 }) => {
   const [isBlurred, setIsBlurred] = useState(assignment.status === 'disengaged')
   const [showDisengageWarning, setShowDisengageWarning] = useState(false)
+  
+  // Check if profile is selected
+  const isSelected = assignment.is_selected === true || assignment.status === 'selected'
+  
+  // Check if the assignment is revealed
+  const isRevealed = assignment.status === 'revealed' || assignment.male_revealed === true || isSelected
 
   const handleDisengage = () => {
     setShowDisengageWarning(true)
@@ -1015,9 +1151,6 @@ const MatchCard = ({ assignment, isRevealing, onReveal, onDisengage }: {
   }
 
   const renderProfileCard = () => {
-    // Check if the assignment is revealed - check both status field and male_revealed for backward compatibility
-    const isRevealed = assignment.status === 'revealed' || assignment.male_revealed === true
-    
     if (!isRevealed) {
       // Before reveal - show picture, name, age, and bio
       return (
@@ -1104,14 +1237,17 @@ const MatchCard = ({ assignment, isRevealing, onReveal, onDisengage }: {
       )
     }
 
-    // After reveal - show full profile with Instagram prominently
+    // After reveal or when selected - show full profile
     return (
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: isBlurred ? 0.3 : 1, scale: 1, filter: isBlurred ? 'blur(8px)' : 'blur(0px)' }}
         transition={{ duration: 0.5 }}
+        className={isSelected ? 'ring-2 ring-green-500/50 rounded-lg' : ''}
       >
-        <Card className="overflow-hidden bg-gradient-to-br from-slate-800/90 to-slate-900/90 border-slate-700/50 backdrop-blur-sm shadow-2xl">
+        <Card className={`overflow-hidden bg-gradient-to-br from-slate-800/90 to-slate-900/90 border-slate-700/50 backdrop-blur-sm shadow-2xl ${
+          isSelected ? 'border-green-500/50 bg-gradient-to-br from-green-800/20 to-slate-900/90' : ''
+        }`}>
           <div className="relative">
             <motion.img 
               src={assignment.female_user.profile_photo} 
@@ -1127,9 +1263,22 @@ const MatchCard = ({ assignment, isRevealing, onReveal, onDisengage }: {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3, duration: 0.3 }}
             >
-              <Badge className="absolute top-4 right-4 bg-green-500/90 text-white shadow-lg">
-                <CheckCircle className="h-4 w-4 mr-1" />
-                Revealed
+              <Badge className={`absolute top-4 right-4 shadow-lg ${
+                isSelected 
+                  ? 'bg-green-500/90 text-white' 
+                  : 'bg-blue-500/90 text-white'
+              }`}>
+                {isSelected ? (
+                  <>
+                    <CheckCircle className="h-4 w-4 mr-1" />
+                    Selected
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="h-4 w-4 mr-1" />
+                    Revealed
+                  </>
+                )}
               </Badge>
             </motion.div>
 
@@ -1154,6 +1303,29 @@ const MatchCard = ({ assignment, isRevealing, onReveal, onDisengage }: {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4, duration: 0.3 }}
             >
+              {/* Selected Profile Timer */}
+              {isSelected && assignment.timer_expires_at && (
+                <motion.div 
+                  className="bg-gradient-to-r from-green-500/30 to-emerald-500/30 border-2 border-green-500/50 rounded-2xl p-4 mb-6 backdrop-blur-sm"
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.2, duration: 0.5 }}
+                >
+                  <div className="flex items-center justify-center space-x-3 mb-2">
+                    <Timer className="h-6 w-6 text-green-400" />
+                    <span className="text-green-100 font-bold text-lg">Profile Selected!</span>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-green-200 text-sm mb-2">
+                      You have 48 hours to make your final decision
+                    </p>
+                    <div className="text-xs text-green-300">
+                      Expires: {new Date(assignment.timer_expires_at).toLocaleDateString()} at {new Date(assignment.timer_expires_at).toLocaleTimeString()}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
               {/* Instagram Section - Main Feature Box */}
               {assignment.female_user.instagram && (
                 <motion.div 
@@ -1289,16 +1461,47 @@ const MatchCard = ({ assignment, isRevealing, onReveal, onDisengage }: {
                 Revealed {assignment.revealed_at && new Date(assignment.revealed_at).toLocaleDateString()}
               </div>
               
-              {/* Only Disengage Button */}
-              <Button 
-                onClick={handleDisengage}
-                variant="outline" 
-                className="w-full border-red-500/50 text-red-400 hover:bg-red-500/10 hover:border-red-500 transition-all duration-300"
-                disabled={isBlurred}
-              >
-                <UserMinus className="h-4 w-4 mr-2" />
-                Disengage
-              </Button>
+              {/* Action Buttons */}
+              <div className="space-y-3">
+                {/* Select Profile Button - Only show if not selected */}
+                {!isSelected && (
+                  <Button 
+                    onClick={onSelectProfile}
+                    className="w-full bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-semibold transition-all duration-300 transform hover:scale-105"
+                  >
+                    <Heart className="h-4 w-4 mr-2" />
+                    Select This Profile
+                  </Button>
+                )}
+                
+                {/* Disengage Button - Hide in Round 2 (final round) */}
+                {user && user.current_round !== 2 && (
+                  <Button 
+                    onClick={handleDisengage}
+                    variant="outline" 
+                    className={`w-full border-red-500/50 text-red-400 hover:bg-red-500/10 hover:border-red-500 transition-all duration-300 ${
+                      isSelected ? 'border-red-600/60 text-red-500 hover:bg-red-600/20' : ''
+                    }`}
+                    disabled={isBlurred}
+                  >
+                    <UserMinus className="h-4 w-4 mr-2" />
+                    {isSelected ? 'Cancel Selection' : 'Disengage'}
+                  </Button>
+                )}
+                
+                {/* Round 2 Final Selection Message */}
+                {user?.current_round === 2 && isSelected && (
+                  <div className="w-full p-4 bg-green-500/20 border border-green-500/30 rounded-lg">
+                    <div className="flex items-center justify-center text-green-400">
+                      <Heart className="h-5 w-5 mr-2" />
+                      <span className="font-semibold">Final Match Selected!</span>
+                    </div>
+                    <p className="text-center text-green-300 text-sm mt-1">
+                      This is your final round selection
+                    </p>
+                  </div>
+                )}
+              </div>
             </motion.div>
           </CardContent>
         </Card>
@@ -1319,12 +1522,24 @@ const MatchCard = ({ assignment, isRevealing, onReveal, onDisengage }: {
             >
               <div className="flex items-center space-x-3 mb-4">
                 <AlertTriangle className="h-6 w-6 text-red-500" />
-                <h3 className="text-lg font-semibold text-white">⚠️ Confirm Disengagement</h3>
+                <h3 className="text-lg font-semibold text-white">
+                  ⚠️ {isSelected ? 'Cancel Selection?' : 'Confirm Disengagement'}
+                </h3>
               </div>
               <p className="text-white/80 mb-6">
-                Are you sure you want to disengage from {assignment.female_user.full_name}? 
-                <br /><br />
-                <strong className="text-red-400">This action cannot be undone!</strong> The profile will be blurred and you cannot reconnect.
+                {isSelected ? (
+                  <>
+                    Are you sure you want to cancel your selection of {assignment.female_user.full_name}? 
+                    <br /><br />
+                    <strong className="text-red-400">⚠️ WARNING: This will completely remove ALL your assigned profiles</strong> (including this selected one) and move you to the next round. You will lose access to all current matches.
+                  </>
+                ) : (
+                  <>
+                    Are you sure you want to disengage from {assignment.female_user.full_name}? 
+                    <br /><br />
+                    <strong className="text-red-400">⚠️ WARNING: This will completely remove ALL your assigned profiles</strong> and move you to the next round. You will lose access to all current matches.
+                  </>
+                )}
               </p>
               <div className="flex space-x-3">
                 <Button
@@ -1338,7 +1553,7 @@ const MatchCard = ({ assignment, isRevealing, onReveal, onDisengage }: {
                   onClick={confirmDisengage}
                   className="flex-1 bg-red-500 hover:bg-red-600 text-white"
                 >
-                  Yes, Disengage
+                  {isSelected ? 'Yes, Remove All Profiles' : 'Yes, Remove All Profiles'}
                 </Button>
               </div>
             </motion.div>

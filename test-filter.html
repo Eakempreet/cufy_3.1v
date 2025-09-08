@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Dashboard Filtering</title>
+</head>
+<body>
+    <h1>Dashboard Filtering Test</h1>
+    <div id="result"></div>
+
+    <script>
+        // Simulate the assignment data from the database
+        const assignedProfiles = [
+            {
+                id: '4680c841-57b3-4a21-8b7f-f47d938ba49b',
+                status: 'revealed',
+                is_selected: false,
+                name: 'riya'
+            },
+            {
+                id: '7b25e618-ec28-49ff-af85-cd7f93290a9a', 
+                status: 'revealed',
+                is_selected: true,
+                name: 'Rahul'
+            }
+        ];
+
+        // Test the filtering logic from Dashboard.tsx
+        function testFilter() {
+            const filtered = assignedProfiles.filter(assignment => {
+                // If user has selected a profile, only show that one
+                const hasSelected = assignedProfiles.some(a => a.is_selected);
+                if (hasSelected) {
+                    return assignment.is_selected;
+                }
+                // Otherwise show all non-hidden profiles
+                return assignment.status !== 'hidden';
+            });
+
+            return filtered;
+        }
+
+        const result = testFilter();
+        
+        document.getElementById('result').innerHTML = `
+            <h2>Original Profiles:</h2>
+            <ul>
+                ${assignedProfiles.map(p => `<li>${p.name} - Selected: ${p.is_selected} - Status: ${p.status}</li>`).join('')}
+            </ul>
+            
+            <h2>Filtered Profiles (What Dashboard Should Show):</h2>
+            <ul>
+                ${result.map(p => `<li><strong>${p.name}</strong> - Selected: ${p.is_selected} - Status: ${p.status}</li>`).join('')}
+            </ul>
+            
+            <h2>Test Result:</h2>
+            <p>${result.length === 1 && result[0].name === 'Rahul' ? '✅ SUCCESS: Only selected profile shown!' : '❌ FAILED: Filter not working correctly'}</p>
+        `;
+    </script>
+</body>
+</html>

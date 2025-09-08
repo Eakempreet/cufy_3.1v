@@ -30,20 +30,34 @@ export async function GET(request: NextRequest) {
     let tempMatches = []
 
     if (currentUser.gender === 'male') {
-      // Get assignments for male users (exclude disengaged)
-      const { data: maleAssignments, error: assignmentsError } = await supabaseAdmin
+      // Check if user has any selected profile first
+      const { data: selectedAssignment } = await supabaseAdmin
         .from('profile_assignments')
         .select('*')
         .eq('male_user_id', currentUser.id)
-        .neq('status', 'disengaged') // Exclude disengaged assignments
-        .order('assigned_at', { ascending: false })
+        .eq('is_selected', true)
+        .single()
 
-      if (assignmentsError) {
-        console.error('Male assignments fetch error:', assignmentsError)
-        return NextResponse.json({ error: 'Failed to fetch assignments' }, { status: 500 })
+      if (selectedAssignment) {
+        // If user has selected a profile, only return that assignment
+        console.log('User has selected profile, returning only selected assignment:', selectedAssignment.id)
+        assignments = [selectedAssignment]
+      } else {
+        // Get all assignments for male users (exclude disengaged and hidden)
+        const { data: maleAssignments, error: assignmentsError } = await supabaseAdmin
+          .from('profile_assignments')
+          .select('*')
+          .eq('male_user_id', currentUser.id)
+          .not('status', 'in', '(disengaged,hidden)') // Exclude disengaged and hidden assignments
+          .order('assigned_at', { ascending: false })
+
+        if (assignmentsError) {
+          console.error('Male assignments fetch error:', assignmentsError)
+          return NextResponse.json({ error: 'Failed to fetch assignments' }, { status: 500 })
+        }
+
+        assignments = maleAssignments || []
       }
-
-      assignments = maleAssignments || []
     }
 
     // Get female profiles for these assignments

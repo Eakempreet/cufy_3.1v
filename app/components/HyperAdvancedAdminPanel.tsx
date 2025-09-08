@@ -6,6 +6,7 @@ import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import Image from 'next/image'
+import AdminMatchesPanel from './AdminMatchesPanel'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/Card'
 import { Button } from './ui/Button'
@@ -132,7 +133,7 @@ interface EnhancedUser {
   phone_number?: string
   year_of_study?: string
   instagram?: string
-  status: 'active' | 'suspended' | 'banned' | 'pending'
+  status: 'active' | 'suspended' | 'banned' | 'pending' | 'Match Found'
   verification_status: 'verified' | 'pending' | 'rejected'
   device_info?: {
     browser?: string
@@ -197,7 +198,7 @@ interface AdminStats {
 
 interface FilterOptions {
   gender: 'all' | 'male' | 'female'
-  status: 'all' | 'active' | 'suspended' | 'banned' | 'pending'
+  status: 'all' | 'active' | 'suspended' | 'banned' | 'pending' | 'Match Found'
   verification: 'all' | 'verified' | 'pending' | 'rejected'
   subscription: 'all' | 'basic' | 'premium' | 'none'
   payment: 'all' | 'confirmed' | 'review' | 'none'
@@ -949,10 +950,14 @@ export default function AdminPanel() {
       {/* Main Content */}
       <div className="px-6 py-6">
         <Tabs value={activeTab === 'dashboard' ? 'users' : activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4 bg-black/90 backdrop-blur-xl border border-gray-800 mb-6">
+          <TabsList className="grid w-full grid-cols-5 bg-black/90 backdrop-blur-xl border border-gray-800 mb-6">
             <TabsTrigger value="users" className="data-[state=active]:bg-gray-800 text-white">
               <Users className="h-4 w-4 mr-2" />
               Users ({totalUsers})
+            </TabsTrigger>
+            <TabsTrigger value="matches" className="data-[state=active]:bg-gray-800 text-white">
+              <Heart className="h-4 w-4 mr-2" />
+              Matches
             </TabsTrigger>
             <TabsTrigger value="payments" className="data-[state=active]:bg-gray-800 text-white">
               <CreditCard className="h-4 w-4 mr-2" />
@@ -997,6 +1002,11 @@ export default function AdminPanel() {
               onBulkAction={handleBulkAction}
               onDeleteUser={deleteUser}
             />
+          </TabsContent>
+
+          {/* Matches Tab */}
+          <TabsContent value="matches">
+            <AdminMatchesPanel />
           </TabsContent>
 
           {/* Payments Tab */}
@@ -1280,6 +1290,7 @@ function UsersManagement({
                         <SelectItem value="suspended">Suspended</SelectItem>
                         <SelectItem value="banned">Banned</SelectItem>
                         <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="Match Found">Match Found</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -1419,9 +1430,11 @@ function UsersTable({ users, selectedUsers, onUserSelect, onSelectAll, onUserDet
                       user.status === 'active' ? 'bg-green-500/20 text-green-400 border-green-500/50' :
                       user.status === 'suspended' ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50' :
                       user.status === 'banned' ? 'bg-red-500/20 text-red-400 border-red-500/50' :
+                      user.status === 'Match Found' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/50' :
                       'bg-gray-500/20 text-gray-400 border-gray-500/50'
                     }`}
                   >
+                    {user.status === 'Match Found' && <Heart className="h-3 w-3 mr-1" />}
                     {user.status}
                   </Badge>
                   <Badge 
@@ -1608,9 +1621,11 @@ function UsersGrid({ users, selectedUsers, onUserSelect, onUserDetail, onPayment
                   user.status === 'active' ? 'bg-green-500/20 text-green-400 border-green-500/50' :
                   user.status === 'suspended' ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50' :
                   user.status === 'banned' ? 'bg-red-500/20 text-red-400 border-red-500/50' :
+                  user.status === 'Match Found' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/50' :
                   'bg-gray-500/20 text-gray-400 border-gray-500/50'
                 }`}
               >
+                {user.status === 'Match Found' && <Heart className="h-2 w-2 mr-1" />}
                 {user.status}
               </Badge>
             </div>
