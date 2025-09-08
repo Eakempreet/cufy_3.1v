@@ -1,5 +1,7 @@
 'use client'
 
+import AdminPanel from '../components/HyperAdvancedAdminPanel'
+
 export default function AdminPage() {
-  return <div>Admin Page - Test</div>
+  return <AdminPanel />
 }

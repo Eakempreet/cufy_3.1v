@@ -13,7 +13,7 @@
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
- */let a=(0,h.Z)("Copy",[["rect",{width:"14",height:"14",x:"8",y:"8",rx:"2",ry:"2",key:"17jyea"}],["path",{d:"M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2",key:"zix9uf"}]])},70882:(e,t,y)=>{y.d(t,{Z:()=>a});var h=y(75593);/**
+ */let a=(0,h.Z)("Copy",[["rect",{width:"14",height:"14",x:"8",y:"8",rx:"2",ry:"2",key:"17jyea"}],["path",{d:"M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2",key:"zix9uf"}]])},95037:(e,t,y)=>{y.d(t,{Z:()=>a});var h=y(75593);/**
  * @license lucide-react v0.446.0 - ISC
  *
  * This source code is licensed under the ISC license.
