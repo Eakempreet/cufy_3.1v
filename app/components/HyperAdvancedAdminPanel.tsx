@@ -6,16 +6,16 @@ import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import Image from 'next/image'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
-import { Card, CardContent, CardHeader, CardTitle } from './ui/Card'
-import { Button } from './ui/Button'
-import { Input } from './ui/Input'
-import { Badge } from './ui/badge'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Textarea } from './ui/textarea'
+import { Textarea } from '@/components/ui/textarea'
 import { Progress } from '@/components/ui/progress'
 import { 
   Users, 
@@ -287,20 +287,7 @@ export default function AdminPanel() {
   const [lastFetchTime, setLastFetchTime] = useState<number>(0) // Add caching timestamp
   const [isTabVisible, setIsTabVisible] = useState(true) // Track tab visibility
 
-  // Safety timeout to prevent infinite loading
-  useEffect(() => {
-    const loadingTimeout = setTimeout(() => {
-      if (loading) {
-        console.warn('Loading timeout reached, forcing loading to false')
-        setLoading(false)
-      }
-    }, 10000) // 10 seconds timeout
-
-    return () => clearTimeout(loadingTimeout)
-  }, [loading])
-
-  // Separate function to fetch with current parameters
-  const fetchUsersWithCurrentParams = useCallback(async (forceRefresh = false) => {
+  const fetchUsers = useCallback(async (forceRefresh = false) => {
     try {
       // Implement caching - don't fetch if data is fresh (less than 2 minutes old)
       const now = Date.now()
@@ -328,27 +315,16 @@ export default function AdminPanel() {
       const response = await fetch(`/api/admin/users?${queryParams}`)
       if (response.ok) {
         const data = await response.json()
-        setUsers(data.users || []) // Fallback to empty array
-        setTotalUsers(data.total || 0)
+        setUsers(data.users)
+        setTotalUsers(data.total)
         setLastUpdateTime(new Date())
         setLastFetchTime(now) // Update cache timestamp
         console.log('Data fetched successfully at', new Date().toLocaleTimeString())
-      } else {
-        console.error('Failed to fetch users:', response.status, response.statusText)
-        throw new Error(`API responded with ${response.status}`)
       }
     } catch (error) {
       console.error('Error fetching users:', error)
-      // Set default values to prevent stuck loading
-      setUsers([])
-      setTotalUsers(0)
     }
   }, [currentPage, usersPerPage, debouncedSearchTerm, filters, lastFetchTime, users.length])
-
-  // Simple fetch function without dependencies
-  const fetchUsers = useCallback(async (forceRefresh = false) => {
-    return fetchUsersWithCurrentParams(forceRefresh)
-  }, [fetchUsersWithCurrentParams])
 
   const fetchSystemSettings = useCallback(async () => {
     try {
@@ -359,14 +335,9 @@ export default function AdminPanel() {
           setBoysRegistrationEnabled(data.settings.boys_registration_enabled)
           setSystemMaintenanceMode(data.settings.maintenance_mode)
         }
-      } else {
-        console.error('Failed to fetch system settings:', response.status)
       }
     } catch (error) {
       console.error('Error fetching system settings:', error)
-      // Set default values
-      setBoysRegistrationEnabled(true)
-      setSystemMaintenanceMode(false)
     }
   }, [])
 
@@ -380,69 +351,32 @@ export default function AdminPanel() {
   }, [fetchUsers])
 
   const initializeAdminPanel = useCallback(async () => {
-    console.log('Initializing admin panel...')
     setLoading(true)
     try {
-      console.log('Starting parallel fetch operations...')
-      
-      // Fetch system settings first (simpler)
-      try {
-        const settingsResponse = await fetch('/api/admin/system-settings')
-        if (settingsResponse.ok) {
-          const data = await settingsResponse.json()
-          if (data.success) {
-            setBoysRegistrationEnabled(data.settings.boys_registration_enabled)
-            setSystemMaintenanceMode(data.settings.maintenance_mode)
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching system settings:', error)
-      }
-      
-      // Fetch initial users (simple query)
-      try {
-        const usersResponse = await fetch('/api/admin/users?page=1&limit=10')
-        if (usersResponse.ok) {
-          const data = await usersResponse.json()
-          setUsers(data.users || [])
-          setTotalUsers(data.total || 0)
-          setLastUpdateTime(new Date())
-          setLastFetchTime(Date.now())
-        }
-      } catch (error) {
-        console.error('Error fetching users:', error)
-        setUsers([])
-        setTotalUsers(0)
-      }
-      
-      console.log('Admin panel initialization completed successfully')
+      await Promise.all([
+        fetchUsers(true), // Force initial fetch
+        fetchSystemSettings()
+      ])
     } catch (error) {
       console.error('Failed to initialize admin panel:', error)
-      // Don't keep loading state forever if there's an error
     } finally {
       setLoading(false)
-      console.log('Loading state cleared')
     }
-  }, []) // Empty dependencies to avoid infinite loops
+  }, [fetchUsers, fetchSystemSettings])
 
   // Session check
   useEffect(() => {
-    console.log('Session check running:', { session: session?.user?.email })
-    
     if (!session?.user?.email) {
-      console.log('No session found, redirecting to login')
-      router.push('/') // Redirect to home page instead of /admin to avoid loop
+      router.push('/admin')
       return
     }
     
     // Check if user is admin
     if (session.user.email !== 'cufy.online@gmail.com') {
-      console.log('Not admin user, redirecting to dashboard')
       router.push('/dashboard')
       return
     }
     
-    console.log('Admin user confirmed, initializing panel')
     initializeAdminPanel()
   }, [session, router, initializeAdminPanel])
 
@@ -456,13 +390,12 @@ export default function AdminPanel() {
     return () => clearTimeout(timer)
   }, [searchTerm])
 
-  // Fetch users only when specific parameters change (disabled to prevent infinite loop)
-  // useEffect(() => {
-  //   if (!loading && debouncedSearchTerm !== undefined) {
-  //     console.log('Search term changed, fetching users:', debouncedSearchTerm)
-  //     fetchUsersWithCurrentParams(true) // Force refresh when search changes
-  //   }
-  // }, [debouncedSearchTerm, currentPage, filters, loading, fetchUsersWithCurrentParams])
+  // Fetch users only when debounced search term changes, not on every keystroke
+  useEffect(() => {
+    if (!loading) {
+      fetchUsers(true) // Force refresh when search changes
+    }
+  }, [debouncedSearchTerm, currentPage, usersPerPage, filters, fetchUsers, loading])
 
   const fetchAdminNotes = async (userId: string) => {
     try {
