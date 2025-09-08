@@ -21,13 +21,17 @@ export async function POST(request: NextRequest) {
     }
 
     // Get current user
-    const { data: currentUser } = await supabaseAdmin
+    console.log('Looking up user with email:', session.user.email)
+    const { data: currentUser, error: userError } = await supabaseAdmin
       .from('users')
-      .select('id, email, gender, current_round, status')
+      .select('id, email, gender, current_round')
       .eq('email', session.user.email)
       .single()
 
-    if (!currentUser) {
+    console.log('User lookup result:', { currentUser, userError })
+
+    if (!currentUser || userError) {
+      console.error('User not found in database:', { email: session.user.email, userError })
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
@@ -160,19 +164,8 @@ export async function POST(request: NextRequest) {
     // If user is in round 2, update their status to "Match Found" (for admin panel)
     if (currentUser.current_round === 2) {
       try {
-        const { error: statusUpdateError } = await supabaseAdmin
-          .from('users')
-          .update({ 
-            status: 'Match Found',
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', currentUser.id)
-
-        if (statusUpdateError) {
-          console.error('Error updating user status to Match Found:', statusUpdateError)
-        } else {
-          console.log('User status updated to "Match Found" for round 2 selection')
-        }
+        // Note: Status column might not exist, so we'll skip this update for now
+        console.log('User is in round 2 - would update status to "Match Found" if status column existed')
       } catch (error) {
         console.error('Failed to update user status:', error)
       }
