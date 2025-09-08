@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
-import { supabase } from '../../lib/supabase'
+import Image from 'next/image'
+import { supabase } from '@/lib/supabase'
 import { Button } from './ui/Button'
 import { Camera } from 'lucide-react'
 
@@ -7,17 +8,11 @@ interface ImageUploadProps {
   onImageUploaded: (url: string) => void
   currentImage?: string
   className?: string
-  uploadType?: 'profile' | 'payment-proof'
+  uploadType?: 'profile-photo' | 'payment-proof'
   userId?: string
 }
 
-export default function ImageUpload({ 
-  onImageUploaded, 
-  currentImage, 
-  className = "",
-  uploadType = 'profile',
-  userId
-}: ImageUploadProps) {
+export default function ImageUpload({ onImageUploaded, currentImage, className = "", uploadType = 'profile-photo', userId }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false)
   const [previewUrl, setPreviewUrl] = useState<string | null>(currentImage || null)
 
@@ -41,46 +36,61 @@ export default function ImageUpload({
         throw new Error('Image must be less than 5MB.')
       }
 
-      const fileExt = file.name.split('.').pop()
-      let fileName: string
-      let bucketName: string
-      
-      if (uploadType === 'payment-proof' && userId) {
-        // For payment proofs, use user-specific naming to allow easy replacement
-        fileName = `payment_proof_${userId}_${Date.now()}.${fileExt}`
-        bucketName = 'payment-proofs'
-      } else {
-        // For profile photos, use random naming
-        fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`
-        bucketName = 'profile-photos'
-      }
-      
-      const filePath = uploadType === 'payment-proof' ? fileName : `profile-photos/${fileName}`
+      let publicUrl: string
 
-      // Upload to Supabase Storage
-      const { error: uploadError } = await supabase.storage
-        .from(bucketName)
-        .upload(uploadType === 'payment-proof' ? fileName : filePath, file)
-
-      if (uploadError) {
-        throw uploadError
-      }
-
-      // Get public URL or return the filename for payment proofs
       if (uploadType === 'payment-proof') {
-        // For payment proofs, return just the filename to be stored in DB
-        setPreviewUrl(URL.createObjectURL(file)) // Local preview
-        onImageUploaded(fileName)
+        // For payment proofs, use the API route for proper authentication
+        const formData = new FormData()
+        formData.append('file', file)
+
+        const response = await fetch('/api/user/payment-proof', {
+          method: 'POST',
+          body: formData,
+        })
+
+        console.log('API Response status:', response.status)
+        
+        if (!response.ok) {
+          const errorData = await response.json()
+          console.error('API Error response:', errorData)
+          throw new Error(errorData.error || 'Failed to upload payment proof')
+        }
+
+        const result = await response.json()
+        publicUrl = result.payment_proof_url
+        
+        // Convert filename to full URL if needed
+        if (!publicUrl.startsWith('http')) {
+          const { data } = supabase.storage
+            .from('payment-proofs')
+            .getPublicUrl(publicUrl)
+          publicUrl = data.publicUrl
+        }
       } else {
-        // For profile photos, return the full public URL
+        // For profile photos, upload directly to storage (existing logic)
+        const fileExt = file.name.split('.').pop()
+        const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`
+        const filePath = `profile-photos/${fileName}`
+
+        // Upload to Supabase Storage
+        const { error: uploadError } = await supabase.storage
+          .from('profile-photos')
+          .upload(filePath, file)
+
+        if (uploadError) {
+          throw uploadError
+        }
+
+        // Get public URL
         const { data } = supabase.storage
-          .from(bucketName)
+          .from('profile-photos')
           .getPublicUrl(filePath)
 
-        const publicUrl = data.publicUrl
-        setPreviewUrl(publicUrl)
-        onImageUploaded(publicUrl)
+        publicUrl = data.publicUrl
       }
+
+      setPreviewUrl(publicUrl)
+      onImageUploaded(publicUrl)
 
     } catch (error: any) {
       console.error('Image upload error:', error)
@@ -95,9 +105,11 @@ export default function ImageUpload({
       <div className="flex flex-col items-center space-y-4">
         {previewUrl ? (
           <div className="relative">
-            <img
+            <Image
               src={previewUrl}
-              alt={uploadType === 'payment-proof' ? 'Payment proof preview' : 'Profile photo preview'}
+              alt={uploadType === 'payment-proof' ? "Payment proof preview" : "Profile photo preview"}
+              width={128}
+              height={128}
               className="w-28 h-28 sm:w-32 sm:h-32 rounded-lg object-cover border-4 border-white shadow-lg"
             />
           </div>
@@ -124,15 +136,11 @@ export default function ImageUpload({
               className="cursor-pointer bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 min-h-[44px] px-4 sm:px-6"
             >
               <Camera className="mr-2 h-4 w-4" />
-              {uploading ? 'Uploading...' : previewUrl ? 'Change Photo' : 
-                (uploadType === 'payment-proof' ? 'Upload Payment Proof' : 'Upload Photo')}
+              {uploading ? 'Uploading...' : previewUrl ? (uploadType === 'payment-proof' ? 'Change Proof' : 'Change Photo') : (uploadType === 'payment-proof' ? 'Upload Proof' : 'Upload Photo')}
             </Button>
           </label>
           <p className="text-sm text-white/60 text-center">
-            {uploadType === 'payment-proof' ? 
-              'Upload payment proof (max 5MB)' : 
-              'Upload profile photo (max 5MB)'
-            }<br />
+            {uploadType === 'payment-proof' ? 'Upload payment proof (max 5MB)' : 'Upload profile photo (max 5MB)'}<br />
             Supported: JPG, PNG, WebP, GIF
           </p>
         </div>

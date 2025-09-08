@@ -5,12 +5,12 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import QRCode from 'qrcode'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
-import { Card, CardContent, CardHeader, CardTitle } from './ui/Card'
-import { Button } from './ui/Button'
-import { Input } from './ui/Input'
-import { Textarea } from './ui/textarea'
-import { Badge } from './ui/badge'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Progress } from '@/components/ui/progress'
 import { 
@@ -1587,12 +1587,34 @@ const PaymentsSection = ({ user }: { user: UserProfile }) => {
 
   const handleProofUpload = async (file: File) => {
     setIsUploading(true)
-    // Implementation for payment proof upload
-    // This would typically upload to your storage service
-    setTimeout(() => {
+    
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      
+      const response = await fetch('/api/user/payment-proof', {
+        method: 'POST',
+        body: formData
+      })
+      
+      if (response.ok) {
+        const result = await response.json()
+        console.log('Payment proof uploaded successfully:', result)
+        setPaymentProof(file)
+        
+        // Show success message and refresh user data
+        window.location.reload() // This will refresh the dashboard to show updated status
+      } else {
+        const error = await response.json()
+        console.error('Upload failed:', error)
+        alert('Failed to upload payment proof. Please try again.')
+      }
+    } catch (error) {
+      console.error('Upload error:', error)
+      alert('Failed to upload payment proof. Please try again.')
+    } finally {
       setIsUploading(false)
-      setPaymentProof(file)
-    }, 2000)
+    }
   }
 
   return (
@@ -1845,19 +1867,28 @@ const PaymentsSection = ({ user }: { user: UserProfile }) => {
             <input
               type="file"
               accept="image/*"
+              disabled={isUploading}
               onChange={(e) => {
                 const file = e.target.files?.[0]
-                if (file) handleProofUpload(file)
+                if (file && !isUploading) handleProofUpload(file)
               }}
               className="hidden"
               id="payment-proof"
             />
             <label
               htmlFor="payment-proof"
-              className="inline-flex items-center px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg cursor-pointer transition-colors"
+              className={`inline-flex items-center px-4 py-2 ${
+                isUploading 
+                  ? 'bg-gray-500 cursor-not-allowed' 
+                  : 'bg-blue-500 hover:bg-blue-600 cursor-pointer'
+              } text-white rounded-lg transition-colors`}
             >
-              <Camera className="h-4 w-4 mr-2" />
-              {paymentProof ? 'Change Photo' : 'Upload Photo'}
+              {isUploading ? (
+                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Camera className="h-4 w-4 mr-2" />
+              )}
+              {isUploading ? 'Uploading...' : paymentProof ? 'Change Photo' : 'Upload Photo'}
             </label>
           </div>
           
