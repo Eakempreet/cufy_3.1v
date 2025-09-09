@@ -4,6 +4,9 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   images: { unoptimized: true },
+  // Add font optimization settings
+  optimizeFonts: true,
+  swcMinify: true,
   webpack: (config, { dev, isServer }) => {
     // Fix for chunk loading errors
     if (!isServer) {

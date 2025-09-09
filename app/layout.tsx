@@ -1,18 +1,6 @@
 import './globals.css'
 import type { Metadata } from 'next'
-import { Inter, Poppins } from 'next/font/google'
 import { SessionProvider } from './components/SessionProvider'
-
-const inter = Inter({ 
-  subsets: ['latin'],
-  variable: '--font-inter'
-})
-
-const poppins = Poppins({ 
-  subsets: ['latin'],
-  weight: ['400', '600', '700'],
-  variable: '--font-poppins'
-})
 
 export const metadata: Metadata = {
   title: 'Cufy - Matches Are Meant to Meet',
@@ -28,7 +16,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} ${poppins.variable} font-inter bg-dark text-white overflow-x-hidden`}>
+      <body className="font-sans bg-dark text-white overflow-x-hidden">
         <SessionProvider>
           {children}
         </SessionProvider>
