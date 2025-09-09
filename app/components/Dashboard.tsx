@@ -57,6 +57,7 @@ interface UserProfile {
   subscription_type?: string
   subscription_status?: string
   payment_confirmed?: boolean
+  payment_proof_url?: string
   instagram?: string
   year_of_study?: string
   energy_style?: string
@@ -2079,7 +2080,7 @@ const PaymentsSection = ({
   fetchUserData 
 }: { 
   user: UserProfile
-  setUser: (user: UserProfile | null) => void
+  setUser: React.Dispatch<React.SetStateAction<UserProfile | null>>
   fetchUserData: () => void
 }) => {
   const [paymentProof, setPaymentProof] = useState<string | null>(null)
@@ -2145,7 +2146,7 @@ const PaymentsSection = ({
     console.log('Payment proof uploaded successfully:', fileName)
     
     // Update local state
-    setUser(prev => prev ? {
+    setUser((prev: UserProfile | null) => prev ? {
       ...prev,
       payment_proof_url: fileName,
       payment_confirmed: false,
