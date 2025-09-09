@@ -36,9 +36,11 @@ export default function ImageUpload({
         throw new Error('Please select an image file.')
       }
 
-      // Validate file size (5MB limit)
-      if (file.size > 5 * 1024 * 1024) {
-        throw new Error('Image must be less than 5MB.')
+      // Validate file size (10MB limit for payment proofs, 5MB for profile photos)
+      const maxSize = uploadType === 'payment-proof' ? 10 * 1024 * 1024 : 5 * 1024 * 1024
+      if (file.size > maxSize) {
+        const maxSizeMB = uploadType === 'payment-proof' ? 10 : 5
+        throw new Error(`Image must be less than ${maxSizeMB}MB.`)
       }
 
       const fileExt = file.name.split('.').pop()
@@ -57,21 +59,41 @@ export default function ImageUpload({
       
       const filePath = uploadType === 'payment-proof' ? fileName : `profile-photos/${fileName}`
 
-      // Upload to Supabase Storage
-      const { error: uploadError } = await supabase.storage
-        .from(bucketName)
-        .upload(uploadType === 'payment-proof' ? fileName : filePath, file)
-
-      if (uploadError) {
-        throw uploadError
-      }
-
-      // Get public URL or return the filename for payment proofs
       if (uploadType === 'payment-proof') {
+        // For payment proofs, use API route to bypass RLS issues
+        const formData = new FormData()
+        formData.append('file', file)
+
+        const response = await fetch('/api/user/payment-proof', {
+          method: 'POST',
+          body: formData
+        })
+
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Payment proof upload failed')
+        }
+
+        const result = await response.json()
+        
         // For payment proofs, return just the filename to be stored in DB
         setPreviewUrl(URL.createObjectURL(file)) // Local preview
-        onImageUploaded(fileName)
+        onImageUploaded(result.payment_proof_url)
+        console.log('Payment proof uploaded successfully via API:', result.payment_proof_url)
       } else {
+        // For profile photos, upload directly to storage
+        const { error: uploadError } = await supabase.storage
+          .from(bucketName)
+          .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: true
+          })
+
+        if (uploadError) {
+          console.error('Upload error:', uploadError)
+          throw new Error(`Upload failed: ${uploadError.message}`)
+        }
+
         // For profile photos, return the full public URL
         const { data } = supabase.storage
           .from(bucketName)
@@ -80,6 +102,7 @@ export default function ImageUpload({
         const publicUrl = data.publicUrl
         setPreviewUrl(publicUrl)
         onImageUploaded(publicUrl)
+        console.log('Profile photo uploaded successfully:', publicUrl)
       }
 
     } catch (error: any) {

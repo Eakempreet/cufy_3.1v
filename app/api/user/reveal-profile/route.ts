@@ -112,24 +112,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // CRITICAL: Hide ALL other profiles (both assigned and revealed) when revealing one
-    // This ensures only one profile is visible after reveal - the final selection
-    const { error: hideError } = await supabaseAdmin
-      .from('profile_assignments')
-      .update({ 
-        status: 'hidden',
-        updated_at: new Date().toISOString()
-      })
-      .eq('male_user_id', currentUser.id)
-      .in('status', ['assigned', 'revealed'])  // Hide both assigned AND revealed profiles
-      .neq('id', assignmentId)
-
-    if (hideError) {
-      console.error('Error hiding other profiles:', hideError)
-      // Continue anyway - main reveal was successful
-    } else {
-      console.log('Successfully hid all other profiles after reveal - this is now the final selection')
-    }
+    // NEW LOGIC: Do NOT hide other profiles when a male selects a female
+    // This allows multiple males to independently select the same female
+    // and keeps all assigned profiles visible to each male user
+    console.log('Profile selected successfully - other profiles remain visible for independent selection')
 
     // Create a temporary match
     try {
@@ -173,7 +159,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ 
       success: true,
-      message: 'Profile selected successfully! This is now your final match.',
+      message: 'Profile selected successfully! You can continue to view and select other profiles.',
       assignment: {
         id: assignment.id,
         female_user: femaleUser,

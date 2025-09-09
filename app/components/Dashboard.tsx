@@ -128,6 +128,7 @@ export default function Dashboard() {
   const [instagramInput, setInstagramInput] = useState('')
   const [isSubmittingInstagram, setIsSubmittingInstagram] = useState(false)
   const [showPhotoUpload, setShowPhotoUpload] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
 
   useEffect(() => {
     if (session?.user?.email) {
@@ -317,11 +318,11 @@ export default function Dashboard() {
       if (response.ok && data.success) {
         console.log('✅ Profile selected successfully:', data.message)
         
-        // Refresh dashboard data to show only selected profile
+        // Refresh dashboard data to show updated assignments
         await fetchUserData()
         
         // Show success message
-        setErrorMessage(`✅ Profile selected! You have 48 hours to decide. Other profiles have been hidden.`)
+        setErrorMessage(`✅ Profile selected! You can continue to view and select other available profiles.`)
         setTimeout(() => setErrorMessage(null), 5000)
       } else {
         console.error('❌ Failed to select profile:', data.error || 'Unknown error')
@@ -709,108 +710,99 @@ export default function Dashboard() {
               {/* For Male Users: Show Assigned Profiles */}
               {user.gender === 'male' && (
                 <>
-                  {/* Smart Profile Display Logic */}
+                  {/* New Logic: Show ALL profiles - both selected and available */}
                   {(() => {
-                    // Check if user has any selected profile
-                    const selectedProfiles = assignedProfiles.filter(a => a.is_selected === true || a.status === 'selected')
-                    const availableProfiles = assignedProfiles.filter(a => !['hidden', 'disengaged', 'selected'].includes(a.status) && a.is_selected !== true)
+                    // Get all profiles that are not hidden or disengaged
+                    const allVisibleProfiles = assignedProfiles.filter(a => !['hidden', 'disengaged'].includes(a.status))
+                    const selectedProfiles = allVisibleProfiles.filter(a => a.is_selected === true || a.status === 'selected')
+                    const availableProfiles = allVisibleProfiles.filter(a => a.is_selected !== true && a.status !== 'selected')
                     
-                    console.log('Dashboard render - Selected profiles:', selectedProfiles.length, 'Available profiles:', availableProfiles.length)
+                    console.log('New Dashboard logic - Total visible:', allVisibleProfiles.length, 'Selected:', selectedProfiles.length, 'Available:', availableProfiles.length)
                     
-                    // If user has selected a profile, ONLY show the selected one
-                    if (selectedProfiles.length > 0) {
+                    if (allVisibleProfiles.length === 0) {
                       return (
                         <Card>
-                          <CardHeader>
-                            <CardTitle className="flex items-center space-x-2 text-lg sm:text-xl">
-                              <Heart className="h-5 w-5 text-pink-500" />
-                              <span>Your Selected Profile</span>
-                              <Badge className="bg-green-500/20 text-green-400 border-green-500/50">
-                                <Timer className="h-3 w-3 mr-1" />
-                                Selected
-                              </Badge>
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <div className="max-w-md mx-auto">
-                              {selectedProfiles.map((assignment) => (
-                                <MatchCard 
-                                  key={assignment.id} 
-                                  assignment={assignment} 
-                                  user={user}
-                                  isRevealing={isRevealing[assignment.id] || false}
-                                  onReveal={() => handleRevealProfile(assignment.id)}
-                                  onSelectProfile={() => handleSelectProfile(assignment.id)}
-                                  onDisengage={(matchId) => setShowDisengageWarning(matchId)}
-                                />
-                              ))}
-                            </div>
-                            <div className="mt-6 p-4 bg-green-500/20 border border-green-500/50 rounded-lg text-center">
-                              <h4 className="text-green-400 font-semibold mb-2">✅ Profile Selected!</h4>
-                              <p className="text-green-300 text-sm">
-                                You have selected this profile. Other profiles have been hidden. 
-                                You have 48 hours to make a final decision.
-                              </p>
-                            </div>
+                          <CardContent className="text-center py-16">
+                            <Heart className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                            <h2 className="text-xl font-semibold text-white mb-2">No Profiles Available</h2>
+                            <p className="text-gray-400">
+                              {assignments.length === 0 
+                                ? "You'll receive matches to review. Check back soon!" 
+                                : "You've processed all your current assignments."
+                              }
+                            </p>
                           </CardContent>
                         </Card>
                       )
                     }
                     
-                    // If no selection, show all available profiles
-                    if (availableProfiles.length > 0) {
-                      return (
-                        <Card>
-                          <CardHeader>
-                            <CardTitle className="flex items-center space-x-2 text-lg sm:text-xl">
-                              <Eye className="h-5 w-5" />
-                              <span>Your Matches</span>
-                              <Badge variant="secondary" className="bg-blue-500/20 text-blue-400 border-blue-500/50">
-                                {availableProfiles.length} Available
-                              </Badge>
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                              {availableProfiles.map((assignment) => (
-                                <MatchCard 
-                                  key={assignment.id} 
-                                  assignment={assignment} 
-                                  user={user}
-                                  isRevealing={isRevealing[assignment.id] || false}
-                                  onReveal={() => handleRevealProfile(assignment.id)}
-                                  onSelectProfile={() => handleSelectProfile(assignment.id)}
-                                  onDisengage={(matchId) => setShowDisengageWarning(matchId)}
-                                />
-                              ))}
-                            </div>
-                            <div className="mt-6 p-4 bg-blue-500/20 border border-blue-500/50 rounded-lg text-center">
-                              <h4 className="text-blue-400 font-semibold mb-2">💡 How it works</h4>
-                              <p className="text-blue-300 text-sm">
-                                Reveal profiles to see full details. When you select one, other profiles will be hidden and reassigned to other users.
-                              </p>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      )
-                    }
-                    
-                    // No profiles available
+                    // Show all profiles with different sections for selected vs available
                     return (
-                      <Card>
-                        <CardContent className="p-8 sm:p-12 text-center">
-                          <Users className="h-12 w-12 sm:h-16 sm:w-16 text-white/30 mx-auto mb-4" />
-                          <h3 className="text-lg sm:text-xl font-semibold text-white mb-2">
-                            No Matches Available
-                          </h3>
-                          <p className="text-white/60 text-sm sm:text-base">
-                            {assignments.length === 0 
-                              ? "You'll receive matches to review. Check back soon!" 
-                              : "You've already made your selection. Other profiles have been hidden."
-                            }
-                          </p>
-                        </CardContent>
-                      </Card>
+                      <div className="space-y-6">
+                        {/* Selected Profiles Section */}
+                        {selectedProfiles.length > 0 && (
+                          <Card>
+                            <CardHeader>
+                              <CardTitle className="flex items-center space-x-2 text-lg sm:text-xl">
+                                <Heart className="h-5 w-5 text-pink-500" />
+                                <span>Your Selected Profiles ({selectedProfiles.length})</span>
+                                <Badge className="bg-green-500/20 text-green-400 border-green-500/50">
+                                  <Timer className="h-3 w-3 mr-1" />
+                                  Selected
+                                </Badge>
+                              </CardTitle>
+                              <p className="text-gray-400 text-sm">
+                                You have selected these profiles. You can still view and select additional profiles below.
+                              </p>
+                            </CardHeader>
+                            <CardContent>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                                {selectedProfiles.map((assignment) => (
+                                  <MatchCard 
+                                    key={assignment.id} 
+                                    assignment={assignment} 
+                                    user={user}
+                                    isRevealing={isRevealing[assignment.id] || false}
+                                    onReveal={() => handleRevealProfile(assignment.id)}
+                                    onSelectProfile={() => handleSelectProfile(assignment.id)}
+                                    onDisengage={(matchId) => setShowDisengageWarning(matchId)}
+                                  />
+                                ))}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        )}
+                        
+                        {/* Available Profiles Section */}
+                        {availableProfiles.length > 0 && (
+                          <Card>
+                            <CardHeader>
+                              <CardTitle className="flex items-center space-x-2 text-lg sm:text-xl">
+                                <User className="h-5 w-5" />
+                                <span>Available Profiles ({availableProfiles.length})</span>
+                              </CardTitle>
+                              <p className="text-gray-400 text-sm">
+                                These profiles are available for you to select. You can select multiple profiles.
+                              </p>
+                            </CardHeader>
+                            <CardContent>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                                {availableProfiles.map((assignment) => (
+                                  <MatchCard 
+                                    key={assignment.id} 
+                                    assignment={assignment} 
+                                    user={user}
+                                    isRevealing={isRevealing[assignment.id] || false}
+                                    onReveal={() => handleRevealProfile(assignment.id)}
+                                    onSelectProfile={() => handleSelectProfile(assignment.id)}
+                                    onDisengage={(matchId) => setShowDisengageWarning(matchId)}
+                                  />
+                                ))}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        )}
+                      </div>
                     )
                   })()}
                 </>
@@ -834,7 +826,6 @@ export default function Dashboard() {
                             <FemaleMatchCard 
                               key={match.id} 
                               match={match} 
-                              onDisengage={(matchId) => setShowDisengageWarning(matchId)}
                             />
                           ))}
                         </div>
@@ -1068,7 +1059,7 @@ export default function Dashboard() {
           {/* Payments Tab (Male Users Only) */}
           {user.gender === 'male' && (
             <TabsContent value="payments">
-              <PaymentsSection user={user} />
+              <PaymentsSection user={user} setUser={setUser} fetchUserData={fetchUserData} />
             </TabsContent>
           )}
         </Tabs>
@@ -1576,11 +1567,15 @@ const MatchCard = ({ assignment, isRevealing, onReveal, onSelectProfile, onDisen
   )
 }
 
-// Female Match Card Component - shows boys who revealed them
-const FemaleMatchCard = ({ match, onDisengage }: {
+// Enhanced Female Match Card Component - shows detailed profiles of boys who revealed them
+const FemaleMatchCard = ({ match }: {
   match: TemporaryMatch
-  onDisengage: (id: string) => void
 }) => {
+  const [showFullProfile, setShowFullProfile] = useState(false)
+  const timeRemaining = new Date(match.expires_at).getTime() - new Date().getTime()
+  const hours = Math.floor(timeRemaining / (1000 * 60 * 60))
+  const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60))
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
@@ -1599,10 +1594,19 @@ const FemaleMatchCard = ({ match, onDisengage }: {
             transition={{ duration: 0.5 }}
           />
           
+          {/* Status Badge */}
           <Badge className="absolute top-4 right-4 bg-blue-500/90 text-white shadow-lg">
             <Heart className="h-4 w-4 mr-1" />
             Revealed You
           </Badge>
+
+          {/* Timer Badge */}
+          {timeRemaining > 0 && (
+            <Badge className="absolute top-4 left-4 bg-yellow-500/90 text-white shadow-lg">
+              <Timer className="h-4 w-4 mr-1" />
+              {hours}h {minutes}m left
+            </Badge>
+          )}
 
           {/* Gradient overlay */}
           <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black/60 to-transparent" />
@@ -1620,57 +1624,270 @@ const FemaleMatchCard = ({ match, onDisengage }: {
         </div>
         
         <CardContent className="p-4 sm:p-6 bg-gradient-to-b from-blue-800/95 to-purple-900/95 backdrop-blur-sm">
-          {/* Instagram Section */}
+          {/* Instagram Section - Featured & Enhanced */}
           {match.male_user.instagram && (
-            <div className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 rounded-xl p-4 mb-4">
-              <div className="flex items-center justify-center space-x-3">
-                <Instagram className="h-5 w-5 text-blue-400" />
-                <span className="text-blue-400 font-semibold text-lg">@{match.male_user.instagram}</span>
+            <motion.div 
+              className="relative bg-gradient-to-r from-pink-500/30 to-purple-500/30 border-2 border-pink-500/50 rounded-2xl p-6 mb-6 backdrop-blur-sm overflow-hidden cursor-pointer"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.3, duration: 0.5 }}
+              whileHover={{ scale: 1.02, boxShadow: "0 10px 40px rgba(236, 72, 153, 0.3)" }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => window.open(`https://instagram.com/${match.male_user.instagram}`, '_blank')}
+            >
+              {/* Enhanced animated background effects */}
+              <div className="absolute inset-0 opacity-20">
+                {[...Array(8)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    className="absolute w-1 h-1 bg-gradient-to-r from-pink-300 to-purple-300 rounded-full"
+                    style={{
+                      left: `${15 + i * 12}%`,
+                      top: `${10 + (i % 3) * 30}%`,
+                    }}
+                    animate={{
+                      opacity: [0.3, 1, 0.3],
+                      scale: [1, 2, 1],
+                      rotate: [0, 180, 360],
+                    }}
+                    transition={{
+                      duration: 3,
+                      repeat: Infinity,
+                      delay: i * 0.3,
+                    }}
+                  />
+                ))}
               </div>
-              <p className="text-center text-blue-300 text-sm mt-1">Connect on Instagram!</p>
-            </div>
+              
+              {/* Floating hearts animation */}
+              <div className="absolute inset-0 pointer-events-none">
+                {[...Array(3)].map((_, i) => (
+                  <motion.div
+                    key={`heart-${i}`}
+                    className="absolute text-pink-300 text-lg"
+                    style={{
+                      left: `${20 + i * 30}%`,
+                      top: `${20 + i * 20}%`,
+                    }}
+                    animate={{
+                      y: [-5, -15, -5],
+                      opacity: [0.3, 0.8, 0.3],
+                      scale: [0.8, 1.2, 0.8],
+                    }}
+                    transition={{
+                      duration: 2.5,
+                      repeat: Infinity,
+                      delay: i * 0.8,
+                    }}
+                  >
+                    💙
+                  </motion.div>
+                ))}
+              </div>
+              
+              <div className="relative z-10">
+                <div className="flex items-center justify-center space-x-4 mb-4">
+                  <motion.div
+                    className="p-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full shadow-lg"
+                    animate={{ 
+                      rotate: [0, 10, -10, 0],
+                      scale: [1, 1.1, 1],
+                    }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
+                    <Instagram className="h-7 w-7 text-white" />
+                  </motion.div>
+                  <div className="text-center">
+                    <span className="text-pink-100 font-bold text-2xl block">@{match.male_user.instagram}</span>
+                    <span className="text-pink-200 text-sm">Click to visit profile</span>
+                  </div>
+                </div>
+                
+                <div className="text-center space-y-3">
+                  <p className="text-pink-200 text-base font-medium">� Connect on Instagram! �</p>
+                  
+                  <motion.div
+                    className="inline-block px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full text-white text-sm font-bold shadow-lg border border-pink-400/50"
+                    whileHover={{ 
+                      scale: 1.05,
+                      boxShadow: "0 5px 20px rgba(236, 72, 153, 0.5)"
+                    }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    ✨ {match.male_user.full_name.split(' ')[0]} is interested in you! ✨
+                  </motion.div>
+                  
+                  <div className="flex items-center justify-center space-x-2 text-pink-300 text-xs">
+                    <motion.div
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                    >
+                      👆
+                    </motion.div>
+                    <span>Tap to open Instagram</span>
+                    <motion.div
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 1.5, repeat: Infinity, delay: 0.7 }}
+                    >
+                      👆
+                    </motion.div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
           )}
           
-          {/* Bio */}
-          <div className="bg-slate-700/50 rounded-lg p-4 mb-4">
-            <h4 className="text-white font-semibold mb-2 flex items-center">
-              <Heart className="h-4 w-4 mr-2 text-blue-400" />
+          {/* Bio Section - Enhanced */}
+          <div className="bg-slate-700/50 rounded-xl p-4 mb-6 border border-slate-600/30">
+            <h4 className="text-white font-semibold mb-3 flex items-center text-lg">
+              <Heart className="h-5 w-5 mr-2 text-blue-400" />
               About {match.male_user.full_name.split(' ')[0]}
             </h4>
-            <p className="text-white/90 text-sm leading-relaxed">
+            <p className="text-white/90 text-sm leading-relaxed mb-4">
               {match.male_user.bio}
             </p>
+            
+            {/* Quick Stats */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-blue-500/20 rounded-lg p-3 text-center">
+                <User className="h-4 w-4 text-blue-400 mx-auto mb-1" />
+                <p className="text-blue-300 text-xs font-medium">University</p>
+                <p className="text-white text-sm">{match.male_user.university}</p>
+              </div>
+              <div className="bg-purple-500/20 rounded-lg p-3 text-center">
+                <Calendar className="h-4 w-4 text-purple-400 mx-auto mb-1" />
+                <p className="text-purple-300 text-xs font-medium">Age</p>
+                <p className="text-white text-sm">{match.male_user.age} years</p>
+              </div>
+            </div>
           </div>
 
-          {/* Details */}
-          <div className="grid grid-cols-1 gap-3 mb-4">
-            {match.male_user.energy_style && (
-              <div className="bg-slate-700/30 rounded-lg p-3">
-                <span className="text-blue-400 font-medium text-xs uppercase tracking-wide">Energy Style</span>
-                <p className="text-white mt-1">{match.male_user.energy_style}</p>
-              </div>
-            )}
-            {match.male_user.love_language && (
-              <div className="bg-slate-700/30 rounded-lg p-3">
-                <span className="text-purple-400 font-medium text-xs uppercase tracking-wide">Love Language</span>
-                <p className="text-white mt-1">{match.male_user.love_language}</p>
-              </div>
-            )}
+          {/* Personality Details - Expanded */}
+          <div className="space-y-3 mb-6">
+            <h5 className="text-white font-semibold flex items-center text-base">
+              <Sparkles className="h-4 w-4 mr-2 text-pink-400" />
+              Personality & Interests
+            </h5>
+            
+            <div className="grid grid-cols-1 gap-3">
+              {match.male_user.energy_style && (
+                <div className="bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border border-blue-500/30 rounded-lg p-3">
+                  <span className="text-blue-400 font-medium text-xs uppercase tracking-wide block mb-1">⚡ Energy Style</span>
+                  <p className="text-white font-medium">{match.male_user.energy_style}</p>
+                </div>
+              )}
+              
+              {match.male_user.group_setting && (
+                <div className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-lg p-3">
+                  <span className="text-purple-400 font-medium text-xs uppercase tracking-wide block mb-1">👥 Group Setting</span>
+                  <p className="text-white font-medium">{match.male_user.group_setting}</p>
+                </div>
+              )}
+              
+              {match.male_user.communication_style && (
+                <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30 rounded-lg p-3">
+                  <span className="text-green-400 font-medium text-xs uppercase tracking-wide block mb-1">💬 Communication</span>
+                  <p className="text-white font-medium">{match.male_user.communication_style}</p>
+                </div>
+              )}
+              
+              {match.male_user.best_trait && (
+                <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 rounded-lg p-3">
+                  <span className="text-yellow-400 font-medium text-xs uppercase tracking-wide block mb-1">✨ Best Trait</span>
+                  <p className="text-white font-medium">{match.male_user.best_trait}</p>
+                </div>
+              )}
+              
+              {match.male_user.love_language && (
+                <div className="bg-gradient-to-r from-rose-500/20 to-pink-500/20 border border-rose-500/30 rounded-lg p-3">
+                  <span className="text-rose-400 font-medium text-xs uppercase tracking-wide block mb-1">💝 Love Language</span>
+                  <p className="text-white font-medium">{match.male_user.love_language}</p>
+                </div>
+              )}
+              
+              {match.male_user.ideal_weekend && (
+                <div className="bg-gradient-to-r from-indigo-500/20 to-blue-500/20 border border-indigo-500/30 rounded-lg p-3">
+                  <span className="text-indigo-400 font-medium text-xs uppercase tracking-wide block mb-1">🌟 Ideal Weekend</span>
+                  <p className="text-white font-medium">
+                    {Array.isArray(match.male_user.ideal_weekend) 
+                      ? match.male_user.ideal_weekend.join(', ')
+                      : match.male_user.ideal_weekend
+                    }
+                  </p>
+                </div>
+              )}
+              
+              {match.male_user.relationship_values && (
+                <div className="bg-gradient-to-r from-teal-500/20 to-cyan-500/20 border border-teal-500/30 rounded-lg p-3">
+                  <span className="text-teal-400 font-medium text-xs uppercase tracking-wide block mb-1">💎 Values</span>
+                  <p className="text-white font-medium">
+                    {Array.isArray(match.male_user.relationship_values) 
+                      ? match.male_user.relationship_values.join(', ')
+                      : match.male_user.relationship_values
+                    }
+                  </p>
+                </div>
+              )}
+              
+              {match.male_user.connection_statement && (
+                <div className="bg-gradient-to-r from-violet-500/20 to-purple-500/20 border border-violet-500/30 rounded-lg p-3">
+                  <span className="text-violet-400 font-medium text-xs uppercase tracking-wide block mb-1">💫 Connection Statement</span>
+                  <p className="text-white font-medium">{match.male_user.connection_statement}</p>
+                </div>
+              )}
+            </div>
           </div>
           
+          {/* Timer and Status Information */}
+          <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 rounded-xl p-4 mb-4">
+            <div className="flex items-center justify-center mb-3">
+              <Timer className="h-5 w-5 text-yellow-400 mr-2" />
+              <span className="text-yellow-200 font-semibold">Decision Timer</span>
+            </div>
+            <div className="text-center">
+              {timeRemaining > 0 ? (
+                <>
+                  <p className="text-white font-bold text-lg">
+                    {hours}h {minutes}m remaining
+                  </p>
+                  <p className="text-yellow-300 text-sm mt-1">
+                    He has until then to make his final choice
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-red-300 font-bold text-lg">
+                    Time Expired
+                  </p>
+                  <p className="text-red-400 text-sm mt-1">
+                    The decision window has closed
+                  </p>
+                </>
+              )}
+            </div>
+          </div>
+          
+          {/* Revealed Date */}
           <div className="text-xs text-white/50 mb-4 flex items-center justify-center">
             <Clock className="h-3 w-3 mr-1" />
-            Revealed {new Date(match.revealed_at).toLocaleDateString()}
+            Revealed your profile on {new Date(match.revealed_at).toLocaleDateString()} at {new Date(match.revealed_at).toLocaleTimeString()}
           </div>
           
-          <Button 
-            onClick={() => onDisengage(match.id)}
-            variant="outline" 
-            className="w-full border-red-500/50 text-red-400 hover:bg-red-500/10 hover:border-red-500"
-          >
-            <UserMinus className="h-4 w-4 mr-2" />
-            Disengage
-          </Button>
+          {/* Status Message */}
+          <div className="bg-blue-500/20 border border-blue-500/30 rounded-lg p-4">
+            <div className="text-center">
+              <Heart className="h-6 w-6 text-blue-400 mx-auto mb-2" />
+              <p className="text-blue-300 font-medium text-sm mb-1">
+                {match.male_user.full_name.split(' ')[0]} has revealed your profile!
+              </p>
+              <p className="text-white/70 text-sm">
+                {timeRemaining > 0 
+                  ? "He's considering you for a potential match. You'll know his decision soon!"
+                  : "The decision period has ended. Check your permanent matches to see the result."
+                }
+              </p>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </motion.div>
@@ -1722,13 +1939,121 @@ const PermanentMatchCard = ({ match, currentUserId }: {
         </div>
         
         <CardContent className="p-4 sm:p-6 bg-gradient-to-b from-green-800/95 to-emerald-900/95 backdrop-blur-sm">
+          {/* Enhanced Instagram Section for Permanent Matches */}
           {otherUser.instagram && (
-            <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30 rounded-xl p-4 mb-4">
-              <div className="flex items-center justify-center space-x-3">
-                <Instagram className="h-5 w-5 text-green-400" />
-                <span className="text-green-400 font-semibold text-lg">@{otherUser.instagram}</span>
+            <motion.div 
+              className="relative bg-gradient-to-r from-green-500/30 to-emerald-500/30 border-2 border-green-500/50 rounded-2xl p-6 mb-6 backdrop-blur-sm overflow-hidden cursor-pointer"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.2, duration: 0.5 }}
+              whileHover={{ 
+                scale: 1.02, 
+                boxShadow: "0 10px 40px rgba(34, 197, 94, 0.3)" 
+              }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => window.open(`https://instagram.com/${otherUser.instagram}`, '_blank')}
+            >
+              {/* Animated celebration effects for permanent matches */}
+              <div className="absolute inset-0 opacity-20">
+                {[...Array(6)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    className="absolute w-1 h-1 bg-gradient-to-r from-green-300 to-emerald-300 rounded-full"
+                    style={{
+                      left: `${10 + i * 15}%`,
+                      top: `${15 + (i % 2) * 50}%`,
+                    }}
+                    animate={{
+                      opacity: [0.3, 1, 0.3],
+                      scale: [1, 2.5, 1],
+                      rotate: [0, 360],
+                    }}
+                    transition={{
+                      duration: 4,
+                      repeat: Infinity,
+                      delay: i * 0.5,
+                    }}
+                  />
+                ))}
               </div>
-            </div>
+              
+              {/* Crown and heart animations for permanent matches */}
+              <div className="absolute inset-0 pointer-events-none">
+                {[...Array(3)].map((_, i) => (
+                  <motion.div
+                    key={`celebration-${i}`}
+                    className="absolute text-green-300 text-xl"
+                    style={{
+                      left: `${25 + i * 25}%`,
+                      top: `${10 + i * 30}%`,
+                    }}
+                    animate={{
+                      y: [-3, -12, -3],
+                      opacity: [0.4, 1, 0.4],
+                      scale: [0.9, 1.3, 0.9],
+                      rotate: [0, 15, -15, 0],
+                    }}
+                    transition={{
+                      duration: 3,
+                      repeat: Infinity,
+                      delay: i * 1,
+                    }}
+                  >
+                    {i === 1 ? '👑' : '💚'}
+                  </motion.div>
+                ))}
+              </div>
+              
+              <div className="relative z-10">
+                <div className="flex items-center justify-center space-x-4 mb-4">
+                  <motion.div
+                    className="p-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full shadow-lg border border-green-400/50"
+                    animate={{ 
+                      rotate: [0, 8, -8, 0],
+                      scale: [1, 1.05, 1],
+                    }}
+                    transition={{ duration: 2.5, repeat: Infinity }}
+                  >
+                    <Instagram className="h-7 w-7 text-white" />
+                  </motion.div>
+                  <div className="text-center">
+                    <span className="text-green-100 font-bold text-2xl block">@{otherUser.instagram}</span>
+                    <span className="text-green-200 text-sm">Your permanent match!</span>
+                  </div>
+                </div>
+                
+                <div className="text-center space-y-3">
+                  <p className="text-green-200 text-base font-medium">💚 Connected Forever! 💚</p>
+                  
+                  <motion.div
+                    className="inline-block px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full text-white text-sm font-bold shadow-lg border border-green-400/50"
+                    whileHover={{ 
+                      scale: 1.05,
+                      boxShadow: "0 5px 20px rgba(34, 197, 94, 0.5)"
+                    }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    👑 Perfect Match Found! 👑
+                  </motion.div>
+                  
+                  <div className="flex items-center justify-center space-x-2 text-green-300 text-xs">
+                    <motion.div
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                    >
+                      👆
+                    </motion.div>
+                    <span>Tap to connect on Instagram</span>
+                    <motion.div
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 1.5, repeat: Infinity, delay: 0.7 }}
+                    >
+                      👆
+                    </motion.div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
           )}
           
           <div className="bg-slate-700/50 rounded-lg p-4 mb-4">
@@ -1748,11 +2073,25 @@ const PermanentMatchCard = ({ match, currentUserId }: {
 }
 
 // Payments Section Component
-const PaymentsSection = ({ user }: { user: UserProfile }) => {
-  const [paymentProof, setPaymentProof] = useState<File | null>(null)
-  const [isUploading, setIsUploading] = useState(false)
+const PaymentsSection = ({ 
+  user, 
+  setUser, 
+  fetchUserData 
+}: { 
+  user: UserProfile
+  setUser: (user: UserProfile | null) => void
+  fetchUserData: () => void
+}) => {
+  const [paymentProof, setPaymentProof] = useState<string | null>(null)
   const [copiedText, setCopiedText] = useState<string | null>(null)
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string | null>(null)
+
+  // Initialize payment proof state with existing proof
+  useEffect(() => {
+    if (user.payment_proof_url) {
+      setPaymentProof(user.payment_proof_url)
+    }
+  }, [user.payment_proof_url])
 
   // Generate QR code for UPI payment
   useEffect(() => {
@@ -1800,14 +2139,25 @@ const PaymentsSection = ({ user }: { user: UserProfile }) => {
     }
   }
 
-  const handleProofUpload = async (file: File) => {
-    setIsUploading(true)
-    // Implementation for payment proof upload
-    // This would typically upload to your storage service
+  const handleProofUpload = async (fileName: string) => {
+    // ImageUpload component now handles the file upload directly via API
+    // We just need to update local state and refresh user data
+    console.log('Payment proof uploaded successfully:', fileName)
+    
+    // Update local state
+    setUser(prev => prev ? {
+      ...prev,
+      payment_proof_url: fileName,
+      payment_confirmed: false,
+      subscription_status: 'pending'
+    } : null)
+    
+    setPaymentProof(fileName)
+    
+    // Refresh user data to get latest payment status
     setTimeout(() => {
-      setIsUploading(false)
-      setPaymentProof(file)
-    }, 2000)
+      fetchUserData()
+    }, 1000)
   }
 
   return (
@@ -2052,41 +2402,64 @@ const PaymentsSection = ({ user }: { user: UserProfile }) => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Current Payment Proof Display */}
+          {user.payment_proof_url && (
+            <div className="mb-4">
+              <h4 className="text-white font-medium mb-2">Current Payment Proof:</h4>
+              <div className="bg-white/10 border border-white/20 rounded-lg p-4">
+                <div className="flex items-center space-x-3">
+                  <CheckCircle className="h-5 w-5 text-green-400" />
+                  <div>
+                    <p className="text-white font-medium">Proof Uploaded</p>
+                    <p className="text-white/70 text-sm">
+                      Status: {user.payment_confirmed ? 'Confirmed' : 'Under Review'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center">
             <Upload className="h-8 w-8 text-gray-400 mx-auto mb-4" />
             <p className="text-white/70 mb-4">
-              Upload your payment screenshot or receipt
+              {user.payment_proof_url ? 'Upload new payment proof to replace current one' : 'Upload your payment screenshot or receipt'}
             </p>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => {
-                const file = e.target.files?.[0]
-                if (file) handleProofUpload(file)
-              }}
-              className="hidden"
-              id="payment-proof"
+            
+            <ImageUpload
+              onImageUploaded={handleProofUpload}
+              currentImage={user.payment_proof_url ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/payment-proofs/${user.payment_proof_url}` : undefined}
+              className="w-full"
+              uploadType="payment-proof"
+              userId={user.id}
             />
-            <label
-              htmlFor="payment-proof"
-              className="inline-flex items-center px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg cursor-pointer transition-colors"
-            >
-              <Camera className="h-4 w-4 mr-2" />
-              {paymentProof ? 'Change Photo' : 'Upload Photo'}
-            </label>
           </div>
           
           {paymentProof && (
             <div className="p-4 bg-green-500/20 border border-green-500/50 rounded-lg">
               <div className="flex items-center space-x-2">
                 <CheckCircle className="h-5 w-5 text-green-400" />
-                <span className="text-green-400 font-medium">Payment proof uploaded</span>
+                <span className="text-green-400 font-medium">Payment proof uploaded successfully!</span>
               </div>
               <p className="text-green-300 text-sm mt-1">
-                File: {paymentProof.name}
+                Our team will review it and confirm your payment within 24 hours.
               </p>
             </div>
           )}
+
+          {/* Upload Instructions */}
+          <div className="bg-blue-500/20 border border-blue-500/30 rounded-lg p-4">
+            <h5 className="text-blue-300 font-semibold mb-2 flex items-center">
+              <AlertTriangle className="h-4 w-4 mr-2" />
+              Upload Instructions
+            </h5>
+            <ul className="text-white/70 text-sm space-y-1">
+              <li>• Take a clear screenshot of your payment confirmation</li>
+              <li>• Ensure the amount and transaction ID are visible</li>
+              <li>• Supported formats: JPG, PNG, WebP (max 10MB)</li>
+              <li>• You can replace your proof anytime before confirmation</li>
+            </ul>
+          </div>
         </CardContent>
       </Card>
 

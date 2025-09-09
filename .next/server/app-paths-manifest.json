@@ -1,10 +1,14 @@
 {
+  "/page": "app/page.js",
+  "/admin/page": "app/admin/page.js",
   "/dashboard/page": "app/dashboard/page.js",
   "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
   "/api/auth/user/route": "app/api/auth/user/route.js",
-  "/api/user/assignments/route": "app/api/user/assignments/route.js",
+  "/api/admin/users/route": "app/api/admin/users/route.js",
   "/api/user/profile/route": "app/api/user/profile/route.js",
+  "/api/user/assignments/route": "app/api/user/assignments/route.js",
   "/api/user/temporary-matches/route": "app/api/user/temporary-matches/route.js",
   "/api/user/permanent-matches/route": "app/api/user/permanent-matches/route.js",
-  "/api/user/reveal-profile/route": "app/api/user/reveal-profile/route.js"
+  "/api/user/payment-proof/route": "app/api/user/payment-proof/route.js",
+  "/api/admin/matches/route": "app/api/admin/matches/route.js"
 }

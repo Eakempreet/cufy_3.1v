@@ -30,34 +30,22 @@ export async function GET(request: NextRequest) {
     let tempMatches = []
 
     if (currentUser.gender === 'male') {
-      // Check if user has any selected profile first
-      const { data: selectedAssignment } = await supabaseAdmin
+      // For the new system: Show all assigned profiles regardless of selection status
+      // This allows multiple males to select the same female independently
+      const { data: maleAssignments, error: assignmentsError } = await supabaseAdmin
         .from('profile_assignments')
         .select('*')
         .eq('male_user_id', currentUser.id)
-        .eq('is_selected', true)
-        .single()
+        .not('status', 'in', '(disengaged,hidden)') // Only exclude disengaged and hidden assignments
+        .order('assigned_at', { ascending: false })
 
-      if (selectedAssignment) {
-        // If user has selected a profile, only return that assignment
-        console.log('User has selected profile, returning only selected assignment:', selectedAssignment.id)
-        assignments = [selectedAssignment]
-      } else {
-        // Get all assignments for male users (exclude disengaged and hidden)
-        const { data: maleAssignments, error: assignmentsError } = await supabaseAdmin
-          .from('profile_assignments')
-          .select('*')
-          .eq('male_user_id', currentUser.id)
-          .not('status', 'in', '(disengaged,hidden)') // Exclude disengaged and hidden assignments
-          .order('assigned_at', { ascending: false })
-
-        if (assignmentsError) {
-          console.error('Male assignments fetch error:', assignmentsError)
-          return NextResponse.json({ error: 'Failed to fetch assignments' }, { status: 500 })
-        }
-
-        assignments = maleAssignments || []
+      if (assignmentsError) {
+        console.error('Male assignments fetch error:', assignmentsError)
+        return NextResponse.json({ error: 'Failed to fetch assignments' }, { status: 500 })
       }
+
+      assignments = maleAssignments || []
+      console.log(`User ${currentUser.email} has ${assignments.length} assignments (including selected ones)`)
     }
 
     // Get female profiles for these assignments
