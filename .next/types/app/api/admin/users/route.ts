@@ -1,4 +1,4 @@
-// File: /home/aman/Desktop/cufy_3.1v-1/app/api/admin/users/route.ts
+// File: /home/aman/Desktop/cufy_3.1v-2/app/api/admin/users/route.ts
 import * as entry from '../../../../../../app/api/admin/users/route.js'
 import type { NextRequest } from 'next/server.js'
 

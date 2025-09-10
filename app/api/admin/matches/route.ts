@@ -171,7 +171,10 @@ export async function GET(request: NextRequest) {
         status: userPermMatch ? 'permanently_matched' : 
                 userTempMatch ? 'temporary_match' :
                 selectedAssignment && hasActiveTimer ? 'deciding' :
-                currentAssignments > 0 ? 'assigned' : 'waiting'
+                currentAssignments > 0 ? 'assigned' : 
+                // Show as 'assigned' instead of 'waiting' for paid users with no assignments
+                // This ensures reset users remain visible in admin panel
+                user.payment_confirmed ? 'assigned' : 'waiting'
       }
     })
 

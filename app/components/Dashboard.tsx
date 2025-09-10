@@ -757,7 +757,7 @@ export default function Dashboard() {
                               </p>
                             </CardHeader>
                             <CardContent>
-                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                              <div className="grid grid-cols-1 gap-4 sm:gap-6">
                                 {selectedProfiles.map((assignment) => (
                                   <MatchCard 
                                     key={assignment.id} 
@@ -787,7 +787,7 @@ export default function Dashboard() {
                               </p>
                             </CardHeader>
                             <CardContent>
-                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                              <div className="grid grid-cols-1 gap-4 sm:gap-6">
                                 {availableProfiles.map((assignment) => (
                                   <MatchCard 
                                     key={assignment.id} 
@@ -1244,7 +1244,7 @@ const MatchCard = ({ assignment, isRevealing, onReveal, onSelectProfile, onDisen
             <motion.img 
               src={assignment.female_user.profile_photo} 
               alt={assignment.female_user.full_name}
-              className="w-full h-56 sm:h-72 object-cover"
+              className="w-full h-48 sm:h-64 md:h-72 object-cover"
               initial={{ opacity: 0, scale: 1.1 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5 }}
@@ -1255,19 +1255,19 @@ const MatchCard = ({ assignment, isRevealing, onReveal, onSelectProfile, onDisen
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3, duration: 0.3 }}
             >
-              <Badge className={`absolute top-4 right-4 shadow-lg ${
+              <Badge className={`absolute top-3 right-3 shadow-lg text-xs ${
                 isSelected 
                   ? 'bg-green-500/90 text-white' 
                   : 'bg-blue-500/90 text-white'
               }`}>
                 {isSelected ? (
                   <>
-                    <CheckCircle className="h-4 w-4 mr-1" />
+                    <CheckCircle className="h-3 w-3 mr-1" />
                     Selected
                   </>
                 ) : (
                   <>
-                    <CheckCircle className="h-4 w-4 mr-1" />
+                    <CheckCircle className="h-3 w-3 mr-1" />
                     Revealed
                   </>
                 )}
@@ -1275,40 +1275,40 @@ const MatchCard = ({ assignment, isRevealing, onReveal, onSelectProfile, onDisen
             </motion.div>
 
             {/* Gradient overlay at bottom */}
-            <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black/60 to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-black/80 to-transparent" />
             
             {/* Name overlay */}
-            <div className="absolute bottom-4 left-4">
-              <h3 className="text-xl font-bold text-white mb-1">
+            <div className="absolute bottom-3 left-3">
+              <h3 className="text-lg sm:text-xl font-bold text-white mb-1">
                 {assignment.female_user.full_name}, {assignment.female_user.age}
               </h3>
-              <p className="text-white/80 text-sm flex items-center">
+              <p className="text-white/80 text-xs sm:text-sm flex items-center">
                 <User className="h-3 w-3 mr-1" />
                 {assignment.female_user.university}
               </p>
             </div>
           </div>
           
-          <CardContent className="p-4 sm:p-6 bg-gradient-to-b from-slate-800/95 to-slate-900/95 backdrop-blur-sm">
+          <CardContent className="p-3 sm:p-4 md:p-6 bg-gradient-to-b from-slate-800/95 to-slate-900/95 backdrop-blur-sm">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4, duration: 0.3 }}
             >
-              {/* Selected Profile Timer */}
+              {/* Selected Profile Timer - Mobile Optimized */}
               {isSelected && assignment.timer_expires_at && (
                 <motion.div 
-                  className="bg-gradient-to-r from-green-500/30 to-emerald-500/30 border-2 border-green-500/50 rounded-2xl p-4 mb-6 backdrop-blur-sm"
+                  className="bg-gradient-to-r from-green-500/30 to-emerald-500/30 border-2 border-green-500/50 rounded-xl p-3 sm:p-4 mb-4 sm:mb-6 backdrop-blur-sm"
                   initial={{ scale: 0.9, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: 0.2, duration: 0.5 }}
                 >
-                  <div className="flex items-center justify-center space-x-3 mb-2">
-                    <Timer className="h-6 w-6 text-green-400" />
-                    <span className="text-green-100 font-bold text-lg">Profile Selected!</span>
+                  <div className="flex items-center justify-center space-x-2 mb-2">
+                    <Timer className="h-5 w-5 text-green-400" />
+                    <span className="text-green-100 font-bold text-base sm:text-lg">Profile Selected!</span>
                   </div>
                   <div className="text-center">
-                    <p className="text-green-200 text-sm mb-2">
+                    <p className="text-green-200 text-xs sm:text-sm mb-2">
                       You have 48 hours to make your final decision
                     </p>
                     <div className="text-xs text-green-300">
@@ -1318,10 +1318,10 @@ const MatchCard = ({ assignment, isRevealing, onReveal, onSelectProfile, onDisen
                 </motion.div>
               )}
 
-              {/* Instagram Section - Main Feature Box */}
+              {/* Instagram Section - Mobile Optimized */}
               {assignment.female_user.instagram && (
                 <motion.div 
-                  className="relative bg-gradient-to-r from-pink-500/30 to-purple-500/30 border-2 border-pink-500/50 rounded-2xl p-6 mb-6 backdrop-blur-sm overflow-hidden"
+                  className="relative bg-gradient-to-r from-pink-500/30 to-purple-500/30 border-2 border-pink-500/50 rounded-xl p-4 sm:p-6 mb-4 sm:mb-6 backdrop-blur-sm overflow-hidden"
                   initial={{ scale: 0.9, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: 0.6, duration: 0.5 }}
@@ -1329,12 +1329,12 @@ const MatchCard = ({ assignment, isRevealing, onReveal, onSelectProfile, onDisen
                 >
                   {/* Animated background sparkles */}
                   <div className="absolute inset-0 opacity-20">
-                    {[...Array(6)].map((_, i) => (
+                    {[...Array(4)].map((_, i) => (
                       <motion.div
                         key={i}
                         className="absolute w-1 h-1 bg-white rounded-full"
                         style={{
-                          left: `${20 + i * 15}%`,
+                          left: `${20 + i * 20}%`,
                           top: `${20 + (i % 2) * 60}%`,
                         }}
                         animate={{
@@ -1351,20 +1351,20 @@ const MatchCard = ({ assignment, isRevealing, onReveal, onSelectProfile, onDisen
                   </div>
                   
                   <div className="relative z-10">
-                    <div className="flex items-center justify-center space-x-4 mb-3">
+                    <div className="flex items-center justify-center space-x-3 mb-3">
                       <motion.div
                         className="p-2 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full"
                         animate={{ rotate: [0, 10, -10, 0] }}
                         transition={{ duration: 2, repeat: Infinity }}
                       >
-                        <Instagram className="h-6 w-6 text-white" />
+                        <Instagram className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                       </motion.div>
-                      <span className="text-pink-100 font-bold text-xl">@{assignment.female_user.instagram}</span>
+                      <span className="text-pink-100 font-bold text-lg sm:text-xl">@{assignment.female_user.instagram}</span>
                     </div>
                     <div className="text-center">
-                      <p className="text-pink-200 text-sm font-medium mb-2">💕 Connect on Instagram! 💕</p>
+                      <p className="text-pink-200 text-xs sm:text-sm font-medium mb-2">💕 Connect on Instagram! 💕</p>
                       <motion.div
-                        className="inline-block px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full text-white text-xs font-semibold shadow-lg"
+                        className="inline-block px-3 py-2 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full text-white text-xs font-semibold shadow-lg"
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                       >
@@ -1375,53 +1375,53 @@ const MatchCard = ({ assignment, isRevealing, onReveal, onSelectProfile, onDisen
                 </motion.div>
               )}
               
-              {/* Bio Section */}
-              <div className="bg-slate-700/50 rounded-lg p-4 mb-4">
-                <h4 className="text-white font-semibold mb-2 flex items-center">
+              {/* Bio Section - Mobile Optimized */}
+              <div className="bg-slate-700/50 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4">
+                <h4 className="text-white font-semibold mb-2 flex items-center text-sm sm:text-base">
                   <Heart className="h-4 w-4 mr-2 text-pink-400" />
                   About {assignment.female_user.full_name.split(' ')[0]}
                 </h4>
-                <p className="text-white/90 text-sm leading-relaxed">
+                <p className="text-white/90 text-xs sm:text-sm leading-relaxed">
                   {assignment.female_user.bio}
                 </p>
               </div>
 
-              {/* Profile Details Grid */}
-              <div className="grid grid-cols-1 gap-3 mb-4">
+              {/* Profile Details Grid - Mobile Optimized */}
+              <div className="grid grid-cols-1 gap-2 sm:gap-3 mb-3 sm:mb-4">
                 {assignment.female_user.energy_style && (
-                  <div className="bg-slate-700/30 rounded-lg p-3">
+                  <div className="bg-slate-700/30 rounded-lg p-2 sm:p-3">
                     <span className="text-pink-400 font-medium text-xs uppercase tracking-wide">Energy Style</span>
-                    <p className="text-white mt-1">{assignment.female_user.energy_style}</p>
+                    <p className="text-white mt-1 text-xs sm:text-sm">{assignment.female_user.energy_style}</p>
                   </div>
                 )}
                 {assignment.female_user.group_setting && (
-                  <div className="bg-slate-700/30 rounded-lg p-3">
+                  <div className="bg-slate-700/30 rounded-lg p-2 sm:p-3">
                     <span className="text-blue-400 font-medium text-xs uppercase tracking-wide">Group Setting</span>
-                    <p className="text-white mt-1">{assignment.female_user.group_setting}</p>
+                    <p className="text-white mt-1 text-xs sm:text-sm">{assignment.female_user.group_setting}</p>
                   </div>
                 )}
                 {assignment.female_user.communication_style && (
-                  <div className="bg-slate-700/30 rounded-lg p-3">
+                  <div className="bg-slate-700/30 rounded-lg p-2 sm:p-3">
                     <span className="text-purple-400 font-medium text-xs uppercase tracking-wide">Communication</span>
-                    <p className="text-white mt-1">{assignment.female_user.communication_style}</p>
+                    <p className="text-white mt-1 text-xs sm:text-sm">{assignment.female_user.communication_style}</p>
                   </div>
                 )}
                 {assignment.female_user.best_trait && (
-                  <div className="bg-slate-700/30 rounded-lg p-3">
+                  <div className="bg-slate-700/30 rounded-lg p-2 sm:p-3">
                     <span className="text-green-400 font-medium text-xs uppercase tracking-wide">Best Trait</span>
-                    <p className="text-white mt-1">{assignment.female_user.best_trait}</p>
+                    <p className="text-white mt-1 text-xs sm:text-sm">{assignment.female_user.best_trait}</p>
                   </div>
                 )}
                 {assignment.female_user.love_language && (
-                  <div className="bg-slate-700/30 rounded-lg p-3">
+                  <div className="bg-slate-700/30 rounded-lg p-2 sm:p-3">
                     <span className="text-yellow-400 font-medium text-xs uppercase tracking-wide">Love Language</span>
-                    <p className="text-white mt-1">{assignment.female_user.love_language}</p>
+                    <p className="text-white mt-1 text-xs sm:text-sm">{assignment.female_user.love_language}</p>
                   </div>
                 )}
                 {assignment.female_user.ideal_weekend && (
-                  <div className="bg-slate-700/30 rounded-lg p-3">
+                  <div className="bg-slate-700/30 rounded-lg p-2 sm:p-3">
                     <span className="text-cyan-400 font-medium text-xs uppercase tracking-wide">Ideal Weekend</span>
-                    <p className="text-white mt-1">
+                    <p className="text-white mt-1 text-xs sm:text-sm">
                       {Array.isArray(assignment.female_user.ideal_weekend) 
                         ? assignment.female_user.ideal_weekend.join(', ')
                         : assignment.female_user.ideal_weekend
@@ -1430,9 +1430,9 @@ const MatchCard = ({ assignment, isRevealing, onReveal, onSelectProfile, onDisen
                   </div>
                 )}
                 {assignment.female_user.relationship_values && (
-                  <div className="bg-slate-700/30 rounded-lg p-3">
+                  <div className="bg-slate-700/30 rounded-lg p-2 sm:p-3">
                     <span className="text-rose-400 font-medium text-xs uppercase tracking-wide">Values</span>
-                    <p className="text-white mt-1">
+                    <p className="text-white mt-1 text-xs sm:text-sm">
                       {Array.isArray(assignment.female_user.relationship_values) 
                         ? assignment.female_user.relationship_values.join(', ')
                         : assignment.female_user.relationship_values
@@ -1441,25 +1441,25 @@ const MatchCard = ({ assignment, isRevealing, onReveal, onSelectProfile, onDisen
                   </div>
                 )}
                 {assignment.female_user.connection_statement && (
-                  <div className="bg-slate-700/30 rounded-lg p-3">
+                  <div className="bg-slate-700/30 rounded-lg p-2 sm:p-3">
                     <span className="text-indigo-400 font-medium text-xs uppercase tracking-wide">Connection Statement</span>
-                    <p className="text-white mt-1">{assignment.female_user.connection_statement}</p>
+                    <p className="text-white mt-1 text-xs sm:text-sm">{assignment.female_user.connection_statement}</p>
                   </div>
                 )}
               </div>
               
-              <div className="text-xs text-white/50 mb-4 flex items-center justify-center">
+              <div className="text-xs text-white/50 mb-3 sm:mb-4 flex items-center justify-center">
                 <Clock className="h-3 w-3 mr-1" />
                 Revealed {assignment.revealed_at && new Date(assignment.revealed_at).toLocaleDateString()}
               </div>
               
-              {/* Action Buttons */}
-              <div className="space-y-3">
+              {/* Action Buttons - Mobile Optimized */}
+              <div className="space-y-2 sm:space-y-3">
                 {/* Select Profile Button - Only show if not selected */}
                 {!isSelected && (
                   <Button 
                     onClick={onSelectProfile}
-                    className="w-full bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-semibold transition-all duration-300 transform hover:scale-105"
+                    className="w-full h-12 sm:h-auto bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-semibold transition-all duration-300 transform hover:scale-105 text-sm sm:text-base"
                   >
                     <Heart className="h-4 w-4 mr-2" />
                     Select This Profile
@@ -1471,7 +1471,7 @@ const MatchCard = ({ assignment, isRevealing, onReveal, onSelectProfile, onDisen
                   <Button 
                     onClick={handleDisengage}
                     variant="outline" 
-                    className={`w-full border-red-500/50 text-red-400 hover:bg-red-500/10 hover:border-red-500 transition-all duration-300 ${
+                    className={`w-full h-10 sm:h-auto border-red-500/50 text-red-400 hover:bg-red-500/10 hover:border-red-500 transition-all duration-300 text-sm ${
                       isSelected ? 'border-red-600/60 text-red-500 hover:bg-red-600/20' : ''
                     }`}
                     disabled={isBlurred}
@@ -1483,12 +1483,12 @@ const MatchCard = ({ assignment, isRevealing, onReveal, onSelectProfile, onDisen
                 
                 {/* Round 2 Final Selection Message */}
                 {user?.current_round === 2 && isSelected && (
-                  <div className="w-full p-4 bg-green-500/20 border border-green-500/30 rounded-lg">
+                  <div className="w-full p-3 sm:p-4 bg-green-500/20 border border-green-500/30 rounded-lg">
                     <div className="flex items-center justify-center text-green-400">
-                      <Heart className="h-5 w-5 mr-2" />
-                      <span className="font-semibold">Final Match Selected!</span>
+                      <Heart className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+                      <span className="font-semibold text-sm sm:text-base">Final Match Selected!</span>
                     </div>
-                    <p className="text-center text-green-300 text-sm mt-1">
+                    <p className="text-center text-green-300 text-xs sm:text-sm mt-1">
                       This is your final round selection
                     </p>
                   </div>

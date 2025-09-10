@@ -904,16 +904,6 @@ export default function AdminPanel() {
             
             <div className="flex items-center space-x-3">
               <Button
-                onClick={() => setRealTimeUpdates(!realTimeUpdates)}
-                variant="outline"
-                size="sm"
-                className={`border-white/20 text-white hover:bg-white/10 ${realTimeUpdates ? 'bg-green-500/20 border-green-500' : 'bg-gray-500/20 border-gray-500'}`}
-              >
-                <Activity className="h-4 w-4 mr-2" />
-                Real-time {realTimeUpdates ? 'ON' : 'OFF (Performance Mode)'}
-              </Button>
-              
-              <Button
                 onClick={handleRefresh}
                 disabled={refreshing}
                 variant="outline"
