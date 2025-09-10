@@ -1,5 +1,6 @@
 {
   "/admin/page": "app/admin/page.js",
   "/api/registration-status/route": "app/api/registration-status/route.js",
-  "/api/admin/matches/route": "app/api/admin/matches/route.js"
+  "/api/admin/matches/route": "app/api/admin/matches/route.js",
+  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js"
 }
