@@ -12,7 +12,7 @@ exports.id = "app/api/registration-status/route";
 exports.ids = ["app/api/registration-status/route"];
 exports.modules = {
 
-/***/ "(ssr)/./node_modules/@supabase/realtime-js/dist/main sync recursive":
+/***/ "(rsc)/./node_modules/@supabase/realtime-js/dist/main sync recursive":
 /*!************************************************************!*\
   !*** ./node_modules/@supabase/realtime-js/dist/main/ sync ***!
   \************************************************************/
@@ -25,7 +25,7 @@ function webpackEmptyContext(req) {
 }
 webpackEmptyContext.keys = () => ([]);
 webpackEmptyContext.resolve = webpackEmptyContext;
-webpackEmptyContext.id = "(ssr)/./node_modules/@supabase/realtime-js/dist/main sync recursive";
+webpackEmptyContext.id = "(rsc)/./node_modules/@supabase/realtime-js/dist/main sync recursive";
 module.exports = webpackEmptyContext;
 
 /***/ }),

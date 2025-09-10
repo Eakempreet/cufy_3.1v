@@ -12,7 +12,7 @@ exports.id = "app/api/auth/user/route";
 exports.ids = ["app/api/auth/user/route"];
 exports.modules = {
 
-/***/ "(ssr)/./node_modules/@supabase/realtime-js/dist/main sync recursive":
+/***/ "(rsc)/./node_modules/@supabase/realtime-js/dist/main sync recursive":
 /*!************************************************************!*\
   !*** ./node_modules/@supabase/realtime-js/dist/main/ sync ***!
   \************************************************************/
@@ -25,7 +25,7 @@ function webpackEmptyContext(req) {
 }
 webpackEmptyContext.keys = () => ([]);
 webpackEmptyContext.resolve = webpackEmptyContext;
-webpackEmptyContext.id = "(ssr)/./node_modules/@supabase/realtime-js/dist/main sync recursive";
+webpackEmptyContext.id = "(rsc)/./node_modules/@supabase/realtime-js/dist/main sync recursive";
 module.exports = webpackEmptyContext;
 
 /***/ }),
@@ -246,7 +246,7 @@ eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpac
 var __webpack_require__ = require("../../../../webpack-runtime.js");
 __webpack_require__.C(exports);
 var __webpack_exec__ = (moduleId) => (__webpack_require__(__webpack_require__.s = moduleId))
-var __webpack_exports__ = __webpack_require__.X(0, ["vendor-chunks/next","vendor-chunks/@supabase","vendor-chunks/tr46","vendor-chunks/whatwg-url","vendor-chunks/webidl-conversions","vendor-chunks/next-auth","vendor-chunks/@babel","vendor-chunks/jose","vendor-chunks/openid-client","vendor-chunks/oauth","vendor-chunks/object-hash","vendor-chunks/preact","vendor-chunks/preact-render-to-string","vendor-chunks/uuid","vendor-chunks/yallist","vendor-chunks/lru-cache","vendor-chunks/cookie","vendor-chunks/oidc-token-hash","vendor-chunks/@panva"], () => (__webpack_exec__("(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader.js?name=app%2Fapi%2Fauth%2Fuser%2Froute&page=%2Fapi%2Fauth%2Fuser%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fauth%2Fuser%2Froute.ts&appDir=%2Fhome%2Faman%2FDesktop%2Fcufy_3.1v-2%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2Fhome%2Faman%2FDesktop%2Fcufy_3.1v-2&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D!")));
+var __webpack_exports__ = __webpack_require__.X(0, ["vendor-chunks/next","vendor-chunks/@supabase","vendor-chunks/tr46","vendor-chunks/next-auth","vendor-chunks/whatwg-url","vendor-chunks/@babel","vendor-chunks/webidl-conversions","vendor-chunks/jose","vendor-chunks/openid-client","vendor-chunks/oauth","vendor-chunks/object-hash","vendor-chunks/preact","vendor-chunks/preact-render-to-string","vendor-chunks/uuid","vendor-chunks/yallist","vendor-chunks/lru-cache","vendor-chunks/cookie","vendor-chunks/oidc-token-hash","vendor-chunks/@panva"], () => (__webpack_exec__("(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader.js?name=app%2Fapi%2Fauth%2Fuser%2Froute&page=%2Fapi%2Fauth%2Fuser%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fauth%2Fuser%2Froute.ts&appDir=%2Fhome%2Faman%2FDesktop%2Fcufy_3.1v-2%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2Fhome%2Faman%2FDesktop%2Fcufy_3.1v-2&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D!")));
 module.exports = __webpack_exports__;
 
 })();

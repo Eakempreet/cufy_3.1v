@@ -9,7 +9,6 @@ import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
 import { Progress } from '@/components/ui/progress'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -27,7 +26,6 @@ import {
   UserX,
   RefreshCw,
   Plus,
-  Filter,
   Timer,
   Hourglass,
   Ban,
@@ -55,15 +53,13 @@ import {
   TrendingUp,
   Shield,
   Zap,
-  Search,
-  SlidersHorizontal,
-  XCircle,
-  Settings,
-  Database,
   Grid3X3,
   List,
   Maximize2,
-  Minimize2
+  Minimize2,
+  Database,
+  XCircle,
+  Search
 } from 'lucide-react'
 
 interface EnhancedMaleUser {
@@ -172,14 +168,9 @@ export default function AdminMatchesPanel() {
   const [assignLoading, setAssignLoading] = useState(false)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   
-  // Search and filter state
+  // Search state (keeping search functionality)
   const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState<string>('all')
-  const [subscriptionFilter, setSubscriptionFilter] = useState<string>('all')
-  const [assignmentStatusFilter, setAssignmentStatusFilter] = useState<string>('all')
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
   const [femaleSearchTerm, setFemaleSearchTerm] = useState('')
-  const [universityFilter, setUniversityFilter] = useState<string>('all')
   const [assignDialogSearchTerm, setAssignDialogSearchTerm] = useState('')
 
   // Debounced search terms for performance
@@ -336,7 +327,7 @@ export default function AdminMatchesPanel() {
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
   }, [fetchMatchesData, isMounted])
 
-  // Filtered data computed properties
+  // Show users with search functionality (no filters)
   const filteredMaleUsers = useMemo(() => {
     return maleUsers.filter(user => {
       // Always show paid users, even if they have 'waiting' status after reset
@@ -346,68 +337,32 @@ export default function AdminMatchesPanel() {
       }
 
       // Search filter (debounced)
-      if (debouncedSearchTerm && !user.full_name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) && 
-          !user.email.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) &&
-          !user.university.toLowerCase().includes(debouncedSearchTerm.toLowerCase())) {
-        return false
-      }
-
-      // Subscription filter
-      if (subscriptionFilter !== 'all' && user.subscription_type !== subscriptionFilter) {
-        return false
-      }
-
-      // Status filter - but allow reset users (with payment) to show regardless of status
-      if (statusFilter !== 'all' && user.status !== statusFilter) {
-        // Allow users with confirmed payment to show even if status doesn't match
-        // This ensures reset users remain visible
-        if (!user.payment_confirmed) {
-          return false
-        }
-      }
-
-      // Assignment status filter
-      if (assignmentStatusFilter !== 'all') {
-        if (assignmentStatusFilter === 'has_assignments' && user.assignedCount === 0) return false
-        if (assignmentStatusFilter === 'no_assignments' && user.assignedCount > 0) return false
-        if (assignmentStatusFilter === 'full_assignments' && user.assignedCount < user.maxAssignments) return false
-        if (assignmentStatusFilter === 'partial_assignments' && 
-            (user.assignedCount === 0 || user.assignedCount >= user.maxAssignments)) return false
-      }
-
-      // University filter
-      if (universityFilter !== 'all' && user.university !== universityFilter) {
+      if (debouncedSearchTerm && 
+          !(user.full_name?.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) || 
+            user.email?.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+            user.university?.toLowerCase().includes(debouncedSearchTerm.toLowerCase()))) {
         return false
       }
 
       return true
     })
-  }, [maleUsers, debouncedSearchTerm, subscriptionFilter, statusFilter, assignmentStatusFilter, universityFilter])
+  }, [maleUsers, debouncedSearchTerm])
 
   const filteredFemaleUsers = useMemo(() => {
     return femaleUsers.filter(user => {
       // Female search filter (debounced)
-      if (debouncedFemaleSearchTerm && !user.full_name.toLowerCase().includes(debouncedFemaleSearchTerm.toLowerCase()) && 
-          !user.email.toLowerCase().includes(debouncedFemaleSearchTerm.toLowerCase()) &&
-          !user.university.toLowerCase().includes(debouncedFemaleSearchTerm.toLowerCase())) {
-        return false
-      }
-
-      // University filter
-      if (universityFilter !== 'all' && user.university !== universityFilter) {
+      if (debouncedFemaleSearchTerm && 
+          !(user.full_name?.toLowerCase().includes(debouncedFemaleSearchTerm.toLowerCase()) || 
+            user.email?.toLowerCase().includes(debouncedFemaleSearchTerm.toLowerCase()) ||
+            user.university?.toLowerCase().includes(debouncedFemaleSearchTerm.toLowerCase()))) {
         return false
       }
 
       return true
     })
-  }, [femaleUsers, debouncedFemaleSearchTerm, universityFilter])
+  }, [femaleUsers, debouncedFemaleSearchTerm])
 
   // Get unique universities for filter
-  const universities = useMemo(() => {
-    const allUniversities = [...maleUsers, ...femaleUsers].map(user => user.university)
-    return Array.from(new Set(allUniversities)).sort()
-  }, [maleUsers, femaleUsers])
-
   // Memoized filtered user counts for performance
   const filteredUserCounts = useMemo(() => {
     const premiumUsers = filteredMaleUsers.filter(u => u.subscription_type === 'premium')
@@ -421,14 +376,10 @@ export default function AdminMatchesPanel() {
     }
   }, [filteredMaleUsers])
 
-  // Clear all filters
-  const clearAllFilters = useCallback(() => {
+  // Clear search function
+  const clearAllSearch = useCallback(() => {
     setSearchTerm('')
     setFemaleSearchTerm('')
-    setStatusFilter('all')
-    setSubscriptionFilter('all')
-    setAssignmentStatusFilter('all')
-    setUniversityFilter('all')
     setAssignDialogSearchTerm('')
   }, [])
 
@@ -750,205 +701,38 @@ export default function AdminMatchesPanel() {
   return (
     <div className="min-h-screen bg-black" style={{ zoom: '0.8' }}>
       <div className="w-full px-4 py-6 space-y-6">
-        {/* Advanced Filter Panel */}
+        {/* Search Panel */}
         <Card className="bg-slate-900/50 backdrop-blur-xl border-slate-700/50 shadow-2xl">
           <CardContent className="p-6">
-            <div className="space-y-6">
-              {/* Main Search Row */}
-              <div className="flex items-center space-x-4">
-                <div className="flex-1 relative">
-                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
-                  <Input
-                    placeholder="Search users by name, email, university..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-12 h-12 bg-slate-800/50 border-slate-700/50 text-white placeholder-slate-400 focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/25 transition-all"
-                  />
-                  {searchTerm && (
-                    <button
-                      type="button"
-                      onClick={() => setSearchTerm('')}
-                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
-                    >
-                      <XCircle className="h-5 w-5" />
-                    </button>
-                  )}
-                </div>
-                
-                <Button
-                  onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-                  variant="outline"
-                  className="h-12 px-6 border-slate-700/50 text-slate-300 hover:bg-slate-700/50 hover:text-white transition-all duration-200"
-                >
-                  <SlidersHorizontal className="h-4 w-4 mr-2" />
-                  Advanced Filters
-                  {(statusFilter !== 'all' || subscriptionFilter !== 'all' || assignmentStatusFilter !== 'all' || universityFilter !== 'all') && (
-                    <Badge className="ml-3 bg-blue-500/20 text-blue-400 border-blue-500/50 pulse-animation">
-                      Active
-                    </Badge>
-                  )}
-                </Button>
-                
-                {(searchTerm || statusFilter !== 'all' || subscriptionFilter !== 'all' || assignmentStatusFilter !== 'all' || universityFilter !== 'all' || femaleSearchTerm || assignDialogSearchTerm) && (
-                  <Button
-                    onClick={clearAllFilters}
-                    variant="outline"
-                    className="h-12 px-4 border-red-500/50 text-red-400 hover:bg-red-500/10 hover:border-red-500 transition-all duration-200"
+            <div className="flex items-center space-x-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400" />
+                <Input
+                  placeholder="Search users by name, email, university..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-12 h-12 bg-slate-800/50 border-slate-700/50 text-white placeholder-slate-400 focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/25 transition-all"
+                />
+                {searchTerm && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchTerm('')}
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
                   >
-                    <XCircle className="h-4 w-4 mr-2" />
-                    Clear All
-                  </Button>
+                    <XCircle className="h-5 w-5" />
+                  </button>
                 )}
-                
-                <Button
-                  onClick={handleManualRefresh}
-                  disabled={refreshing}
-                  variant="outline"
-                  className="h-12 px-4 border-slate-700/50 text-slate-300 hover:bg-slate-700/50 hover:text-white transition-all duration-200"
-                >
-                  <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-                  Refresh
-                </Button>
               </div>
-
-              {/* Advanced Filters Collapsible */}
-              <AnimatePresence>
-                {showAdvancedFilters && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.3, ease: "easeInOut" }}
-                    className="space-y-6 border-t border-slate-700/50 pt-6"
-                  >
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                      {/* Plan Type Filter */}
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium text-slate-300">Plan Type</label>
-                        <Select value={selectedPlanType} onValueChange={handlePlanTypeChange}>
-                          <SelectTrigger className="bg-slate-800/50 border-slate-700/50 text-white hover:bg-slate-700/50 transition-colors">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent className="bg-slate-800 border-slate-700">
-                            <SelectItem value="all">All Plans</SelectItem>
-                            <SelectItem value="premium">Premium (₹249)</SelectItem>
-                            <SelectItem value="basic">Basic (₹99)</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      {/* Status Filter */}
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium text-slate-300">User Status</label>
-                        <Select value={statusFilter} onValueChange={setStatusFilter}>
-                          <SelectTrigger className="bg-slate-800/50 border-slate-700/50 text-white hover:bg-slate-700/50 transition-colors">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent className="bg-slate-800 border-slate-700">
-                            <SelectItem value="all">All Statuses</SelectItem>
-                            <SelectItem value="waiting">Waiting Assignment</SelectItem>
-                            <SelectItem value="assigned">Has Assignments</SelectItem>
-                            <SelectItem value="temporary_match">In Temporary Match</SelectItem>
-                            <SelectItem value="permanently_matched">Permanently Matched</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      {/* Subscription Filter */}
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium text-slate-300">Subscription Plan</label>
-                        <Select value={subscriptionFilter} onValueChange={setSubscriptionFilter}>
-                          <SelectTrigger className="bg-slate-800/50 border-slate-700/50 text-white hover:bg-slate-700/50 transition-colors">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent className="bg-slate-800 border-slate-700">
-                            <SelectItem value="all">All Plans</SelectItem>
-                            <SelectItem value="premium">Premium (₹249)</SelectItem>
-                            <SelectItem value="basic">Basic (₹99)</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      {/* Assignment Status Filter */}
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium text-slate-300">Assignment Status</label>
-                        <Select value={assignmentStatusFilter} onValueChange={setAssignmentStatusFilter}>
-                          <SelectTrigger className="bg-slate-800/50 border-slate-700/50 text-white hover:bg-slate-700/50 transition-colors">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent className="bg-slate-800 border-slate-700">
-                            <SelectItem value="all">All Assignment States</SelectItem>
-                            <SelectItem value="no_assignments">No Assignments</SelectItem>
-                            <SelectItem value="partial_assignments">Partial Assignments</SelectItem>
-                            <SelectItem value="full_assignments">Full Assignments</SelectItem>
-                            <SelectItem value="has_assignments">Has Assignments</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      {/* University Filter */}
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium text-slate-300">University</label>
-                        <Select value={universityFilter} onValueChange={setUniversityFilter}>
-                          <SelectTrigger className="bg-slate-800/50 border-slate-700/50 text-white hover:bg-slate-700/50 transition-colors">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent className="bg-slate-800 border-slate-700">
-                            <SelectItem value="all">All Universities</SelectItem>
-                            {universities.map((university) => (
-                              <SelectItem key={university} value={university}>
-                                {university}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    {/* Female Users Search */}
-                    <div className="space-y-3 border-t border-slate-700/50 pt-4">
-                      <label className="text-sm font-medium text-slate-300">Female Users Search (for assignment)</label>
-                      <div className="relative">
-                        <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
-                        <Input
-                          placeholder="Search female users by name, email, university, or bio..."
-                          value={femaleSearchTerm}
-                          onChange={(e) => setFemaleSearchTerm(e.target.value)}
-                          className="pl-12 bg-slate-800/50 border-slate-700/50 text-white placeholder-slate-400 focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/25 transition-all"
-                        />
-                        {femaleSearchTerm && (
-                          <button
-                            type="button"
-                            onClick={() => setFemaleSearchTerm('')}
-                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
-                          >
-                            <XCircle className="h-4 w-4" />
-                          </button>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Results Summary */}
-                    <div className="flex items-center justify-between bg-slate-800/30 rounded-xl p-4 border border-slate-700/30">
-                      <div className="text-sm text-slate-300">
-                        Showing <span className="text-white font-bold">{filteredMaleUsers.length}</span> of <span className="text-slate-400">{maleUsers.length}</span> male users
-                        {filteredFemaleUsers.length !== femaleUsers.length && (
-                          <span className="ml-4">
-                            • <span className="text-white font-bold">{filteredFemaleUsers.length}</span> of <span className="text-slate-400">{femaleUsers.length}</span> female users
-                          </span>
-                        )}
-                      </div>
-                      
-                      {(searchTerm || statusFilter !== 'all' || subscriptionFilter !== 'all' || assignmentStatusFilter !== 'all' || universityFilter !== 'all' || femaleSearchTerm || assignDialogSearchTerm) && (
-                        <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/50 animate-pulse">
-                          <Filter className="h-3 w-3 mr-1" />
-                          Filters Active
-                        </Badge>
-                      )}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              
+              <Button
+                onClick={handleManualRefresh}
+                disabled={refreshing}
+                variant="outline"
+                className="h-12 px-4 border-slate-700/50 text-slate-300 hover:bg-slate-700/50 hover:text-white transition-all duration-200"
+              >
+                <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -1278,12 +1062,12 @@ export default function AdminMatchesPanel() {
             
             {selectedMaleUser && (
               <div className="p-6 space-y-6 overflow-y-auto max-h-[70vh]">
-                {/* Enhanced Search and Filters Section */}
+                {/* Search Section */}
                 <div className="bg-gradient-to-r from-slate-800/50 to-slate-700/50 rounded-xl p-6 border border-slate-600/30">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold text-white flex items-center">
                       <Search className="h-5 w-5 mr-2 text-blue-400" />
-                      Search & Filter Profiles
+                      Search Female Profiles
                     </h3>
                     <div className="text-sm text-gray-300 bg-slate-700/50 rounded-full px-3 py-1">
                       <span className="text-blue-400 font-semibold">
@@ -1293,91 +1077,27 @@ export default function AdminMatchesPanel() {
                     </div>
                   </div>
                   
-                  <div className="space-y-4">
-                    {/* Search Input */}
-                    <div className="relative">
-                      <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                      <Input
-                        placeholder="🔍 Search by name, email, university, interests, or any keyword..."
-                        value={assignDialogSearchTerm}
-                        onChange={(e) => setAssignDialogSearchTerm(e.target.value)}
-                        className="pl-12 pr-12 h-12 bg-slate-800/50 border-slate-600/50 text-white placeholder-gray-400 rounded-lg text-base focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20"
-                      />
-                      {assignDialogSearchTerm && (
-                        <button
-                          type="button"
-                          onClick={() => setAssignDialogSearchTerm('')}
-                          className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
-                        >
-                          <XCircle className="h-5 w-5" />
-                        </button>
-                      )}
-                    </div>
-                    
-                    {/* Quick Filter Buttons */}
-                    <div className="flex flex-wrap gap-2">
-                      <Button
+                  <div className="relative">
+                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <Input
+                      placeholder="🔍 Search by name, email, university, interests, or any keyword..."
+                      value={assignDialogSearchTerm}
+                      onChange={(e) => setAssignDialogSearchTerm(e.target.value)}
+                      className="pl-12 pr-12 h-12 bg-slate-800/50 border-slate-600/50 text-white placeholder-gray-400 rounded-lg text-base focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20"
+                    />
+                    {assignDialogSearchTerm && (
+                      <button
+                        type="button"
                         onClick={() => setAssignDialogSearchTerm('')}
-                        variant="outline"
-                        size="sm"
-                        className={`border-slate-600/50 text-slate-300 hover:bg-slate-700/50 ${!assignDialogSearchTerm ? 'bg-blue-500/20 border-blue-500/50 text-blue-400' : ''}`}
+                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
                       >
-                        All Profiles
-                      </Button>
-                      <Button
-                        onClick={() => setAssignDialogSearchTerm('19')}
-                        variant="outline"
-                        size="sm"
-                        className="border-slate-600/50 text-slate-300 hover:bg-slate-700/50"
-                      >
-                        Age 19
-                      </Button>
-                      <Button
-                        onClick={() => setAssignDialogSearchTerm('20')}
-                        variant="outline"
-                        size="sm"
-                        className="border-slate-600/50 text-slate-300 hover:bg-slate-700/50"
-                      >
-                        Age 20
-                      </Button>
-                      <Button
-                        onClick={() => setAssignDialogSearchTerm('21')}
-                        variant="outline"
-                        size="sm"
-                        className="border-slate-600/50 text-slate-300 hover:bg-slate-700/50"
-                      >
-                        Age 21
-                      </Button>
-                    </div>
+                        <XCircle className="h-5 w-5" />
+                      </button>
+                    )}
                   </div>
-                  
-                  {assignDialogSearchTerm && getAvailableFemaleUsers(selectedMaleUser).length === 0 && (
-                    <div className="mt-4 p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg">
-                      <div className="flex items-start space-x-3">
-                        <AlertTriangle className="h-5 w-5 text-amber-400 mt-0.5 flex-shrink-0" />
-                        <div>
-                          <p className="text-amber-300 font-medium">No profiles match your search</p>
-                          <p className="text-amber-400/80 text-sm mt-1">
-                            Try different keywords, check spelling, or clear the search to see all available profiles.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {assignDialogSearchTerm && getAvailableFemaleUsers(selectedMaleUser).length > 0 && (
-                    <div className="mt-3 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
-                      <div className="flex items-center">
-                        <CheckCircle className="h-4 w-4 text-green-400 mr-2" />
-                        <span className="text-green-300 text-sm">
-                          Found {getAvailableFemaleUsers(selectedMaleUser).length} matching profiles
-                        </span>
-                      </div>
-                    </div>
-                  )}
                 </div>
 
-                {/* Enhanced Female Profiles Grid */}
+                {/* Female Profiles Grid */}
                 <div>
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold text-white flex items-center">
@@ -1385,6 +1105,12 @@ export default function AdminMatchesPanel() {
                       Available Female Profiles
                     </h3>
                     <div className="flex items-center space-x-2">
+                      <div className="text-sm text-gray-300 bg-slate-700/50 rounded-full px-3 py-1">
+                        <span className="text-blue-400 font-semibold">
+                          {getAvailableFemaleUsers(selectedMaleUser).length}
+                        </span>
+                        {` available profiles`}
+                      </div>
                       {assignLoading && (
                         <div className="flex items-center space-x-2 text-blue-400">
                           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-400"></div>
