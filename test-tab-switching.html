@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tab Switching Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #1a1a1a;
+            color: white;
+        }
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            border: 1px solid #333;
+            background: #2a2a2a;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        button.active {
+            background: #007acc;
+        }
+        button:hover {
+            background: #444;
+        }
+        button.active:hover {
+            background: #0066aa;
+        }
+        .content {
+            padding: 20px;
+            border: 1px solid #333;
+            border-radius: 5px;
+            background: #2a2a2a;
+        }
+        .counter {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #007acc;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .log {
+            margin-top: 20px;
+            padding: 10px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 5px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="counter" id="counter">Page loads: 1</div>
+    
+    <h1>Tab Switching Test (Admin Panel Simulation)</h1>
+    <p>This test simulates the admin panel tab switching behavior. If any button causes a page reload, you'll see the counter increase.</p>
+    
+    <div class="tabs">
+        <button type="button" class="active" onclick="switchTab('matches', this)">Matches</button>
+        <button type="button" onclick="switchTab('users', this)">Users</button>
+        <button type="button" onclick="switchTab('payments', this)">Payments</button>
+        <button type="button" onclick="switchTab('settings', this)">Settings</button>
+    </div>
+    
+    <div class="content" id="content">
+        <h2>Matches Tab</h2>
+        <p>This is the matches tab content. Click other tabs to test switching.</p>
+        
+        <h3>Action Buttons (should not cause page reload):</h3>
+        <button type="button" onclick="log('Refresh clicked')">Refresh</button>
+        <button type="button" onclick="log('Clear filters clicked')">Clear Filters</button>
+        <button type="button" onclick="log('Advanced filters clicked')">Advanced Filters</button>
+        
+        <h3>Search with Clear Button:</h3>
+        <div style="position: relative; display: inline-block; margin-top: 10px;">
+            <input type="text" placeholder="Search..." id="searchInput" style="padding: 8px 40px 8px 12px; background: #1a1a1a; border: 1px solid #333; color: white; border-radius: 5px;">
+            <button type="button" onclick="clearSearch()" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #999; cursor: pointer; padding: 5px;">✕</button>
+        </div>
+    </div>
+    
+    <div class="log" id="log">
+        <h3>Activity Log:</h3>
+        <div id="logContent">Page loaded</div>
+    </div>
+
+    <script>
+        let pageLoadCount = parseInt(sessionStorage.getItem('pageLoadCount') || '0') + 1;
+        sessionStorage.setItem('pageLoadCount', pageLoadCount);
+        document.getElementById('counter').textContent = `Page loads: ${pageLoadCount}`;
+        
+        const tabContents = {
+            matches: `
+                <h2>Matches Tab</h2>
+                <p>This is the matches tab content. Click other tabs to test switching.</p>
+                
+                <h3>Action Buttons (should not cause page reload):</h3>
+                <button type="button" onclick="log('Refresh clicked')">Refresh</button>
+                <button type="button" onclick="log('Clear filters clicked')">Clear Filters</button>
+                <button type="button" onclick="log('Advanced filters clicked')">Advanced Filters</button>
+                
+                <h3>Search with Clear Button:</h3>
+                <div style="position: relative; display: inline-block; margin-top: 10px;">
+                    <input type="text" placeholder="Search..." id="searchInput" style="padding: 8px 40px 8px 12px; background: #1a1a1a; border: 1px solid #333; color: white; border-radius: 5px;">
+                    <button type="button" onclick="clearSearch()" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #999; cursor: pointer; padding: 5px;">✕</button>
+                </div>
+            `,
+            users: `
+                <h2>Users Tab</h2>
+                <p>This is the users tab content.</p>
+                <button type="button" onclick="log('User action clicked')">User Action</button>
+            `,
+            payments: `
+                <h2>Payments Tab</h2>
+                <p>This is the payments tab content.</p>
+                <button type="button" onclick="log('Payment action clicked')">Payment Action</button>
+            `,
+            settings: `
+                <h2>Settings Tab</h2>
+                <p>This is the settings tab content.</p>
+                <button type="button" onclick="log('Settings action clicked')">Settings Action</button>
+            `
+        };
+        
+        function switchTab(tabName, buttonElement) {
+            log(`Switched to ${tabName} tab`);
+            
+            // Update button states
+            document.querySelectorAll('.tabs button').forEach(btn => btn.classList.remove('active'));
+            buttonElement.classList.add('active');
+            
+            // Update content
+            document.getElementById('content').innerHTML = tabContents[tabName];
+        }
+        
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logContent = document.getElementById('logContent');
+            logContent.innerHTML += `<br>[${timestamp}] ${message}`;
+            logContent.scrollTop = logContent.scrollHeight;
+        }
+        
+        function clearSearch() {
+            document.getElementById('searchInput').value = '';
+            log('Search cleared');
+        }
+        
+        // Log initial load
+        log('Page loaded successfully');
+    </script>
+</body>
+</html>

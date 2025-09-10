@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
@@ -270,6 +270,9 @@ export default function AdminPanel() {
   const [usersPerPage, setUsersPerPage] = useState(25)
   const [totalUsers, setTotalUsers] = useState(0)
   
+  // Track initialization to prevent multiple calls
+  const hasInitializedRef = useRef(false)
+  
   // Admin notes
   const [adminNotes, setAdminNotes] = useState<AdminNote[]>([])
   const [newNote, setNewNote] = useState('')
@@ -381,7 +384,14 @@ export default function AdminPanel() {
   }, [fetchUsers])
 
   const initializeAdminPanel = useCallback(async () => {
+    // Prevent multiple initializations
+    if (hasInitializedRef.current) {
+      console.log('Admin panel already initialized, skipping...')
+      return
+    }
+    
     console.log('Initializing admin panel...')
+    hasInitializedRef.current = true
     setLoading(true)
     try {
       console.log('Starting parallel fetch operations...')
@@ -419,6 +429,8 @@ export default function AdminPanel() {
       console.log('Admin panel initialization completed successfully')
     } catch (error) {
       console.error('Failed to initialize admin panel:', error)
+      // Reset the initialization flag on error so it can be retried
+      hasInitializedRef.current = false
       // Don't keep loading state forever if there's an error
     } finally {
       setLoading(false)
@@ -428,7 +440,7 @@ export default function AdminPanel() {
 
   // Session check
   useEffect(() => {
-    console.log('Session check running:', { session: session?.user?.email })
+    console.log('Session check running:', { session: session?.user?.email, hasInitialized: hasInitializedRef.current })
     
     if (!session?.user?.email) {
       console.log('No session found, redirecting to login')
@@ -443,9 +455,14 @@ export default function AdminPanel() {
       return
     }
     
-    console.log('Admin user confirmed, initializing panel')
-    initializeAdminPanel()
-  }, [session, router, initializeAdminPanel])
+    // Only initialize if not already done
+    if (!hasInitializedRef.current) {
+      console.log('Admin user confirmed, initializing panel')
+      initializeAdminPanel()
+    } else {
+      console.log('Admin panel already initialized, skipping initialization')
+    }
+  }, [session?.user?.email, router]) // Removed initializeAdminPanel from dependencies to prevent infinite loop
 
   // Debounce search term to prevent instant refresh - increased delay
   useEffect(() => {

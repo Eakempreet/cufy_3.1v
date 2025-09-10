@@ -159,11 +159,13 @@ export default function AdminMatchesPanel() {
   })
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  const [isMounted, setIsMounted] = useState(false)
   const [selectedFemaleUser, setSelectedFemaleUser] = useState<EnhancedFemaleUser | null>(null)
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false)
   
   // UI state
   const [selectedPlanType, setSelectedPlanType] = useState<'all' | 'premium' | 'basic'>('all')
+  const [activeTab, setActiveTab] = useState<'premium' | 'basic'>('premium')
   const [selectedMaleUser, setSelectedMaleUser] = useState<EnhancedMaleUser | null>(null)
   const [assignDialogOpen, setAssignDialogOpen] = useState(false)
   const [selectedAssignSlot, setSelectedAssignSlot] = useState<1 | 2 | 3>(1)
@@ -207,9 +209,21 @@ export default function AdminMatchesPanel() {
     return () => clearTimeout(timer)
   }, [assignDialogSearchTerm])
 
+  // Cache timestamp for preventing excessive API calls
+  const [lastFetchTime, setLastFetchTime] = useState<number>(0)
+
   // Fetch matches data
   const fetchMatchesData = useCallback(async (forceRefresh = false) => {
     try {
+      // Implement caching - don't fetch if data is fresh (less than 30 seconds)
+      const now = Date.now()
+      const CACHE_DURATION = 30000 // 30 seconds
+      
+      if (!forceRefresh && lastFetchTime && (now - lastFetchTime) < CACHE_DURATION && maleUsers.length > 0) {
+        console.log('Using cached data, skipping fetch')
+        return
+      }
+      
       if (!forceRefresh && !refreshing) {
         setRefreshing(true)
       }
@@ -219,6 +233,7 @@ export default function AdminMatchesPanel() {
         const data = await response.json()
         setMaleUsers(data.maleUsers || [])
         setFemaleUsers(data.femaleUsers || [])
+        setLastFetchTime(now)
         setStatistics(data.statistics || {
           premiumUsers: 0,
           basicUsers: 0,
@@ -291,15 +306,35 @@ export default function AdminMatchesPanel() {
 
   // Initial load
   useEffect(() => {
+    setIsMounted(true)
     fetchMatchesData()
+    
+    return () => {
+      setIsMounted(false)
+    }
   }, [fetchMatchesData])
 
-  // Handle plan type change
+  // Tab visibility handler to prevent unnecessary refreshing
   useEffect(() => {
-    if (!loading) {
-      fetchMatchesData(true)
+    if (!isMounted) return
+    
+    let lastVisibilityChange = Date.now()
+    
+    const handleVisibilityChange = () => {
+      if (!isMounted) return
+      
+      const now = Date.now()
+      // Only refresh if tab was hidden for more than 10 minutes
+      if (!document.hidden && (now - lastVisibilityChange) > 600000) {
+        console.log('Tab visible after long absence, refreshing data')
+        fetchMatchesData(true)
+      }
+      lastVisibilityChange = now
     }
-  }, [selectedPlanType])
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [fetchMatchesData, isMounted])
 
   // Filtered data computed properties
   const filteredMaleUsers = useMemo(() => {
@@ -396,6 +431,20 @@ export default function AdminMatchesPanel() {
     setUniversityFilter('all')
     setAssignDialogSearchTerm('')
   }, [])
+
+  // Manual refresh function (triggered by refresh button only)
+  const handleManualRefresh = useCallback(() => {
+    fetchMatchesData(true)
+  }, [fetchMatchesData])
+
+  // Handle plan type filter change (this should refresh data)
+  const handlePlanTypeChange = useCallback((newPlanType: 'all' | 'premium' | 'basic') => {
+    setSelectedPlanType(newPlanType)
+    // Only refresh if the plan type actually changed
+    if (newPlanType !== selectedPlanType) {
+      fetchMatchesData(true)
+    }
+  }, [selectedPlanType, fetchMatchesData])
 
   // Enhanced assign profile with optimized performance
   const handleAssignProfile = async (maleUserId: string, femaleUserId: string) => {
@@ -717,6 +766,7 @@ export default function AdminMatchesPanel() {
                   />
                   {searchTerm && (
                     <button
+                      type="button"
                       onClick={() => setSearchTerm('')}
                       className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
                     >
@@ -751,7 +801,7 @@ export default function AdminMatchesPanel() {
                 )}
                 
                 <Button
-                  onClick={() => fetchMatchesData(true)}
+                  onClick={handleManualRefresh}
                   disabled={refreshing}
                   variant="outline"
                   className="h-12 px-4 border-slate-700/50 text-slate-300 hover:bg-slate-700/50 hover:text-white transition-all duration-200"
@@ -775,7 +825,7 @@ export default function AdminMatchesPanel() {
                       {/* Plan Type Filter */}
                       <div className="space-y-2">
                         <label className="text-sm font-medium text-slate-300">Plan Type</label>
-                        <Select value={selectedPlanType} onValueChange={(value: any) => setSelectedPlanType(value)}>
+                        <Select value={selectedPlanType} onValueChange={handlePlanTypeChange}>
                           <SelectTrigger className="bg-slate-800/50 border-slate-700/50 text-white hover:bg-slate-700/50 transition-colors">
                             <SelectValue />
                           </SelectTrigger>
@@ -868,6 +918,7 @@ export default function AdminMatchesPanel() {
                         />
                         {femaleSearchTerm && (
                           <button
+                            type="button"
                             onClick={() => setFemaleSearchTerm('')}
                             className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
                           >
@@ -1020,7 +1071,7 @@ export default function AdminMatchesPanel() {
         </div>
 
         {/* Main Content Tabs */}
-        <Tabs defaultValue="premium" className="w-full">
+        <Tabs value={activeTab} onValueChange={(value: any) => setActiveTab(value)} className="w-full">
           <TabsList className="grid w-full grid-cols-2 bg-slate-900/50 backdrop-blur-xl border border-slate-700/50 p-1 rounded-xl">
             <TabsTrigger 
               value="premium" 
@@ -1040,12 +1091,11 @@ export default function AdminMatchesPanel() {
 
           {/* Premium Users Tab */}
           <TabsContent value="premium" className="mt-8">
-            {(selectedPlanType === 'all' || selectedPlanType === 'premium') && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-              >
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
                 <Card className="bg-slate-900/50 backdrop-blur-xl border-slate-700/50 shadow-2xl">
                   <CardHeader className="pb-4">
                     <CardTitle className="text-white flex items-center justify-between">
@@ -1080,17 +1130,15 @@ export default function AdminMatchesPanel() {
                   </CardContent>
                 </Card>
               </motion.div>
-            )}
           </TabsContent>
 
           {/* Basic Users Tab */}
           <TabsContent value="basic" className="mt-8">
-            {(selectedPlanType === 'all' || selectedPlanType === 'basic') && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-              >
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
                 <Card className="bg-slate-900/50 backdrop-blur-xl border-slate-700/50 shadow-2xl">
                   <CardHeader className="pb-4">
                     <CardTitle className="text-white flex items-center justify-between">
@@ -1125,7 +1173,6 @@ export default function AdminMatchesPanel() {
                   </CardContent>
                 </Card>
               </motion.div>
-            )}
           </TabsContent>
         </Tabs>
 
@@ -1189,6 +1236,7 @@ export default function AdminMatchesPanel() {
                     Active Round
                   </Badge>
                   <button
+                    type="button"
                     onClick={() => setAssignDialogOpen(false)}
                     className="p-2 text-gray-400 hover:text-white hover:bg-red-500/10 hover:border-red-500/30 border border-transparent rounded-lg transition-all duration-200"
                   >
@@ -1257,6 +1305,7 @@ export default function AdminMatchesPanel() {
                       />
                       {assignDialogSearchTerm && (
                         <button
+                          type="button"
                           onClick={() => setAssignDialogSearchTerm('')}
                           className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
                         >
