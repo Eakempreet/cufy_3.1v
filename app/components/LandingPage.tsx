@@ -7,7 +7,7 @@ import { Heart, Star, Sparkles, Crown, AlertTriangle, Users, MessageCircle, Shie
 import Link from 'next/link'
 import { useSession, signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import FloatingShapes from './FloatingShapes'
 import Navbar from './Navbar'
 import Footer from './Footer'
@@ -127,6 +127,54 @@ export default function LandingPage() {
   const [boysRegistrationEnabled, setBoysRegistrationEnabled] = useState(true)
   const [boysRegistrationMessage, setBoysRegistrationMessage] = useState('Boys registration will open soon! Girls can join now.')
   const [settingsLoaded, setSettingsLoaded] = useState(false)
+
+  // Auto fullscreen on first user interaction
+  useEffect(() => {
+    let hasRequestedFullscreen = false
+    
+    const requestFullscreenOnInteraction = async () => {
+      if (hasRequestedFullscreen) return
+      hasRequestedFullscreen = true
+      
+      try {
+        if (!document.fullscreenElement) {
+          const element = document.documentElement
+          
+          if (element.requestFullscreen) {
+            await element.requestFullscreen()
+          } else if ((element as any).webkitRequestFullscreen) {
+            // Safari
+            await (element as any).webkitRequestFullscreen()
+          } else if ((element as any).mozRequestFullScreen) {
+            // Firefox
+            await (element as any).mozRequestFullScreen()
+          } else if ((element as any).msRequestFullscreen) {
+            // IE/Edge
+            await (element as any).msRequestFullscreen()
+          }
+        }
+      } catch (error) {
+        console.log('Fullscreen request failed:', error)
+      }
+      
+      // Remove event listeners after first use
+      document.removeEventListener('click', requestFullscreenOnInteraction)
+      document.removeEventListener('touchstart', requestFullscreenOnInteraction)
+      document.removeEventListener('keydown', requestFullscreenOnInteraction)
+    }
+
+    // Add event listeners for user interactions
+    document.addEventListener('click', requestFullscreenOnInteraction, { once: true })
+    document.addEventListener('touchstart', requestFullscreenOnInteraction, { once: true })
+    document.addEventListener('keydown', requestFullscreenOnInteraction, { once: true })
+    
+    // Cleanup function
+    return () => {
+      document.removeEventListener('click', requestFullscreenOnInteraction)
+      document.removeEventListener('touchstart', requestFullscreenOnInteraction)
+      document.removeEventListener('keydown', requestFullscreenOnInteraction)
+    }
+  }, [])
 
   // Fetch system settings on component mount
   useEffect(() => {
@@ -672,7 +720,7 @@ export default function LandingPage() {
                       onClick={() => handleJoinClick('female')}
                     >
                       <Heart className="mr-3 h-5 w-5 group-hover:scale-110 transition-transform" />
-                      <span className="relative">
+                      <span className="relative flex-1">
                         College Girl
                         <div className="absolute inset-0 bg-white/10 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                       </span>

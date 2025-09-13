@@ -1,7 +1,7 @@
 'use client'
 
-import HyperAdvancedAdminPanel from '../components/HyperAdvancedAdminPanel'
+import AdminPanel from '../components/HyperAdvancedAdminPanel'
 
 export default function AdminPage() {
-  return <HyperAdvancedAdminPanel />
+  return <AdminPanel />
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
@@ -230,6 +230,48 @@ export default function AdminPanel() {
   const { data: session } = useSession()
   const router = useRouter()
   
+  // Auto fullscreen on first user interaction
+  useEffect(() => {
+    let hasRequestedFullscreen = false
+    
+    const requestFullscreenOnInteraction = async () => {
+      if (hasRequestedFullscreen) return
+      hasRequestedFullscreen = true
+      
+      try {
+        if (!document.fullscreenElement) {
+          const element = document.documentElement
+          
+          if (element.requestFullscreen) {
+            await element.requestFullscreen()
+          } else if ((element as any).webkitRequestFullscreen) {
+            await (element as any).webkitRequestFullscreen()
+          } else if ((element as any).mozRequestFullScreen) {
+            await (element as any).mozRequestFullScreen()
+          } else if ((element as any).msRequestFullscreen) {
+            await (element as any).msRequestFullscreen()
+          }
+        }
+      } catch (error) {
+        console.log('Fullscreen request failed:', error)
+      }
+      
+      document.removeEventListener('click', requestFullscreenOnInteraction)
+      document.removeEventListener('touchstart', requestFullscreenOnInteraction)
+      document.removeEventListener('keydown', requestFullscreenOnInteraction)
+    }
+
+    document.addEventListener('click', requestFullscreenOnInteraction, { once: true })
+    document.addEventListener('touchstart', requestFullscreenOnInteraction, { once: true })
+    document.addEventListener('keydown', requestFullscreenOnInteraction, { once: true })
+    
+    return () => {
+      document.removeEventListener('click', requestFullscreenOnInteraction)
+      document.removeEventListener('touchstart', requestFullscreenOnInteraction)
+      document.removeEventListener('keydown', requestFullscreenOnInteraction)
+    }
+  }, [])
+  
   // Core state
   const [users, setUsers] = useState<EnhancedUser[]>([])
   const [loading, setLoading] = useState(true)
@@ -269,9 +311,6 @@ export default function AdminPanel() {
   const [currentPage, setCurrentPage] = useState(1)
   const [usersPerPage, setUsersPerPage] = useState(25)
   const [totalUsers, setTotalUsers] = useState(0)
-  
-  // Track initialization to prevent multiple calls
-  const hasInitializedRef = useRef(false)
   
   // Admin notes
   const [adminNotes, setAdminNotes] = useState<AdminNote[]>([])
@@ -384,14 +423,7 @@ export default function AdminPanel() {
   }, [fetchUsers])
 
   const initializeAdminPanel = useCallback(async () => {
-    // Prevent multiple initializations
-    if (hasInitializedRef.current) {
-      console.log('Admin panel already initialized, skipping...')
-      return
-    }
-    
     console.log('Initializing admin panel...')
-    hasInitializedRef.current = true
     setLoading(true)
     try {
       console.log('Starting parallel fetch operations...')
@@ -429,8 +461,6 @@ export default function AdminPanel() {
       console.log('Admin panel initialization completed successfully')
     } catch (error) {
       console.error('Failed to initialize admin panel:', error)
-      // Reset the initialization flag on error so it can be retried
-      hasInitializedRef.current = false
       // Don't keep loading state forever if there's an error
     } finally {
       setLoading(false)
@@ -440,7 +470,7 @@ export default function AdminPanel() {
 
   // Session check
   useEffect(() => {
-    console.log('Session check running:', { session: session?.user?.email, hasInitialized: hasInitializedRef.current })
+    console.log('Session check running:', { session: session?.user?.email })
     
     if (!session?.user?.email) {
       console.log('No session found, redirecting to login')
@@ -455,14 +485,9 @@ export default function AdminPanel() {
       return
     }
     
-    // Only initialize if not already done
-    if (!hasInitializedRef.current) {
-      console.log('Admin user confirmed, initializing panel')
-      initializeAdminPanel()
-    } else {
-      console.log('Admin panel already initialized, skipping initialization')
-    }
-  }, [session?.user?.email, router]) // Removed initializeAdminPanel from dependencies to prevent infinite loop
+    console.log('Admin user confirmed, initializing panel')
+    initializeAdminPanel()
+  }, [session, router, initializeAdminPanel])
 
   // Debounce search term to prevent instant refresh - increased delay
   useEffect(() => {

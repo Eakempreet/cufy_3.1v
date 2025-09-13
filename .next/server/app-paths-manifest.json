@@ -1,6 +1,16 @@
 {
+  "/page": "app/page.js",
   "/admin/page": "app/admin/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/gender-selection/page": "app/gender-selection/page.js",
+  "/girls-onboarding/page": "app/girls-onboarding/page.js",
   "/api/registration-status/route": "app/api/registration-status/route.js",
-  "/api/admin/matches/route": "app/api/admin/matches/route.js",
-  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js"
+  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
+  "/api/auth/user/route": "app/api/auth/user/route.js",
+  "/api/user/create/route": "app/api/user/create/route.js",
+  "/api/user/check/route": "app/api/user/check/route.js",
+  "/api/user/assignments/route": "app/api/user/assignments/route.js",
+  "/api/user/profile/route": "app/api/user/profile/route.js",
+  "/api/user/temporary-matches/route": "app/api/user/temporary-matches/route.js",
+  "/api/user/permanent-matches/route": "app/api/user/permanent-matches/route.js"
 }

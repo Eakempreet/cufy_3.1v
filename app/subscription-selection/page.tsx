@@ -10,6 +10,48 @@ export default function SubscriptionSelectionPage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(true)
 
+  // Auto fullscreen on first user interaction
+  useEffect(() => {
+    let hasRequestedFullscreen = false
+    
+    const requestFullscreenOnInteraction = async () => {
+      if (hasRequestedFullscreen) return
+      hasRequestedFullscreen = true
+      
+      try {
+        if (!document.fullscreenElement) {
+          const element = document.documentElement
+          
+          if (element.requestFullscreen) {
+            await element.requestFullscreen()
+          } else if ((element as any).webkitRequestFullscreen) {
+            await (element as any).webkitRequestFullscreen()
+          } else if ((element as any).mozRequestFullScreen) {
+            await (element as any).mozRequestFullScreen()
+          } else if ((element as any).msRequestFullscreen) {
+            await (element as any).msRequestFullscreen()
+          }
+        }
+      } catch (error) {
+        console.log('Fullscreen request failed:', error)
+      }
+      
+      document.removeEventListener('click', requestFullscreenOnInteraction)
+      document.removeEventListener('touchstart', requestFullscreenOnInteraction)
+      document.removeEventListener('keydown', requestFullscreenOnInteraction)
+    }
+
+    document.addEventListener('click', requestFullscreenOnInteraction, { once: true })
+    document.addEventListener('touchstart', requestFullscreenOnInteraction, { once: true })
+    document.addEventListener('keydown', requestFullscreenOnInteraction, { once: true })
+    
+    return () => {
+      document.removeEventListener('click', requestFullscreenOnInteraction)
+      document.removeEventListener('touchstart', requestFullscreenOnInteraction)
+      document.removeEventListener('keydown', requestFullscreenOnInteraction)
+    }
+  }, [])
+
   useEffect(() => {
     // Wait for session to load
     if (status === 'loading') return
