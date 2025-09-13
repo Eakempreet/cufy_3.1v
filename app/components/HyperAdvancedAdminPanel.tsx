@@ -71,8 +71,6 @@ import {
   ChevronDown,
   ChevronUp,
   MoreHorizontal,
-  Maximize2,
-  Minimize2,
   Copy,
   Lock,
   Unlock,
@@ -230,47 +228,7 @@ export default function AdminPanel() {
   const { data: session } = useSession()
   const router = useRouter()
   
-  // Auto fullscreen on first user interaction
-  useEffect(() => {
-    let hasRequestedFullscreen = false
-    
-    const requestFullscreenOnInteraction = async () => {
-      if (hasRequestedFullscreen) return
-      hasRequestedFullscreen = true
-      
-      try {
-        if (!document.fullscreenElement) {
-          const element = document.documentElement
-          
-          if (element.requestFullscreen) {
-            await element.requestFullscreen()
-          } else if ((element as any).webkitRequestFullscreen) {
-            await (element as any).webkitRequestFullscreen()
-          } else if ((element as any).mozRequestFullScreen) {
-            await (element as any).mozRequestFullScreen()
-          } else if ((element as any).msRequestFullscreen) {
-            await (element as any).msRequestFullscreen()
-          }
-        }
-      } catch (error) {
-        console.log('Fullscreen request failed:', error)
-      }
-      
-      document.removeEventListener('click', requestFullscreenOnInteraction)
-      document.removeEventListener('touchstart', requestFullscreenOnInteraction)
-      document.removeEventListener('keydown', requestFullscreenOnInteraction)
-    }
 
-    document.addEventListener('click', requestFullscreenOnInteraction, { once: true })
-    document.addEventListener('touchstart', requestFullscreenOnInteraction, { once: true })
-    document.addEventListener('keydown', requestFullscreenOnInteraction, { once: true })
-    
-    return () => {
-      document.removeEventListener('click', requestFullscreenOnInteraction)
-      document.removeEventListener('touchstart', requestFullscreenOnInteraction)
-      document.removeEventListener('keydown', requestFullscreenOnInteraction)
-    }
-  }, [])
   
   // Core state
   const [users, setUsers] = useState<EnhancedUser[]>([])
@@ -304,7 +262,6 @@ export default function AdminPanel() {
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set())
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'table'>('table')
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
-  const [isFullscreen, setIsFullscreen] = useState(false)
   const [selectedFullPhoto, setSelectedFullPhoto] = useState<{ url: string, name: string } | null>(null)
   
   // Pagination
@@ -907,7 +864,7 @@ export default function AdminPanel() {
   }
 
   return (
-    <div className={`min-h-screen bg-black ${isFullscreen ? 'fixed inset-0 z-50' : ''}`}>
+    <div className="min-h-screen bg-black">
       {/* Header */}
       <motion.header 
         initial={{ y: -20, opacity: 0 }}
@@ -956,14 +913,6 @@ export default function AdminPanel() {
                 Refresh
               </Button>
               
-              <Button
-                onClick={() => setIsFullscreen(!isFullscreen)}
-                variant="outline"
-                size="sm"
-                className="border-white/20 text-white hover:bg-white/10"
-              >
-                {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-              </Button>
               
               <Button
                 onClick={() => signOut({ callbackUrl: '/' })}
