@@ -306,7 +306,8 @@ export default function LandingPage() {
     const handleLoginClick = async () => {
     await requestFullscreen()
     setUserState('loading')
-    router.push('/gender-selection')
+    // Trigger Google authentication
+    await signIn('google')
   }
 
   // Handle post-login routing based on stored gender preference
