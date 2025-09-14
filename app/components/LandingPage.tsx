@@ -128,53 +128,32 @@ export default function LandingPage() {
   const [boysRegistrationMessage, setBoysRegistrationMessage] = useState('Boys registration will open soon! Girls can join now.')
   const [settingsLoaded, setSettingsLoaded] = useState(false)
 
-  // Auto fullscreen on first user interaction
-  useEffect(() => {
-    let hasRequestedFullscreen = false
-    
-    const requestFullscreenOnInteraction = async () => {
-      if (hasRequestedFullscreen) return
-      hasRequestedFullscreen = true
-      
-      try {
-        if (!document.fullscreenElement) {
-          const element = document.documentElement
-          
-          if (element.requestFullscreen) {
-            await element.requestFullscreen()
-          } else if ((element as any).webkitRequestFullscreen) {
-            // Safari
-            await (element as any).webkitRequestFullscreen()
-          } else if ((element as any).mozRequestFullScreen) {
-            // Firefox
-            await (element as any).mozRequestFullScreen()
-          } else if ((element as any).msRequestFullscreen) {
-            // IE/Edge
-            await (element as any).msRequestFullscreen()
-          }
+  // Fullscreen utility function
+  const requestFullscreen = async () => {
+    try {
+      if (!document.fullscreenElement) {
+        const element = document.documentElement
+        
+        if (element.requestFullscreen) {
+          await element.requestFullscreen()
+        } else if ((element as any).webkitRequestFullscreen) {
+          // Safari
+          await (element as any).webkitRequestFullscreen()
+        } else if ((element as any).mozRequestFullScreen) {
+          // Firefox
+          await (element as any).mozRequestFullScreen()
+        } else if ((element as any).msRequestFullscreen) {
+          // IE/Edge
+          await (element as any).msRequestFullscreen()
         }
-      } catch (error) {
-        console.log('Fullscreen request failed:', error)
       }
-      
-      // Remove event listeners after first use
-      document.removeEventListener('click', requestFullscreenOnInteraction)
-      document.removeEventListener('touchstart', requestFullscreenOnInteraction)
-      document.removeEventListener('keydown', requestFullscreenOnInteraction)
+    } catch (error) {
+      console.log('Fullscreen request failed:', error)
     }
+  }
 
-    // Add event listeners for user interactions
-    document.addEventListener('click', requestFullscreenOnInteraction, { once: true })
-    document.addEventListener('touchstart', requestFullscreenOnInteraction, { once: true })
-    document.addEventListener('keydown', requestFullscreenOnInteraction, { once: true })
-    
-    // Cleanup function
-    return () => {
-      document.removeEventListener('click', requestFullscreenOnInteraction)
-      document.removeEventListener('touchstart', requestFullscreenOnInteraction)
-      document.removeEventListener('keydown', requestFullscreenOnInteraction)
-    }
-  }, [])
+  // Auto fullscreen on first user interaction - Removed since we'll trigger on button clicks
+  // Now handled in individual button click handlers
 
   // Fetch system settings on component mount
   useEffect(() => {
@@ -279,6 +258,7 @@ export default function LandingPage() {
   }, [session, status, router])
 
   const handleCompleteProfile = async () => {
+    await requestFullscreen()
     if (isCheckingProfile) return
     
     setIsCheckingProfile(true)
@@ -312,94 +292,21 @@ export default function LandingPage() {
     }
   }
 
-  const handleJoinClick = async (gender: 'male' | 'female') => {
-    // Check if boys registration is disabled for male users
-    if (gender === 'male' && !boysRegistrationEnabled) {
-      alert(boysRegistrationMessage)
-      return
-    }
-
-    if (status === 'authenticated' && session?.user?.email) {
-      // User is already signed in, check if they exist in our database
-      try {
-        const controller = new AbortController()
-        const timeoutId = setTimeout(() => controller.abort(), 5000) // 5 second timeout
-
-        const response = await fetch('/api/auth/user', {
-          signal: controller.signal
-        })
-        clearTimeout(timeoutId)
-
-        if (!response.ok) {
-          throw new Error(`API error: ${response.status}`)
-        }
-
-        const data = await response.json()
-
-        if (data.exists) {
-          // User exists, redirect based on type
-          if (data.user.is_admin) {
-            router.push('/admin')
-          } else {
-            router.push('/dashboard')
-          }
-        } else {
-          // User doesn't exist, redirect to onboarding
-          router.push(`/${gender === 'male' ? 'boys' : 'girls'}-onboarding`)
-        }
-      } catch (error) {
-        console.error('Error checking user status:', error)
-        // Fallback to onboarding on any error
-        router.push(`/${gender === 'male' ? 'boys' : 'girls'}-onboarding`)
-      }
+    const handleJoinClick = async (gender?: 'female' | 'male') => {
+    await requestFullscreen()
+    setUserState('loading')
+    if (gender) {
+      // If gender is provided, go directly to the appropriate onboarding
+      router.push(gender === 'female' ? '/girls-onboarding' : '/boys-onboarding')
     } else {
-      // User not signed in, trigger Google sign-in with gender preference
-      localStorage.setItem('pendingGender', gender)
-      await signIn('google')
+      router.push('/gender-selection')
     }
   }
 
-  const handleLoginClick = async () => {
-    if (status === 'authenticated' && session?.user?.email) {
-      // User is already signed in, check their status
-      try {
-        const controller = new AbortController()
-        const timeoutId = setTimeout(() => controller.abort(), 5000) // 5 second timeout
-
-        const response = await fetch('/api/auth/user', {
-          signal: controller.signal
-        })
-        clearTimeout(timeoutId)
-
-        if (!response.ok) {
-          throw new Error(`API error: ${response.status}`)
-        }
-
-        const data = await response.json()
-
-        if (data.exists) {
-          // User exists, redirect based on type
-          if (data.user.is_admin) {
-            router.push('/admin')
-          } else {
-            router.push('/dashboard')
-          }
-        } else {
-          // User doesn't have a profile, show warning
-          alert('Profile not found! Please create a profile by clicking "Join as Boy" or "Join as Girl"')
-        }
-      } catch (error) {
-        console.error('Error checking user status:', error)
-        if (error instanceof Error && error.name === 'AbortError') {
-          alert('Request timed out. Please try again.')
-        } else {
-          alert('Error checking profile. Please try again.')
-        }
-      }
-    } else {
-      // User not signed in, trigger Google sign-in
-      await signIn('google')
-    }
+    const handleLoginClick = async () => {
+    await requestFullscreen()
+    setUserState('loading')
+    router.push('/gender-selection')
   }
 
   // Handle post-login routing based on stored gender preference
@@ -467,38 +374,35 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-dark relative overflow-hidden">
+    <div className="min-h-screen bg-black relative overflow-hidden">
       <FloatingShapes />
       <Navbar />
 
-      {/* Hero Section - Enhanced */}
-      <section className="relative pt-24 sm:pt-28 pb-8 sm:pb-12 px-3 sm:px-6 min-h-[70vh] flex items-center bg-mesh overflow-hidden">
-        {/* Enhanced Background Elements */}
+      {/* Hero Section - Compact & Dark */}
+      <section className="relative pt-20 sm:pt-24 pb-6 sm:pb-8 px-3 sm:px-6 min-h-[55vh] flex items-center overflow-hidden">
+        {/* Clean Dark Background Elements */}
         <div className="absolute inset-0">
-          {/* Primary gradient overlays */}
-          <div className="absolute top-0 left-1/4 w-96 h-96 bg-gradient-to-br from-purple-500/20 to-transparent rounded-full blur-3xl animate-pulse" />
-          <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-gradient-to-br from-pink-500/20 to-transparent rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-gradient-to-br from-cyan-500/15 to-transparent rounded-full blur-3xl animate-pulse" style={{ animationDelay: '4s' }} />
+          {/* Subtle gradient overlays */}
+          <div className="absolute top-0 left-1/4 w-72 h-72 bg-gradient-to-br from-purple-500/8 to-transparent rounded-full blur-3xl" />
+          <div className="absolute bottom-1/4 right-1/4 w-60 h-60 bg-gradient-to-br from-pink-500/6 to-transparent rounded-full blur-3xl" />
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-gradient-to-br from-cyan-500/5 to-transparent rounded-full blur-3xl" />
           
-          {/* Grid overlay - reduced opacity */}
-          <div className="absolute inset-0 bg-grid opacity-5" />
-          
-          {/* Floating particles */}
+          {/* Minimal floating elements */}
           <div className="absolute inset-0">
-            {[...Array(15)].map((_, i) => (
+            {[...Array(5)].map((_, i) => (
               <motion.div
                 key={i}
-                className="absolute w-1 h-1 bg-white/20 rounded-full"
+                className="absolute w-0.5 h-0.5 bg-white/10 rounded-full"
                 style={{
                   left: `${Math.random() * 100}%`,
                   top: `${Math.random() * 100}%`,
                 }}
                 animate={{
-                  y: [-20, 20],
-                  opacity: [0.2, 0.8, 0.2],
+                  y: [-10, 10],
+                  opacity: [0.1, 0.3, 0.1],
                 }}
                 transition={{
-                  duration: 3 + Math.random() * 4,
+                  duration: 6 + Math.random() * 2,
                   repeat: Infinity,
                   delay: Math.random() * 2,
                 }}
@@ -513,61 +417,45 @@ export default function LandingPage() {
           animate="visible"
           className="container mx-auto text-center relative z-10"
         >
-          {/* Enhanced Floating Elements */}
+          {/* Compact Floating Elements */}
           <motion.div
             initial={{ y: 0, rotate: 0 }}
             animate={{ 
-              y: [-15, 15, -15],
-              rotate: [-5, 5, -5],
+              y: [-10, 10, -10],
+              rotate: [-3, 3, -3],
               transition: {
-                duration: 6,
+                duration: 5,
                 repeat: Infinity,
                 ease: "easeInOut"
               }
             }}
-            className="absolute -top-10 -left-10 text-6xl opacity-30 blur-sm"
+            className="absolute -top-6 -left-6 text-4xl opacity-20 blur-sm"
           >
             💕
           </motion.div>
           <motion.div
             initial={{ y: 0, rotate: 0 }}
             animate={{ 
-              y: [-10, 20, -10],
-              rotate: [5, -5, 5],
+              y: [-8, 15, -8],
+              rotate: [3, -3, 3],
               transition: {
-                duration: 8,
+                duration: 6,
                 repeat: Infinity,
                 ease: "easeInOut",
                 delay: 1
               }
             }}
-            className="absolute -top-5 -right-10 text-4xl opacity-30 blur-sm"
+            className="absolute -top-4 -right-6 text-3xl opacity-20 blur-sm"
           >
             ✨
-          </motion.div>
-          <motion.div
-            initial={{ y: 0, scale: 1 }}
-            animate={{ 
-              y: [-8, 12, -8],
-              scale: [1, 1.1, 1],
-              transition: {
-                duration: 7,
-                repeat: Infinity,
-                ease: "easeInOut",
-                delay: 2
-              }
-            }}
-            className="absolute top-20 left-20 text-3xl opacity-25 blur-sm"
-          >
-            💫
           </motion.div>
 
           <motion.div
             variants={itemVariants}
-            className="mb-6"
+            className="mb-4"
           >
             <motion.span 
-              className="inline-block px-8 py-3 rounded-full glass-medium border-gradient text-gradient font-semibold text-sm hover-glow transition-all-smooth cursor-pointer"
+              className="inline-block px-6 py-2 rounded-full glass-strong border-gradient text-gradient font-semibold text-xs hover-glow transition-all-smooth cursor-pointer"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -579,7 +467,7 @@ export default function LandingPage() {
 
           <motion.h1
             variants={itemVariants}
-            className="text-fluid-xl font-space font-bold mb-4 leading-tight px-4 sm:px-0"
+            className="text-fluid-lg font-space font-bold mb-3 leading-tight px-4 sm:px-0"
           >
             <motion.span 
               className="text-gradient-cosmic block"
@@ -609,7 +497,7 @@ export default function LandingPage() {
 
           <motion.p
             variants={itemVariants}
-            className="text-fluid-base text-white/80 mb-6 max-w-4xl mx-auto leading-relaxed px-4 sm:px-6 lg:px-0"
+            className="text-fluid-sm text-white/70 mb-4 max-w-3xl mx-auto leading-relaxed px-4 sm:px-6 lg:px-0"
           >
             <motion.span
               initial={{ opacity: 0 }}
@@ -629,7 +517,7 @@ export default function LandingPage() {
             </motion.span>
           </motion.p>
 
-          {/* Enhanced Stats Section */}
+          {/* Compact Stats Section */}
           <motion.div
             variants={itemVariants}
             className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6 max-w-4xl mx-auto px-4 sm:px-6 lg:px-0"
@@ -637,22 +525,22 @@ export default function LandingPage() {
             {stats.map((stat, index) => (
               <motion.div
                 key={index}
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1.2 + index * 0.1 }}
-                whileHover={{ scale: 1.05, y: -5 }}
-                className="card-premium p-3 text-center group cursor-pointer"
+                whileHover={{ scale: 1.05, y: -3 }}
+                className="glass-strong p-2 text-center group cursor-pointer rounded-2xl border border-white/10"
               >
                 <motion.div 
-                  className="text-xl md:text-2xl font-bold text-gradient-cosmic mb-1 group-hover:text-gradient-aurora transition-all duration-500"
+                  className="text-lg md:text-xl font-bold text-gradient-cosmic mb-0.5 group-hover:text-gradient-aurora transition-all duration-500"
                   whileHover={{ scale: 1.1 }}
                 >
                   {stat.number}
                 </motion.div>
-                <div className="text-white/70 text-xs font-medium group-hover:text-white/90 transition-all duration-300">
+                <div className="text-white/60 text-xs font-medium group-hover:text-white/80 transition-all duration-300">
                   {stat.label}
                 </div>
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-3xl" />
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl" />
               </motion.div>
             ))}
           </motion.div>
@@ -669,7 +557,7 @@ export default function LandingPage() {
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="glass-medium border-gradient rounded-2xl p-3 sm:p-4 max-w-sm sm:max-w-md mx-auto mb-3 hover-glow"
+                    className="glass-medium border-gradient rounded-2xl p-3 sm:p-4 max-w-lg mx-auto mb-4 hover-glow"
                   >
                     <div className="flex items-center space-x-3 text-orange-400 text-sm">
                       <div className="p-1.5 rounded-full bg-orange-500/20">
@@ -687,7 +575,7 @@ export default function LandingPage() {
                 <motion.div 
                   whileHover={{ scale: 1.02 }} 
                   whileTap={{ scale: 0.98 }} 
-                  className="w-full max-w-sm px-4 sm:px-0"
+                  className="w-full max-w-lg mx-auto"
                 >
                   <Button 
                     size="lg" 
@@ -700,7 +588,7 @@ export default function LandingPage() {
                   </Button>
                 </motion.div>
 
-                <div className="text-white/60 text-sm font-medium px-4 relative">
+                <div className="text-white/60 text-sm font-medium relative w-full max-w-lg mx-auto">
                   <span className="relative z-10 bg-black px-4">or join as</span>
                   <div className="absolute inset-0 flex items-center">
                     <div className="w-full border-t border-white/20"></div>
@@ -708,7 +596,7 @@ export default function LandingPage() {
                 </div>
 
                 {/* Enhanced Action Buttons Container */}
-                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full max-w-lg justify-center items-stretch px-4 sm:px-0">
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full max-w-lg mx-auto justify-center items-stretch">
                   <motion.div 
                     whileHover={{ scale: 1.02, y: -2 }} 
                     whileTap={{ scale: 0.98 }} 
@@ -821,40 +709,40 @@ export default function LandingPage() {
         </motion.div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-20 px-6 relative">
+      {/* Features Section - Compact */}
+      <section className="py-12 px-6 relative">
         <motion.div
           style={{ y: y1 }}
-          className="absolute top-0 left-0 w-full h-full opacity-5"
+          className="absolute top-0 left-0 w-full h-full opacity-3"
         >
-          <div className="absolute top-10 left-10 text-8xl">💖</div>
-          <div className="absolute bottom-10 right-10 text-8xl">✨</div>
+          <div className="absolute top-8 left-8 text-3xl sm:text-4xl md:text-5xl">💖</div>
+          <div className="absolute bottom-8 right-8 text-2xl sm:text-3xl md:text-4xl">✨</div>
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0, y: 40 }}
+          initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 0.6 }}
           viewport={{ once: true }}
           className="container mx-auto relative z-10"
         >
-          <div className="text-center mb-16">
+          <div className="text-center mb-12">
             <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
+              initial={{ opacity: 0, scale: 0.9 }}
               whileInView={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.6 }}
+              transition={{ duration: 0.5 }}
               viewport={{ once: true }}
             >
-              <h2 className="text-4xl md:text-6xl font-bold font-poppins mb-4">
+              <h2 className="text-3xl md:text-5xl font-bold font-poppins mb-3">
                 Why <span className="text-gradient">College Students</span> Love Cufy
               </h2>
-              <p className="text-xl text-white/70 max-w-3xl mx-auto">
+              <p className="text-lg text-white/70 max-w-2xl mx-auto">
                 Designed specifically for college life, relationships, and meaningful connections that last beyond graduation.
               </p>
             </motion.div>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {features.map((feature, index) => (
               <motion.div
                 key={index}
@@ -894,28 +782,28 @@ export default function LandingPage() {
         </motion.div>
       </section>
 
-      {/* Testimonials Section */}
-      <section className="py-12 sm:py-16 lg:py-20 px-3 sm:px-6 relative">
+      {/* Testimonials Section - Compact */}
+      <section className="py-10 sm:py-12 px-3 sm:px-6 relative">
         <motion.div
           style={{ y: y2 }}
-          className="absolute inset-0 opacity-5"
+          className="absolute inset-0 opacity-3"
         >
-          <div className="absolute top-10 sm:top-20 left-4 sm:left-20 text-4xl sm:text-6xl">🎓</div>
-          <div className="absolute bottom-10 sm:bottom-20 right-4 sm:right-20 text-4xl sm:text-6xl">💕</div>
+          <div className="absolute top-8 left-8 text-3xl sm:text-4xl">🎓</div>
+          <div className="absolute bottom-8 right-8 text-3xl sm:text-4xl">💕</div>
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0, y: 40 }}
+          initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 0.6 }}
           viewport={{ once: true }}
           className="container mx-auto relative z-10"
         >
-          <div className="text-center mb-12 sm:mb-16">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-bold font-poppins mb-4">
+          <div className="text-center mb-10">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold font-poppins mb-3">
               <span className="text-gradient">Real Stories</span> from Real Students
             </h2>
-            <p className="text-xl text-white/70 max-w-3xl mx-auto">
+            <p className="text-lg text-white/70 max-w-2xl mx-auto">
               See how Cufy has transformed college relationships across India's top universities.
             </p>
           </div>
@@ -1017,26 +905,26 @@ export default function LandingPage() {
         </motion.div>
       </section>
 
-      {/* Pricing Section */}
-      <section className="py-20 px-6 relative">
+      {/* Pricing Section - Compact */}
+      <section className="py-12 px-6 relative">
         <motion.div
-          initial={{ opacity: 0, y: 40 }}
+          initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 0.6 }}
           viewport={{ once: true }}
           className="container mx-auto"
         >
-          <div className="text-center mb-16">
+          <div className="text-center mb-12">
             <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
+              initial={{ opacity: 0, scale: 0.9 }}
               whileInView={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.6 }}
+              transition={{ duration: 0.5 }}
               viewport={{ once: true }}
             >
-              <h2 className="text-4xl md:text-6xl font-bold font-poppins mb-4">
+              <h2 className="text-3xl md:text-5xl font-bold font-poppins mb-3">
                 <span className="text-gradient">Premium Plans</span> for College Boys
               </h2>
-              <p className="text-xl text-white/70 max-w-3xl mx-auto">
+              <p className="text-lg text-white/70 max-w-2xl mx-auto">
                 Choose the perfect plan to unlock meaningful connections and find your college soulmate.
               </p>
             </motion.div>
@@ -1152,47 +1040,47 @@ export default function LandingPage() {
         </motion.div>
       </section>
 
-      {/* Call-to-Action Section */}
-      <section className="py-20 px-6 relative">
+      {/* Call-to-Action Section - Compact */}
+      <section className="py-12 px-6 relative">
         <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
+          initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 0.6 }}
           viewport={{ once: true }}
           className="container mx-auto text-center"
         >
-          <div className="bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-blue-500/10 border border-white/10 rounded-3xl p-12 backdrop-blur-xl">
+          <div className="bg-gradient-to-r from-pink-500/8 via-purple-500/8 to-blue-500/8 border border-white/10 rounded-3xl p-4 sm:p-8 backdrop-blur-xl">
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 15 }}
               whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
+              transition={{ delay: 0.2 }}
               viewport={{ once: true }}
             >
-              <h2 className="text-4xl md:text-5xl font-bold font-poppins mb-6">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold font-poppins mb-4">
                 Ready to find your <span className="text-gradient">college soulmate</span>?
               </h2>
-              <p className="text-xl text-white/70 mb-8 max-w-2xl mx-auto">
+              <p className="text-base sm:text-lg text-white/70 mb-6 max-w-2xl mx-auto px-2">
                 Join hundreds of college students who've found love, friendship, and meaningful relationships on Cufy.
               </p>
               
               {userState === 'no-auth' && (
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-lg mx-auto px-2">
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex-1">
                     <Button 
                       size="lg" 
-                      className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-xl px-10 py-4 shadow-2xl shadow-pink-500/25"
+                      className="w-full bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-base sm:text-lg px-6 py-3 shadow-2xl shadow-pink-500/25"
                       onClick={() => handleJoinClick('female')}
                     >
-                      <Heart className="mr-2 h-6 w-6" />
+                      <Heart className="mr-2 h-5 w-5" />
                       Start as College Girl
                     </Button>
                   </motion.div>
                   
-                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex-1">
                     <Button 
                       size="lg" 
                       variant="glass"
-                      className={`text-xl px-10 py-4 ${
+                      className={`w-full text-base sm:text-lg px-6 py-3 ${
                         !boysRegistrationEnabled 
                           ? 'opacity-50 cursor-not-allowed' 
                           : 'shadow-2xl shadow-blue-500/25'
@@ -1200,9 +1088,9 @@ export default function LandingPage() {
                       disabled={!boysRegistrationEnabled}
                       onClick={() => handleJoinClick('male')}
                     >
-                      <Sparkles className="mr-2 h-6 w-6" />
+                      <Sparkles className="mr-2 h-5 w-5" />
                       {!boysRegistrationEnabled ? (
-                        <span className="text-lg sm:text-xl">
+                        <span className="text-sm sm:text-base">
                           Boys Entry Closed
                         </span>
                       ) : (
@@ -1213,7 +1101,7 @@ export default function LandingPage() {
                 </div>
               )}
 
-              <div className="mt-8 flex justify-center items-center gap-8 text-white/50 text-sm">
+              <div className="mt-6 flex flex-wrap justify-center items-center gap-4 sm:gap-8 text-white/50 text-xs sm:text-sm px-2">
                 <div className="flex items-center gap-2">
                   <Coffee className="h-4 w-4" />
                   <span>Coffee dates</span>

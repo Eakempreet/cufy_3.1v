@@ -1,4 +1,4 @@
-// File: /home/aman/Desktop/cufy_3.1v-2/app/page.tsx
+// File: /home/aman/Desktop/cufy_3.1v/app/page.tsx
 import * as entry from '../../../app/page.js'
 import type { ResolvingMetadata } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

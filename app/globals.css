@@ -75,15 +75,10 @@
     font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     background: var(--bg-primary);
     background-image: 
-      /* Primary gradient overlay */
-      radial-gradient(ellipse 1400px 600px at 50% 0%, rgba(168, 85, 247, 0.15) 0%, transparent 50%),
-      /* Secondary accent points */
-      radial-gradient(circle 800px at 20% 100%, rgba(236, 72, 153, 0.12) 0%, transparent 50%),
-      radial-gradient(circle 600px at 80% 50%, rgba(6, 182, 212, 0.08) 0%, transparent 50%),
-      /* Ambient lighting */
-      radial-gradient(circle 1200px at 40% 80%, rgba(168, 85, 247, 0.06) 0%, transparent 50%),
-      /* Texture overlay */
-      linear-gradient(0deg, rgba(0, 0, 0, 0.02) 0%, transparent 100%);
+      /* Subtle gradient overlay */
+      radial-gradient(ellipse 1200px 400px at 50% 0%, rgba(168, 85, 247, 0.08) 0%, transparent 50%),
+      /* Minimal accent */
+      radial-gradient(circle 600px at 20% 100%, rgba(236, 72, 153, 0.05) 0%, transparent 50%);
     min-height: 100vh;
     overflow-x: hidden;
   }
@@ -121,21 +116,21 @@
 
   .glass-medium {
     background: var(--glass-medium);
-    backdrop-filter: blur(24px) saturate(200%);
+    backdrop-filter: blur(30px) saturate(200%);
     border: 1px solid var(--border-medium);
     box-shadow: var(--shadow-medium);
   }
 
   .glass-strong {
     background: var(--glass-strong);
-    backdrop-filter: blur(32px) saturate(220%);
+    backdrop-filter: blur(40px) saturate(220%);
     border: 1px solid var(--border-strong);
     box-shadow: var(--shadow-strong);
   }
 
   .glass-dark {
     background: var(--glass-dark-light);
-    backdrop-filter: blur(20px) saturate(120%);
+    backdrop-filter: blur(28px) saturate(150%);
     border: 1px solid var(--border-light);
     box-shadow: var(--shadow-medium);
   }
@@ -390,10 +385,7 @@
   
   /* Enhanced Backgrounds */
   .bg-mesh {
-    background-image: 
-      radial-gradient(circle at 25% 25%, rgba(168, 85, 247, 0.1) 0%, transparent 50%),
-      radial-gradient(circle at 75% 75%, rgba(236, 72, 153, 0.1) 0%, transparent 50%),
-      linear-gradient(135deg, transparent 0%, rgba(6, 182, 212, 0.05) 100%);
+    background: transparent;
   }
   
   .bg-grid {

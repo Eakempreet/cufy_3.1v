@@ -1,5 +1,10 @@
 {
-  "/not-found": "app/not-found.js",
   "/page": "app/page.js",
-  "/api/registration-status/route": "app/api/registration-status/route.js"
+  "/admin/page": "app/admin/page.js",
+  "/api/registration-status/route": "app/api/registration-status/route.js",
+  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
+  "/api/admin/system-settings/route": "app/api/admin/system-settings/route.js",
+  "/api/admin/users/route": "app/api/admin/users/route.js",
+  "/api/auth/user/route": "app/api/auth/user/route.js",
+  "/api/admin/database-backup/route": "app/api/admin/database-backup/route.js"
 }

@@ -1827,6 +1827,75 @@ function SystemManagement({
   systemMaintenanceMode, 
   setSystemMaintenanceMode 
 }: any) {
+  const [isBackingUp, setIsBackingUp] = useState(false)
+  const [backupStatus, setBackupStatus] = useState<string>('')
+  const [recentBackups, setRecentBackups] = useState<any[]>([])
+
+  // Fetch backup system status on component mount
+  useEffect(() => {
+    checkBackupSystemStatus()
+  }, [])
+
+  const checkBackupSystemStatus = async () => {
+    try {
+      const response = await fetch('/api/admin/database-backup')
+      const data = await response.json()
+      
+      if (data.recentBackups) {
+        setRecentBackups(data.recentBackups)
+      }
+      setBackupStatus(data.status || 'unknown')
+    } catch (error) {
+      console.error('Error checking backup system:', error)
+      setBackupStatus('error')
+    }
+  }
+
+  const downloadDatabaseBackup = async (backupType: 'simple' | 'advanced' = 'simple') => {
+    if (isBackingUp) return
+    
+    setIsBackingUp(true)
+    try {
+      const response = await fetch('/api/admin/database-backup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ backupType }),
+      })
+
+      if (response.ok) {
+        // Get filename from response headers
+        const contentDisposition = response.headers.get('Content-Disposition')
+        const filename = contentDisposition 
+          ? contentDisposition.split('filename=')[1]?.replace(/"/g, '')
+          : `cufy_backup_${new Date().toISOString().slice(0, 19).replace(/[:-]/g, '')}.xlsx`
+
+        // Create blob and download
+        const blob = await response.blob()
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = filename
+        document.body.appendChild(a)
+        a.click()
+        window.URL.revokeObjectURL(url)
+        document.body.removeChild(a)
+
+        alert(`✅ Database backup downloaded successfully: ${filename}`)
+        
+        // Refresh backup status
+        checkBackupSystemStatus()
+      } else {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Backup failed')
+      }
+    } catch (error) {
+      console.error('Database backup error:', error)
+      alert(`❌ Database backup failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    } finally {
+      setIsBackingUp(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <Card className="bg-black/40 backdrop-blur-xl border-white/10">
@@ -1884,6 +1953,102 @@ function SystemManagement({
               {systemMaintenanceMode ? <AlertTriangle className="h-4 w-4 mr-2" /> : <CheckCircle className="h-4 w-4 mr-2" />}
               {systemMaintenanceMode ? 'Maintenance' : 'Operational'}
             </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Database Backup Section */}
+      <Card className="bg-black/40 backdrop-blur-xl border-white/10">
+        <CardHeader>
+          <CardTitle className="text-white flex items-center space-x-2">
+            <Database className="h-5 w-5 text-blue-400" />
+            <span>Database Backup</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-white font-medium">Quick Backup</h3>
+              <p className="text-gray-400 text-sm">Download all database tables as Excel file</p>
+            </div>
+            <div className="flex space-x-2">
+              <Button
+                onClick={() => downloadDatabaseBackup('simple')}
+                disabled={isBackingUp}
+                variant="outline"
+                className="border-blue-500 text-blue-400 hover:bg-blue-500/10"
+              >
+                {isBackingUp ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
+                {isBackingUp ? 'Creating...' : 'Simple Backup'}
+              </Button>
+              <Button
+                onClick={() => downloadDatabaseBackup('advanced')}
+                disabled={isBackingUp}
+                variant="outline"
+                className="border-purple-500 text-purple-400 hover:bg-purple-500/10"
+              >
+                {isBackingUp ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
+                {isBackingUp ? 'Creating...' : 'Advanced Backup'}
+              </Button>
+            </div>
+          </div>
+
+          {/* Backup System Status */}
+          <div className="bg-white/5 border border-white/10 rounded-lg p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-white font-medium">Backup System Status</h4>
+              <Badge 
+                variant="outline" 
+                className={`${
+                  backupStatus === 'ready' ? 'border-green-500 text-green-400' : 
+                  backupStatus === 'setup_required' ? 'border-yellow-500 text-yellow-400' :
+                  backupStatus === 'not_found' ? 'border-red-500 text-red-400' :
+                  'border-gray-500 text-gray-400'
+                }`}
+              >
+                {backupStatus === 'ready' ? '✅ Ready' : 
+                 backupStatus === 'setup_required' ? '⚠️ Setup Required' :
+                 backupStatus === 'not_found' ? '❌ Not Found' :
+                 '🔄 Checking...'}
+              </Badge>
+            </div>
+            
+            {recentBackups.length > 0 && (
+              <div>
+                <h5 className="text-white text-sm font-medium mb-2">Recent Backups:</h5>
+                <div className="space-y-2">
+                  {recentBackups.slice(0, 3).map((backup, index) => (
+                    <div key={index} className="flex items-center justify-between text-sm">
+                      <span className="text-gray-300 truncate">{backup.filename}</span>
+                      <div className="flex items-center space-x-2 text-gray-400">
+                        <span>{backup.sizeFormatted}</span>
+                        <span>•</span>
+                        <span>{new Date(backup.created).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Backup Information */}
+          <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
+            <div className="flex items-start space-x-3">
+              <Info className="h-5 w-5 text-blue-400 mt-0.5" />
+              <div>
+                <h4 className="text-blue-400 font-medium">Backup Information</h4>
+                <p className="text-blue-300/80 text-sm mt-1">
+                  Database backups include all user data, payments, matches, and system settings. 
+                  Files are saved in Excel format for easy viewing and analysis.
+                </p>
+                <ul className="text-blue-300/60 text-xs mt-2 space-y-1">
+                  <li>• Simple Backup: Core tables only (~200KB)</li>
+                  <li>• Advanced Backup: All tables with detailed logging (~200KB)</li>
+                  <li>• Files are timestamped and auto-downloaded</li>
+                </ul>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
