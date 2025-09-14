@@ -1,0 +1,21 @@
+User-agent: *
+Allow: /
+
+# Additional crawling rules for specific bots
+User-agent: GPTBot
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+# Allow search engines to find our sitemap
+Sitemap: https://cufy.online/sitemap.xml
+
+# Host directive
+Host: https://cufy.online
+
+# Crawl delay for polite crawling
+Crawl-delay: 1

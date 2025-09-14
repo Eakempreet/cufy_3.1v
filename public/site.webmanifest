@@ -1,0 +1,79 @@
+{
+  "name": "Cufy - College Dating Platform",
+  "short_name": "Cufy",
+  "description": "India's premier college dating app connecting genuine students",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#ec4899",
+  "orientation": "portrait",
+  "scope": "/",
+  "lang": "en",
+  "categories": ["social", "lifestyle", "education"],
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-256x256.png",
+      "sizes": "256x256",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshot-mobile.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "/screenshot-desktop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Find Matches",
+      "short_name": "Matches",
+      "description": "Find your perfect college match",
+      "url": "/dashboard",
+      "icons": [
+        {
+          "src": "/shortcut-match.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Join as Student",
+      "short_name": "Join",
+      "description": "Join Cufy as a college student",
+      "url": "/gender-selection",
+      "icons": [
+        {
+          "src": "/shortcut-join.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ]
+}
