@@ -1830,21 +1830,32 @@ function SystemManagement({
   const [isBackingUp, setIsBackingUp] = useState(false)
   const [backupStatus, setBackupStatus] = useState<string>('')
   const [recentBackups, setRecentBackups] = useState<any[]>([])
+  const [isVercelEnvironment, setIsVercelEnvironment] = useState(false)
 
-  // Fetch backup system status on component mount
+  // Detect environment and fetch backup system status on component mount
   useEffect(() => {
-    checkBackupSystemStatus()
+    // Detect if running on Vercel
+    const isVercel = window.location.hostname.includes('vercel.app') || 
+                     window.location.hostname.includes('.vercel.app') ||
+                     process.env.NODE_ENV === 'production'
+    setIsVercelEnvironment(isVercel)
+    
+    checkBackupSystemStatus(isVercel)
   }, [])
 
-  const checkBackupSystemStatus = async () => {
+  const checkBackupSystemStatus = async (useVercelEndpoint?: boolean) => {
     try {
-      const response = await fetch('/api/admin/database-backup')
+      const endpoint = useVercelEndpoint || isVercelEnvironment 
+        ? '/api/admin/database-backup-vercel'
+        : '/api/admin/database-backup'
+        
+      const response = await fetch(endpoint)
       const data = await response.json()
       
       if (data.recentBackups) {
         setRecentBackups(data.recentBackups)
       }
-      setBackupStatus(data.status || 'unknown')
+      setBackupStatus(data.status || 'ready')
     } catch (error) {
       console.error('Error checking backup system:', error)
       setBackupStatus('error')
@@ -1856,7 +1867,12 @@ function SystemManagement({
     
     setIsBackingUp(true)
     try {
-      const response = await fetch('/api/admin/database-backup', {
+      // Use appropriate endpoint based on environment
+      const endpoint = isVercelEnvironment 
+        ? '/api/admin/database-backup-vercel'
+        : '/api/admin/database-backup'
+        
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ backupType }),
@@ -1867,7 +1883,7 @@ function SystemManagement({
         const contentDisposition = response.headers.get('Content-Disposition')
         const filename = contentDisposition 
           ? contentDisposition.split('filename=')[1]?.replace(/"/g, '')
-          : `cufy_backup_${new Date().toISOString().slice(0, 19).replace(/[:-]/g, '')}.xlsx`
+          : `cufy_backup_${new Date().toISOString().slice(0, 19).replace(/[:-]/g, '')}.csv`
 
         // Create blob and download
         const blob = await response.blob()
@@ -1880,10 +1896,13 @@ function SystemManagement({
         window.URL.revokeObjectURL(url)
         document.body.removeChild(a)
 
-        alert(`✅ Database backup downloaded successfully: ${filename}`)
+        const records = response.headers.get('X-Backup-Records')
+        const tables = response.headers.get('X-Backup-Tables')
+        
+        alert(`✅ Database backup downloaded successfully!\n📁 File: ${filename}\n📊 Records: ${records || 'N/A'}\n📋 Tables: ${tables || 'N/A'}`)
         
         // Refresh backup status
-        checkBackupSystemStatus()
+        checkBackupSystemStatus(isVercelEnvironment)
       } else {
         const errorData = await response.json()
         throw new Error(errorData.error || 'Backup failed')
@@ -1969,7 +1988,9 @@ function SystemManagement({
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-white font-medium">Quick Backup</h3>
-              <p className="text-gray-400 text-sm">Download all database tables as Excel file</p>
+              <p className="text-gray-400 text-sm">
+                Download all database tables as {isVercelEnvironment ? 'CSV' : 'Excel'} file
+              </p>
             </div>
             <div className="flex space-x-2">
               <Button
@@ -2040,12 +2061,18 @@ function SystemManagement({
                 <h4 className="text-blue-400 font-medium">Backup Information</h4>
                 <p className="text-blue-300/80 text-sm mt-1">
                   Database backups include all user data, payments, matches, and system settings. 
-                  Files are saved in Excel format for easy viewing and analysis.
+                  {isVercelEnvironment 
+                    ? 'Files are saved in CSV format for Vercel compatibility.' 
+                    : 'Files are saved in Excel format for easy viewing and analysis.'
+                  }
                 </p>
                 <ul className="text-blue-300/60 text-xs mt-2 space-y-1">
                   <li>• Simple Backup: Core tables only (~200KB)</li>
-                  <li>• Advanced Backup: All tables with detailed logging (~200KB)</li>
+                  <li>• Advanced Backup: All tables with detailed logging (~500KB)</li>
                   <li>• Files are timestamped and auto-downloaded</li>
+                  {isVercelEnvironment && (
+                    <li>• Note: CSV format used on Vercel deployment</li>
+                  )}
                 </ul>
               </div>
             </div>
